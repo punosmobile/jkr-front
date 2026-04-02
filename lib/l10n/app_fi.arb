@@ -1,0 +1,9 @@
+﻿{
+    "@@locale": "fi",
+    "appTitle": "jkrfront",
+    "welcome": "Tervetuloa",
+    "home": "Koti",
+    "loading": "Ladataan...",
+    "error": "Virhe",
+    "retry": "YritÃ¤ uudelleen"
+}

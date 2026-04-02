@@ -1,0 +1,9 @@
+﻿{
+    "@@locale": "sv",
+    "appTitle": "jkrfront",
+    "welcome": "VÃ¤lkommen",
+    "home": "Hem",
+    "loading": "Laddar...",
+    "error": "Fel",
+    "retry": "FÃ¶rsÃ¶k igen"
+}

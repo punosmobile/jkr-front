@@ -1,0 +1,30 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        API_BASE_URL: http://localhost:8000
+        AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+        AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+    networks:
+      - jkr-network
+
+  backend:
+    # Backend pyörii jo Dockerissa — käytetään olemassa olevaa konttia
+    # Jos haluat käyttää tätä, vaihda image/build backendin mukaan
+    image: jkr-core:latest
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.local
+    networks:
+      - jkr-network
+
+networks:
+  jkr-network:
+    driver: bridge

@@ -1,0 +1,26 @@
+﻿{
+    "appTitle": "jkrfront",
+    "@appTitle": {
+        "description": "The application title"
+    },
+    "welcome": "Welcome",
+    "@welcome": {
+        "description": "Welcome message"
+    },
+    "home": "Home",
+    "@home": {
+        "description": "Home screen title"
+    },
+    "loading": "Loading...",
+    "@loading": {
+        "description": "Loading message"
+    },
+    "error": "Error",
+    "@error": {
+        "description": "Error message"
+    },
+    "retry": "Retry",
+    "@retry": {
+        "description": "Retry action"
+    }
+}

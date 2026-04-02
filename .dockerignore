@@ -1,0 +1,13 @@
+.dart_tool/
+.idea/
+.vscode/
+.git/
+build/
+android/
+ios/
+test/
+*.iml
+*.log
+.env
+.env.*
+node_modules/
