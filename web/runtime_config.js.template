@@ -1,0 +1,6 @@
+window.runtimeConfig = {
+  apiBaseUrl: "${API_BASE_URL}",
+  azureClientId: "${AZURE_CLIENT_ID}",
+  azureTenantId: "${AZURE_TENANT_ID}",
+  azureRedirectUri: "${AZURE_REDIRECT_URI}"
+};

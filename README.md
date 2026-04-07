@@ -47,31 +47,50 @@ flutter pub get
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-### 3. Käynnistys
+### 3. Käynnistys (Flutter dev-palvelin)
 
+| | Komento |
+|---|---|
+| Windows | `runlocal.bat` |
+| Linux/macOS | `chmod +x runlocal.sh && ./runlocal.sh` |
+
+Tai suoraan:
 ```bash
 flutter run -d chrome --dart-define-from-file=.env.local --web-port=8080
 ```
 
-tai Windows-pikakomenolla:
-
-```bat
-runlocal.bat
-```
-
 > Portti **8080** täytyy vastata `.env.local`-tiedostossa määritettyä `AZURE_REDIRECT_URI`-osoitetta.
 
-## Docker
+## Docker (paikallinen)
 
-### Paikallinen kontti
+Dockerilla ajettaessa frontend liittyy backendin Docker-verkkoon (`jkr-core-development_default`), joten molemmat täytyy olla käynnissä.
+
+### 1. Käynnistä backend
 
 ```bash
-docker compose up --build
+cd ../jkr-core-development
+docker compose -f dev.docker-compose.yml up
 ```
 
-`docker-compose.yml` käyttää `.env.local`-tiedostoa backendille ja välittää Azure-muuttujat build-argumentteina.
+### 2. Buildaa frontend-image
 
-### Tuotantokuva käsin
+| | Komento |
+|---|---|
+| Windows | `buildweb.bat` |
+| Linux/macOS | `chmod +x buildweb.sh && ./buildweb.sh` |
+
+Skripti buildaa ensin Flutter-webin paikallisesti ja sitten kevyen nginx-imagen (`Dockerfile.local`). Flutter-muutoksiin riittää jatkossa pelkkä `flutter build web --dart-define-from-file=.env.local` — imagea ei tarvitse rakentaa uudelleen.
+
+### 3. Käynnistä frontend-kontti
+
+| | Komento |
+|---|---|
+| Windows | `rundocker.bat` |
+| Linux/macOS | `chmod +x rundocker.sh && ./rundocker.sh` |
+
+`build/web` on mountattu konttiin, joten Flutter rebuild päivittää sisällön välittömästi.
+
+### Tuotantokuva
 
 ```bash
 docker build \
@@ -81,13 +100,24 @@ docker build \
   -t jkrfront .
 ```
 
-Kuva rakentuu kaksivaiheisesti: Flutter buildaa staattisen web-paketin, nginx ajaa sitä portissa 8080.
+Tuotanto-Dockerfile (`Dockerfile`) rakentuu kaksivaiheisesti: Flutter kompiloi sisällä, nginx ajaa tulosta portissa 8080.
 
 ## Azure-deployaus
 
-Frontend deployataan **Azure Container App**:na tai **Azure Static Web App**:na.
+Frontend deployataan **Azure Container App**:na.
 
-Build-aikaiset ympäristömuuttujat (`API_BASE_URL`, `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`) syötetään Container Registryn build-argumentteina tai CI/CD-putken salaisuuksina — ne eivät tule ajonaikaisesti ympäristöstä, vaan kompiloidaan suoraan Flutter-binääriin `--dart-define`-mekanismilla.
+### Ympäristömuuttujat ajonaikaisesti
+
+Konfiguraatioarvot eivät ole kompiloituina Flutter-binääriin. nginx generoi käynnistyessään `runtime_config.js`-tiedoston kontin ympäristömuuttujista (`docker/30-runtime-config.sh`). Flutter lukee arvot `window.runtimeConfig`-objektista — `--dart-define`-arvot toimivat fallbackina `flutter run` -ajossa.
+
+Tämä mahdollistaa **saman Docker-imagen** käytön kaikissa ympäristöissä (dev / test / prod) vaihtamalla vain Container App:n ympäristömuuttujat.
+
+| Muuttuja | Kuvaus |
+|---|---|
+| `API_BASE_URL` | Backendin osoite |
+| `AZURE_CLIENT_ID` | Azure AD -sovelluksen client ID |
+| `AZURE_TENANT_ID` | Azure AD -vuokraajan tunnus |
+| `AZURE_REDIRECT_URI` | OAuth-paluuosoite |
 
 ## Projektirakenne
 

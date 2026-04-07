@@ -10,19 +10,12 @@ RUN flutter pub get
 # Kopioi lähdekoodi
 COPY . .
 
-# Build-time ympäristömuuttujat
-ARG API_BASE_URL=http://localhost:8000
-ARG AZURE_CLIENT_ID
-ARG AZURE_TENANT_ID
-
 # Generoi koodi (injectable, freezed, jne.)
 RUN flutter pub run build_runner build --delete-conflicting-outputs
 
-# Buildaa Flutter web
-RUN flutter build web --release \
-    --dart-define=API_BASE_URL=${API_BASE_URL} \
-    --dart-define=AZURE_CLIENT_ID=${AZURE_CLIENT_ID} \
-    --dart-define=AZURE_TENANT_ID=${AZURE_TENANT_ID}
+# Buildaa Flutter web — ei build-aikaisia ympäristömuuttujia,
+# arvot tulevat ajonaikaisesti nginx:n generoimasta runtime_config.js:stä
+RUN flutter build web --release --no-wasm-dry-run
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
@@ -35,6 +28,10 @@ COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Kopioi buildattu Flutter web -sovellus
 COPY --from=build /app/build/web /usr/share/nginx/html
+
+# Entrypoint-skripti generoi runtime_config.js ympäristömuuttujista
+COPY docker/30-runtime-config.sh /docker-entrypoint.d/
+RUN chmod +x /docker-entrypoint.d/30-runtime-config.sh
 
 EXPOSE 8080
 
