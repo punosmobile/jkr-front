@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/theme/app_theme.dart';
+import '../../../../shared/widgets/card_container.dart';
 import '../../data/models/db_column_doc.dart';
 import '../../data/repositories/documentation_repository.dart';
 import '../bloc/documentation_bloc.dart';
@@ -25,78 +27,83 @@ class _DocumentationView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tietokantadokumentaatio'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => context
-                .read<DocumentationBloc>()
-                .add(const DocumentationLoadRequested()),
-          ),
-        ],
-      ),
-      body: Column(
+    return Padding(
+      padding: const EdgeInsets.all(22),
+      child: Column(
         children: [
-          // Hakukenttä
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Hae skeemaa, taulua tai kenttää...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+          // Toolbar: search + refresh + stats
+          CardContainer(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 34,
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: 'Hae skeemaa, taulua tai kenttää...',
+                            hintStyle: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+                            prefixIcon: Icon(Icons.search, size: 16, color: AppTheme.textTertiary),
+                            prefixIconConstraints: const BoxConstraints(minWidth: 34),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(7),
+                              borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.20)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(7),
+                              borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.20)),
+                            ),
+                            filled: true,
+                            fillColor: AppTheme.background2,
+                          ),
+                          style: const TextStyle(fontSize: 12),
+                          onChanged: (value) => context
+                              .read<DocumentationBloc>()
+                              .add(DocumentationSearchChanged(value)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    OutlinedButton.icon(
+                      onPressed: () => context
+                          .read<DocumentationBloc>()
+                          .add(const DocumentationLoadRequested()),
+                      icon: const Icon(Icons.refresh, size: 14),
+                      label: const Text('Päivitä'),
+                    ),
+                  ],
                 ),
-              ),
-              onChanged: (value) => context
-                  .read<DocumentationBloc>()
-                  .add(DocumentationSearchChanged(value)),
+                const SizedBox(height: 10),
+                // Stats chips
+                BlocBuilder<DocumentationBloc, DocumentationState>(
+                  buildWhen: (prev, curr) =>
+                      prev.schemaCount != curr.schemaCount ||
+                      prev.tableCount != curr.tableCount ||
+                      prev.columnCount != curr.columnCount ||
+                      prev.status != curr.status,
+                  builder: (context, state) {
+                    if (state.status == DocumentationStatus.loaded) {
+                      return Row(
+                        children: [
+                          _StatBadge(label: 'Skeemat', count: state.schemaCount, color: AppTheme.primaryColor),
+                          const SizedBox(width: 8),
+                          _StatBadge(label: 'Taulut', count: state.tableCount, color: AppTheme.green),
+                          const SizedBox(width: 8),
+                          _StatBadge(label: 'Kentät', count: state.columnCount, color: AppTheme.amber),
+                        ],
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ],
             ),
           ),
-          // Tilastot
-          BlocBuilder<DocumentationBloc, DocumentationState>(
-            buildWhen: (prev, curr) =>
-                prev.schemaCount != curr.schemaCount ||
-                prev.tableCount != curr.tableCount ||
-                prev.columnCount != curr.columnCount ||
-                prev.status != curr.status,
-            builder: (context, state) {
-              if (state.status == DocumentationStatus.loaded) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      _StatChip(
-                        label: 'Skeemat',
-                        count: state.schemaCount,
-                        color: colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      _StatChip(
-                        label: 'Taulut',
-                        count: state.tableCount,
-                        color: colorScheme.secondary,
-                      ),
-                      const SizedBox(width: 8),
-                      _StatChip(
-                        label: 'Kentät',
-                        count: state.columnCount,
-                        color: colorScheme.tertiary,
-                      ),
-                    ],
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-          const SizedBox(height: 8),
-          // Sisältö
+          const SizedBox(height: 14),
+          // Content
           Expanded(
             child: BlocBuilder<DocumentationBloc, DocumentationState>(
               builder: (context, state) {
@@ -109,16 +116,16 @@ class _DocumentationView extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.error_outline,
-                              size: 48, color: colorScheme.error),
+                          Icon(Icons.error_outline, size: 48, color: AppTheme.red),
                           const SizedBox(height: 16),
-                          Text('Virhe: ${state.errorMessage}'),
+                          Text('Virhe: ${state.errorMessage}',
+                              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                           const SizedBox(height: 16),
-                          FilledButton.icon(
+                          ElevatedButton.icon(
                             onPressed: () => context
                                 .read<DocumentationBloc>()
                                 .add(const DocumentationLoadRequested()),
-                            icon: const Icon(Icons.refresh),
+                            icon: const Icon(Icons.refresh, size: 14),
                             label: const Text('Yritä uudelleen'),
                           ),
                         ],
@@ -126,8 +133,9 @@ class _DocumentationView extends StatelessWidget {
                     );
                   case DocumentationStatus.loaded:
                     if (state.schemas.isEmpty) {
-                      return const Center(
-                        child: Text('Ei tuloksia'),
+                      return Center(
+                        child: Text('Ei tuloksia',
+                            style: TextStyle(fontSize: 12, color: AppTheme.textTertiary)),
                       );
                     }
                     return _SchemaListView(
@@ -144,12 +152,14 @@ class _DocumentationView extends StatelessWidget {
   }
 }
 
-class _StatChip extends StatelessWidget {
+// ─── STAT BADGE ──────────────────────────────────────────────────────────────
+
+class _StatBadge extends StatelessWidget {
   final String label;
   final int count;
   final Color color;
 
-  const _StatChip({
+  const _StatBadge({
     required this.label,
     required this.count,
     required this.color,
@@ -157,19 +167,31 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Chip(
-      avatar: CircleAvatar(
-        backgroundColor: color,
-        child: Text(
-          '$count',
-          style: const TextStyle(color: Colors.white, fontSize: 11),
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
       ),
-      label: Text(label, style: const TextStyle(fontSize: 12)),
-      visualDensity: VisualDensity.compact,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$count',
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(fontSize: 11, color: color),
+          ),
+        ],
+      ),
     );
   }
 }
+
+// ─── SCHEMA LIST VIEW ────────────────────────────────────────────────────────
 
 class _SchemaListView extends StatelessWidget {
   final List<SchemaDoc> schemas;
@@ -180,7 +202,7 @@ class _SchemaListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.zero,
       itemCount: schemas.length,
       itemBuilder: (context, index) {
         final schema = schemas[index];
@@ -198,18 +220,24 @@ class _SchemaExpansionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.background,
+        border: Border.all(color: Colors.black.withValues(alpha: 0.10), width: 0.5),
+        borderRadius: BorderRadius.circular(11),
+      ),
       child: ExpansionTile(
         initiallyExpanded: expandAll,
-        leading: Icon(Icons.schema, color: colorScheme.primary),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+        collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+        leading: Icon(Icons.schema, size: 18, color: AppTheme.primaryColor),
         title: Text(
           schema.name,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
         ),
-        subtitle: Text('${schema.tables.length} taulua'),
+        subtitle: Text('${schema.tables.length} taulua',
+            style: TextStyle(fontSize: 11, color: AppTheme.textTertiary)),
         children: schema.tables.entries.map((entry) {
           final table = entry.value;
           return _TableExpansionTile(table: table, expandAll: expandAll);
@@ -227,25 +255,21 @@ class _TableExpansionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return ExpansionTile(
       initiallyExpanded: expandAll,
       tilePadding: const EdgeInsets.symmetric(horizontal: 24),
       title: Row(
         children: [
-          const Icon(Icons.table_chart, size: 18),
+          Icon(Icons.table_chart, size: 16, color: AppTheme.textTertiary),
           const SizedBox(width: 8),
-          Text(table.name, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(table.name,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppTheme.textPrimary)),
           if (table.comment != null && table.comment!.isNotEmpty) ...[
             const SizedBox(width: 12),
             Flexible(
               child: Text(
                 table.comment!,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontStyle: FontStyle.italic,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: AppTheme.textTertiary),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -257,80 +281,74 @@ class _TableExpansionTile extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: DataTable(
             columnSpacing: 24,
-            headingRowHeight: 36,
-            dataRowMinHeight: 32,
-            dataRowMaxHeight: 56,
+            headingRowHeight: 32,
+            dataRowMinHeight: 28,
+            dataRowMaxHeight: 48,
+            headingTextStyle: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
+              color: AppTheme.textSecondary,
+            ),
             columns: const [
-              DataColumn(label: Text('Kenttä', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-              DataColumn(label: Text('Tyyppi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-              DataColumn(label: Text('NULL', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-              DataColumn(label: Text('Kommentti', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-              DataColumn(label: Text('Geometria', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+              DataColumn(label: Text('Kenttä')),
+              DataColumn(label: Text('Tyyppi')),
+              DataColumn(label: Text('NULL')),
+              DataColumn(label: Text('Kommentti')),
+              DataColumn(label: Text('Geometria')),
             ],
-            rows: table.columns.map((col) => _buildColumnRow(context, col)).toList(),
+            rows: table.columns.map((col) => _buildColumnRow(col)).toList(),
           ),
         ),
       ],
     );
   }
 
-  DataRow _buildColumnRow(BuildContext context, DbColumnDoc col) {
-    final colorScheme = Theme.of(context).colorScheme;
-
+  DataRow _buildColumnRow(DbColumnDoc col) {
     return DataRow(cells: [
       DataCell(Text(
         col.kentta,
-        style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w500),
+        style: const TextStyle(fontFamily: 'DM Mono', fontWeight: FontWeight.w500, fontSize: 11),
       )),
       DataCell(Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
-          color: Colors.amber.withValues(alpha: 0.1),
+          color: AppTheme.amber.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
           col.tyyppi ?? '',
-          style: TextStyle(
-            fontFamily: 'monospace',
-            fontSize: 12,
-            color: Colors.amber.shade700,
-          ),
+          style: TextStyle(fontFamily: 'DM Mono', fontSize: 11, color: AppTheme.amber),
         ),
       )),
       DataCell(Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
-          color: col.isNotNull
-              ? colorScheme.error.withValues(alpha: 0.1)
-              : Colors.transparent,
+          color: col.isNotNull ? AppTheme.red.withValues(alpha: 0.10) : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
           col.isNotNull ? 'NOT NULL' : 'YES',
           style: TextStyle(
-            fontSize: 11,
-            color: col.isNotNull ? colorScheme.error : colorScheme.onSurfaceVariant,
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: col.isNotNull ? AppTheme.red : AppTheme.textTertiary,
           ),
         ),
       )),
       DataCell(Text(
         col.kentanKommentti ?? '',
-        style: TextStyle(
-          fontStyle: FontStyle.italic,
-          fontSize: 12,
-          color: colorScheme.onSurfaceVariant,
-        ),
+        style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: AppTheme.textTertiary),
       )),
       DataCell(col.geometryInfo != null
           ? Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
+                color: AppTheme.green.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 col.geometryInfo!,
-                style: TextStyle(fontSize: 11, color: Colors.green.shade700),
+                style: TextStyle(fontSize: 10, color: AppTheme.green),
               ),
             )
           : const SizedBox.shrink()),
