@@ -35,4 +35,24 @@ class SharepointRepository {
     final baseUrl = _dio.options.baseUrl;
     return '$baseUrl/sharepoint/download?path=${Uri.encodeQueryComponent(path)}';
   }
+
+  /// Pull files from SharePoint to the backend server's /data/input directory.
+  /// [paths] is a list of SharePoint file paths to download.
+  /// [subfolder] is an optional target subfolder within /data/input.
+  Future<SharepointPullResult> pullToServer({
+    required List<String> paths,
+    String? subfolder,
+  }) async {
+    final queryParams = <String, dynamic>{
+      'paths': paths,
+    };
+    if (subfolder != null && subfolder.isNotEmpty) {
+      queryParams['subfolder'] = subfolder;
+    }
+    final response = await _dio.post(
+      '/sharepoint/pull',
+      queryParameters: queryParams,
+    );
+    return SharepointPullResult.fromJson(response.data as Map<String, dynamic>);
+  }
 }

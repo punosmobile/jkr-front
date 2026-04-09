@@ -14,6 +14,10 @@ class SharepointBloc extends Bloc<SharepointEvent, SharepointState> {
     on<SharepointFolderOpened>(_onFolderOpened);
     on<SharepointNavigatedBack>(_onNavigatedBack);
     on<SharepointRefreshRequested>(_onRefresh);
+    on<SharepointFileToggled>(_onFileToggled);
+    on<SharepointAllFilesToggled>(_onAllFilesToggled);
+    on<SharepointPullOneRequested>(_onPullOne);
+    on<SharepointPullSelectedRequested>(_onPullSelected);
   }
 
   Future<void> _onInit(
@@ -38,6 +42,8 @@ class SharepointBloc extends Bloc<SharepointEvent, SharepointState> {
         rootFolder: rootFolder,
         siteId: status.siteId,
         folderHistory: const [],
+        selectedFiles: const {},
+        pullStatusMessage: null,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -60,6 +66,8 @@ class SharepointBloc extends Bloc<SharepointEvent, SharepointState> {
         items: items,
         currentFolder: event.folder,
         folderHistory: [...state.folderHistory, state.currentFolder],
+        selectedFiles: const {},
+        pullStatusMessage: null,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -85,6 +93,8 @@ class SharepointBloc extends Bloc<SharepointEvent, SharepointState> {
         items: items,
         currentFolder: previousFolder,
         folderHistory: newHistory,
+        selectedFiles: const {},
+        pullStatusMessage: null,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -110,6 +120,96 @@ class SharepointBloc extends Bloc<SharepointEvent, SharepointState> {
       emit(state.copyWith(
         status: SharepointPageStatus.error,
         errorMessage: e.toString(),
+      ));
+    }
+  }
+
+  void _onFileToggled(
+    SharepointFileToggled event,
+    Emitter<SharepointState> emit,
+  ) {
+    final updated = Set<String>.from(state.selectedFiles);
+    if (updated.contains(event.fileName)) {
+      updated.remove(event.fileName);
+    } else {
+      updated.add(event.fileName);
+    }
+    emit(state.copyWith(selectedFiles: updated));
+  }
+
+  void _onAllFilesToggled(
+    SharepointAllFilesToggled event,
+    Emitter<SharepointState> emit,
+  ) {
+    if (event.selected) {
+      final allFileNames = state.items
+          .where((i) => !i.isFolder)
+          .map((i) => i.name)
+          .toSet();
+      emit(state.copyWith(selectedFiles: allFileNames));
+    } else {
+      emit(state.copyWith(selectedFiles: const {}));
+    }
+  }
+
+  Future<void> _onPullOne(
+    SharepointPullOneRequested event,
+    Emitter<SharepointState> emit,
+  ) async {
+    emit(state.copyWith(isPulling: true, pullStatusMessage: null, pullHadErrors: false));
+    try {
+      final result = await _repository.pullToServer(paths: [event.filePath]);
+      final ok = result.downloaded.length;
+      final fail = result.errors.length;
+      String msg;
+      if (ok > 0) {
+        final dl = result.downloaded.first;
+        msg = '${dl.filename} ladattu → ${result.targetDir ?? dl.targetPath ?? ''}';
+      } else {
+        msg = 'Lataus epäonnistui';
+      }
+      if (fail > 0) {
+        msg += ' (${fail} virhe${fail > 1 ? 'ttä' : ''})';
+      }
+      emit(state.copyWith(
+        isPulling: false,
+        pullStatusMessage: msg,
+        pullHadErrors: fail > 0,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isPulling: false,
+        pullStatusMessage: 'Virhe: $e',
+        pullHadErrors: true,
+      ));
+    }
+  }
+
+  Future<void> _onPullSelected(
+    SharepointPullSelectedRequested event,
+    Emitter<SharepointState> emit,
+  ) async {
+    final paths = state.selectedFilePaths;
+    if (paths.isEmpty) return;
+    emit(state.copyWith(isPulling: true, pullStatusMessage: null, pullHadErrors: false));
+    try {
+      final result = await _repository.pullToServer(paths: paths);
+      final ok = result.downloaded.length;
+      final fail = result.errors.length;
+      String msg = '$ok ladattu';
+      if (fail > 0) msg += ', $fail epäonnistui';
+      msg += ' → ${result.targetDir ?? ''}';
+      emit(state.copyWith(
+        isPulling: false,
+        pullStatusMessage: msg,
+        pullHadErrors: fail > 0,
+        selectedFiles: const {},
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isPulling: false,
+        pullStatusMessage: 'Virhe: $e',
+        pullHadErrors: true,
       ));
     }
   }

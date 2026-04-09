@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -5,6 +7,7 @@ import '../../core/auth/auth_bloc.dart';
 import '../../core/auth/auth_event.dart';
 import '../../core/auth/auth_service.dart';
 import '../../core/di/injection.dart';
+import '../../core/network/dio_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../features/backups/presentation/pages/backups_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
@@ -29,6 +32,41 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   String _activeView = 'dashboard';
   bool _importActive = false;
+  bool _dbConnected = false;
+  Timer? _healthTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkHealth();
+    _healthTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _checkHealth(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _healthTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _checkHealth() async {
+    try {
+      final dio = getIt<DioClient>().dio;
+      final response = await dio.get('/health');
+      final data = response.data as Map<String, dynamic>;
+      final db = data['database'] as Map<String, dynamic>?;
+      final connected = db?['connected'] == true;
+      if (mounted && connected != _dbConnected) {
+        setState(() => _dbConnected = connected);
+      }
+    } catch (_) {
+      if (mounted && _dbConnected) {
+        setState(() => _dbConnected = false);
+      }
+    }
+  }
 
   String get _pageTitle {
     const titles = {
@@ -70,7 +108,7 @@ class _AppShellState extends State<AppShell> {
                 activeViewId: _activeView,
                 userName: _parseUsername(),
                 envLabel: 'Tuotanto',
-                dbConnected: true,
+                dbConnected: _dbConnected,
                 onNavigate: (id) {
                   setState(() => _activeView = id);
                   Navigator.of(context).pop();
@@ -88,7 +126,7 @@ class _AppShellState extends State<AppShell> {
               activeViewId: _activeView,
               userName: _parseUsername(),
               envLabel: 'Tuotanto',
-              dbConnected: true,
+              dbConnected: _dbConnected,
               onNavigate: (id) => setState(() => _activeView = id),
               onLogout: () =>
                   context.read<AuthBloc>().add(const AuthLogoutRequested()),

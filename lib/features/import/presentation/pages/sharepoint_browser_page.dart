@@ -109,6 +109,12 @@ class _Toolbar extends StatelessWidget {
             const SizedBox(height: 8),
             _Breadcrumb(state: state),
           ],
+          // Mass pull bar
+          if (state.status == SharepointPageStatus.loaded &&
+              (state.selectedCount > 0 || state.isPulling || state.pullStatusMessage != null)) ...[
+            const SizedBox(height: 8),
+            _PullBar(state: state),
+          ],
         ],
       ),
     );
@@ -197,6 +203,66 @@ class _Breadcrumb extends StatelessWidget {
   }
 }
 
+// ─── PULL BAR ────────────────────────────────────────────────────────────────
+
+class _PullBar extends StatelessWidget {
+  final SharepointState state;
+  const _PullBar({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: state.pullHadErrors ? AppTheme.redBg : AppTheme.primaryLight,
+        borderRadius: BorderRadius.circular(7),
+      ),
+      child: Row(
+        children: [
+          if (state.isPulling) ...[
+            const SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Ladataan palvelimelle...',
+              style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+            ),
+          ] else if (state.pullStatusMessage != null) ...[
+            Icon(
+              state.pullHadErrors ? Icons.warning_amber : Icons.check_circle,
+              size: 14,
+              color: state.pullHadErrors ? AppTheme.red : AppTheme.green,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                state.pullStatusMessage!,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: state.pullHadErrors ? AppTheme.red : AppTheme.textSecondary,
+                ),
+              ),
+            ),
+          ],
+          if (state.selectedCount > 0 && !state.isPulling) ...[
+            const Spacer(),
+            ElevatedButton.icon(
+              onPressed: () => context
+                  .read<SharepointBloc>()
+                  .add(const SharepointPullSelectedRequested()),
+              icon: const Icon(Icons.download, size: 14),
+              label: Text('Lataa ${state.selectedCount} palvelimelle'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 // ─── FOLDER CONTENT VIEW ─────────────────────────────────────────────────────
 
 class _FolderContentView extends StatelessWidget {
@@ -238,11 +304,29 @@ class _FolderContentView extends StatelessWidget {
             ),
             child: Row(
               children: [
+                // Select-all checkbox
+                SizedBox(
+                  width: 30,
+                  child: BlocBuilder<SharepointBloc, SharepointState>(
+                    buildWhen: (prev, curr) =>
+                        prev.allFilesSelected != curr.allFilesSelected,
+                    builder: (context, s) {
+                      return Checkbox(
+                        value: s.allFilesSelected,
+                        onChanged: (val) => context
+                            .read<SharepointBloc>()
+                            .add(SharepointAllFilesToggled(val ?? false)),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                      );
+                    },
+                  ),
+                ),
                 _headerCell('Nimi', flex: 4),
                 _headerCell('Tyyppi', flex: 1),
                 _headerCell('Koko', flex: 1),
                 _headerCell('Muokattu', flex: 2),
-                _headerCell('', flex: 1),
+                _headerCell('Toiminnot', flex: 2),
               ],
             ),
           ),
@@ -253,10 +337,13 @@ class _FolderContentView extends StatelessWidget {
               itemCount: state.items.length,
               itemBuilder: (context, index) {
                 final item = state.items[index];
+                final isSelected = state.selectedFiles.contains(item.name);
                 return _FileRow(
                   item: item,
                   currentFolder: state.currentFolder,
                   isLast: index == state.items.length - 1,
+                  isSelected: isSelected,
+                  isPulling: state.isPulling,
                 );
               },
             ),
@@ -288,11 +375,15 @@ class _FileRow extends StatelessWidget {
   final SharepointItem item;
   final String currentFolder;
   final bool isLast;
+  final bool isSelected;
+  final bool isPulling;
 
   const _FileRow({
     required this.item,
     required this.currentFolder,
     this.isLast = false,
+    this.isSelected = false,
+    this.isPulling = false,
   });
 
   @override
@@ -322,6 +413,20 @@ class _FileRow extends StatelessWidget {
         ),
         child: Row(
           children: [
+            // Checkbox (files only)
+            SizedBox(
+              width: 30,
+              child: item.isFolder
+                  ? const SizedBox.shrink()
+                  : Checkbox(
+                      value: isSelected,
+                      onChanged: (_) => context
+                          .read<SharepointBloc>()
+                          .add(SharepointFileToggled(item.name)),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                    ),
+            ),
             // Name
             Expanded(
               flex: 4,
@@ -381,32 +486,25 @@ class _FileRow extends StatelessWidget {
             ),
             // Actions
             Expanded(
-              flex: 1,
+              flex: 2,
               child: item.isFolder
                   ? const SizedBox.shrink()
                   : Row(
                       children: [
-                        InkWell(
+                        _ActionLink(
+                          icon: Icons.download,
+                          label: 'Lataa',
+                          color: AppTheme.primaryColor,
                           onTap: () => _downloadFile(context),
-                          borderRadius: BorderRadius.circular(4),
-                          child: Padding(
-                            padding: const EdgeInsets.all(4),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.download, size: 13, color: AppTheme.primaryColor),
-                                const SizedBox(width: 3),
-                                Text(
-                                  'Lataa',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: AppTheme.primaryColor,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _ActionLink(
+                          icon: Icons.upload_file,
+                          label: 'Palvelimelle',
+                          color: AppTheme.green,
+                          onTap: isPulling
+                              ? null
+                              : () => _pullToServer(context),
                         ),
                       ],
                     ),
@@ -417,12 +515,19 @@ class _FileRow extends StatelessWidget {
     );
   }
 
+  String get _fullPath => currentFolder.isEmpty
+      ? item.name
+      : '$currentFolder/${item.name}';
+
   void _downloadFile(BuildContext context) {
-    final path = currentFolder.isEmpty
-        ? item.name
-        : '$currentFolder/${item.name}';
-    final url = SharepointRepository().getDownloadUrl(path);
+    final url = SharepointRepository().getDownloadUrl(_fullPath);
     launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  }
+
+  void _pullToServer(BuildContext context) {
+    context
+        .read<SharepointBloc>()
+        .add(SharepointPullOneRequested(_fullPath));
   }
 
   static IconData _fileIcon(String name) {
@@ -459,6 +564,49 @@ class _FileRow extends StatelessWidget {
     if (dateStr == null || dateStr.isEmpty) return '—';
     // Expect ISO format: 2024-03-26T08:35:26...
     return dateStr.replaceFirst('T', ' ').substring(0, 19);
+  }
+}
+
+// ─── ACTION LINK ─────────────────────────────────────────────────────────────
+
+class _ActionLink extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const _ActionLink({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveColor = onTap != null ? color : AppTheme.textTertiary;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 13, color: effectiveColor),
+            const SizedBox(width: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: effectiveColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
