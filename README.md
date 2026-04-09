@@ -121,23 +121,128 @@ Tämä mahdollistaa **saman Docker-imagen** käytön kaikissa ympäristöissä (
 
 ## Projektirakenne
 
+Sovellus noudattaa **feature-first** -arkkitehtuuria. Jokainen päänäkymä on oma feature-moduulinsa, ja yhteiset widgetit ja palvelut sijaitsevat `shared/`-hakemistossa. Authenticated-käyttäjän pääkehys on `AppShell`, joka sisältää sivupalkin (`AppSidebar`) ja sisältöalueen. Sivupalkista valittu näkymä renderöityy sisältöalueelle.
+
 ```
 lib/
-├── core/
-│   ├── auth/          # Azure AD / MSAL -integraatio
-│   ├── config/        # Ympäristömuuttujat (EnvConfig)
-│   ├── di/            # Riippuvuusinjektio (GetIt + Injectable)
-│   ├── network/       # Dio-asiakas ja interceptorit
-│   ├── router/        # Reititys (GoRouter)
-│   └── theme/         # Material 3 -teema
-├── features/
-│   ├── auth/          # Kirjautumissivu
-│   ├── documentation/ # Tietokantaskeeman dokumentaationäkymä
-│   └── home/          # Etusivu ja tiedontuonti-UI
+├── main.dart                        # Sovelluksen entry point
+├── core/                            # Ydininfra, ei feature-kohtaista
+│   ├── auth/                        # Azure AD / MSAL -integraatio
+│   │   ├── auth_bloc.dart           #   BLoC: kirjautumistila
+│   │   ├── auth_event.dart          #   BLoC-tapahtumat
+│   │   ├── auth_service.dart        #   MSAL-palvelukutsut
+│   │   ├── auth_state.dart          #   BLoC-tilat
+│   │   └── msal_js_interop.dart     #   JS interop MSAL-kirjastolle
+│   ├── config/
+│   │   └── env_config.dart          #   Ympäristömuuttujat (runtime + dart-define)
+│   ├── constants/
+│   │   └── app_constants.dart       #   Sovellustason vakiot
+│   ├── di/                          # Riippuvuusinjektio (GetIt + Injectable)
+│   │   ├── injection.dart
+│   │   ├── injection.config.dart    #   Generoitu
+│   │   └── injectable_module.dart
+│   ├── errors/                      # Poikkeukset ja virhemalllit
+│   │   ├── exceptions.dart
+│   │   └── failures.dart
+│   ├── extensions/                  # Dart-laajennusmetodit
+│   ├── network/                     # HTTP-asiakas
+│   │   ├── dio_client.dart
+│   │   ├── network_info.dart
+│   │   └── interceptors/
+│   │       ├── auth_interceptor.dart
+│   │       └── logging_interceptor.dart
+│   ├── router/
+│   │   └── app_router.dart          #   GoRouter-reititys + auth redirect
+│   ├── theme/
+│   │   └── app_theme.dart           #   Material 3 -teema, väripaletti
+│   ├── utils/                       # Apufunktiot
+│   └── widgets/                     # Core-tason yleiset widgetit
+│
+├── features/                        # Feature-moduulit (yksi per sivupalkin näkymä)
+│   ├── auth/                        # Kirjautuminen
+│   │   └── presentation/pages/
+│   │       └── login_page.dart
+│   │
+│   ├── home/                        # Etusivu (ennen kirjautumisen jälkeistä AppShell-siirtymää)
+│   │   ├── data/                    #   datasources/, models/, repositories/
+│   │   ├── domain/                  #   entities/, repositories/, usecases/
+│   │   └── presentation/
+│   │       ├── bloc/
+│   │       ├── pages/home_page.dart
+│   │       └── widgets/
+│   │
+│   ├── dashboard/                   # Dashboard — yleiskatsaus ja metriikat
+│   │   └── presentation/pages/
+│   │       └── dashboard_page.dart
+│   │
+│   ├── import/                      # Tietojen tuonti — tiedostovalinta, tuontijono, edistyminen
+│   │   ├── data/
+│   │   │   ├── models/              #   import_file.dart, import_queue_item.dart
+│   │   │   └── repositories/       #   import_repository.dart
+│   │   └── presentation/
+│   │       ├── bloc/
+│   │       └── pages/import_page.dart
+│   │
+│   ├── realtime_log/                # Reaaliaikainen loki — WebSocket + simulaatio
+│   │   └── presentation/pages/
+│   │       └── realtime_log_page.dart
+│   │
+│   ├── reports/                     # Raportit
+│   │   └── presentation/pages/
+│   │       └── reports_page.dart
+│   │
+│   ├── backups/                     # Varmuuskopiot
+│   │   └── presentation/pages/
+│   │       └── backups_page.dart
+│   │
+│   ├── documentation/               # Tietokantadokumentaatio — skeema/taulu/kenttä-selain
+│   │   ├── data/
+│   │   │   ├── models/              #   db_column_doc.dart (SchemaDoc, TableDoc, DbColumnDoc)
+│   │   │   └── repositories/       #   documentation_repository.dart
+│   │   └── presentation/
+│   │       ├── bloc/                #   documentation_bloc/event/state
+│   │       └── pages/documentation_page.dart
+│   │
+│   ├── help/                        # Ohjeet & tuki
+│   │   └── presentation/pages/
+│   │       └── help_page.dart
+│   │
+│   └── planned/                     # Suunnitellut ominaisuudet (placeholder-sivu)
+│       └── presentation/pages/
+│           └── planned_feature_page.dart
+│
 ├── shared/
-│   └── services/      # Lokitus, tallennus, analytiikka
-└── l10n/              # Lokalisaatiot (fi, en, sv)
+│   ├── services/
+│   │   ├── logging/                 #   logger_service.dart
+│   │   ├── storage/                 #   secure_storage_service.dart
+│   │   └── analytics/
+│   └── widgets/                     # Yhteiset UI-komponentit
+│       ├── app_shell.dart           #   Pääkehys: sivupalkki + topbar + sisältöalue
+│       ├── app_sidebar.dart         #   Sivupalkki ja navigaatioitemit
+│       ├── card_container.dart      #   Yleinen kortti-wrapper
+│       ├── metric_card.dart         #   Tilastokortti (arvo + trendi)
+│       ├── responsive_grid.dart     #   Responsiivinen grid-layout
+│       ├── status_badge.dart        #   Tilabadge (väri + teksti)
+│       └── term_line.dart           #   Terminaalirivi (monofontti + väri)
+│
+└── l10n/                            # Lokalisaatiot (fi, en, sv)
 ```
+
+### Sivupalkin näkymät ja vastaavat tiedostot
+
+| Sivupalkki-item | Feature-moduuli | Sivutiedosto | Tila |
+|---|---|---|---|
+| Dashboard | `features/dashboard/` | `dashboard_page.dart` | Toteutettu (staattinen UI) |
+| Tietojen tuonti | `features/import/` | `import_page.dart` | Toteutettu (BLoC + repository) |
+| Reaaliaikainen loki | `features/realtime_log/` | `realtime_log_page.dart` | Toteutettu (WebSocket + simulaatio) |
+| Raportit | `features/reports/` | `reports_page.dart` | Toteutettu (staattinen UI) |
+| Varmuuskopiot | `features/backups/` | `backups_page.dart` | Toteutettu (staattinen UI) |
+| Tietokantadok. | `features/documentation/` | `documentation_page.dart` | Toteutettu (BLoC + backend API) |
+| Ohjeet & tuki | `features/help/` | `help_page.dart` | Toteutettu (staattinen UI) |
+| Kohteet | – | `planned_feature_page.dart` | Suunniteltu |
+| Karttanäkymä | – | `planned_feature_page.dart` | Suunniteltu |
+| Tietokanta | – | `planned_feature_page.dart` | Suunniteltu |
+| Lokit & historia | – | `planned_feature_page.dart` | Suunniteltu |
 
 ## Koodigeneraatio
 

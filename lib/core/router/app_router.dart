@@ -6,8 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../auth/auth_bloc.dart';
 import '../auth/auth_state.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
-import '../../features/documentation/presentation/pages/documentation_page.dart';
-import '../../features/home/presentation/pages/home_page.dart';
+import '../../shared/widgets/app_shell.dart';
 
 /// Application router configuration.
 class AppRouter {
@@ -52,15 +51,7 @@ class AppRouter {
           name: 'home',
           pageBuilder: (context, state) => MaterialPage(
             key: state.pageKey,
-            child: const HomePage(),
-          ),
-        ),
-        GoRoute(
-          path: documentation,
-          name: 'documentation',
-          pageBuilder: (context, state) => MaterialPage(
-            key: state.pageKey,
-            child: const DocumentationPage(),
+            child: const AppShell(),
           ),
         ),
       ],
