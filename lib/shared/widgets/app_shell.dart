@@ -10,6 +10,7 @@ import '../../features/backups/presentation/pages/backups_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/help/presentation/pages/help_page.dart';
 import '../../features/import/presentation/pages/import_page.dart';
+import '../../features/import/presentation/pages/sharepoint_browser_page.dart';
 import '../../features/planned/presentation/pages/planned_feature_page.dart';
 import '../../features/realtime_log/presentation/pages/realtime_log_page.dart';
 import '../../features/documentation/presentation/pages/documentation_page.dart';
@@ -41,6 +42,7 @@ class _AppShellState extends State<AppShell> {
       'kartta': 'Karttanäkymä',
       'tietokanta': 'Tietokanta-työkalu',
       'lokit': 'Lokit & historia',
+      'sharepoint': 'SharePoint-tiedostot',
       'dbdocs': 'Tietokantadokumentaatio',
     };
     return titles[_activeView] ?? _activeView;
@@ -162,6 +164,8 @@ class _AppShellState extends State<AppShell> {
         return const ReportsPage(key: ValueKey('raportit'));
       case 'varmuuskopiot':
         return const BackupsPage(key: ValueKey('varmuuskopiot'));
+      case 'sharepoint':
+        return const SharepointBrowserPage(key: ValueKey('sharepoint'));
       case 'dbdocs':
         return const DocumentationPage(key: ValueKey('dbdocs'));
       case 'ohjeet':

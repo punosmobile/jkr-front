@@ -234,6 +234,7 @@ lib/
 |---|---|---|---|
 | Dashboard | `features/dashboard/` | `dashboard_page.dart` | Toteutettu (staattinen UI) |
 | Tietojen tuonti | `features/import/` | `import_page.dart` | Toteutettu (BLoC + repository) |
+| SharePoint | `features/import/` | `sharepoint_browser_page.dart` | Toteutettu (BLoC + backend API) |
 | Reaaliaikainen loki | `features/realtime_log/` | `realtime_log_page.dart` | Toteutettu (WebSocket + simulaatio) |
 | Raportit | `features/reports/` | `reports_page.dart` | Toteutettu (staattinen UI) |
 | Varmuuskopiot | `features/backups/` | `backups_page.dart` | Toteutettu (staattinen UI) |

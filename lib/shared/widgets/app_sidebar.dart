@@ -49,6 +49,7 @@ class AppSidebar extends StatelessWidget {
     SidebarSection(items: [
       SidebarNavItem(id: 'dashboard', label: 'Dashboard', icon: Icons.dashboard_outlined),
       SidebarNavItem(id: 'import', label: 'Tietojen tuonti', icon: Icons.download_outlined),
+      SidebarNavItem(id: 'sharepoint', label: 'SharePoint', icon: Icons.cloud_outlined),
       SidebarNavItem(id: 'realogi', label: 'Reaaliaikainen loki', icon: Icons.play_arrow_outlined),
       SidebarNavItem(id: 'raportit', label: 'Raportit', icon: Icons.grid_view_outlined),
       SidebarNavItem(id: 'varmuuskopiot', label: 'Varmuuskopiot', icon: Icons.backup_outlined),
