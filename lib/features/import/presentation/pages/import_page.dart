@@ -200,7 +200,7 @@ class _SharepointFileRow extends StatelessWidget {
             StatusBadge(text: _badgeText, type: _badgeType),
             const SizedBox(width: 8),
             Text(
-              file.size,
+              file.size.toString(),
               style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
             ),
           ],

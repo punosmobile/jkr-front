@@ -24,7 +24,11 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
   ) async {
     emit(state.copyWith(status: ImportPageStatus.loading));
     try {
+      print('pre sharepoint.');
       final files = await repository.fetchSharepointFiles();
+      print('after sharepoint.');
+      print(files);
+
       emit(state.copyWith(
         status: ImportPageStatus.loaded,
         sharepointFiles: files,

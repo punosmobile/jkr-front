@@ -1,46 +1,53 @@
+import 'dart:async';
+
+import 'package:dio/dio.dart';
+import 'package:jkrfront/core/di/injection.dart';
+import 'package:jkrfront/core/network/dio_client.dart';
+import 'package:jkrfront/features/import/data/models/sharepoint_item.dart';
+
 import '../models/import_file.dart';
 import '../models/import_queue_item.dart';
 
 /// Repository for import operations.
 /// All methods return stub/dummy data for now — no backend calls.
 class ImportRepository {
+  final Dio _dio = getIt<DioClient>().dio;
+
   /// Fetch available files from Sharepoint.
-  Future<List<ImportFile>> fetchSharepointFiles() async {
-    // TODO: Replace with real API call
-    await Future.delayed(const Duration(milliseconds: 300));
-    return const [
-      ImportFile(
-        id: '1',
-        name: 'DVV_Q1_2025.csv',
-        size: '2,4 Mt',
-        badge: ImportFileBadge.uusi,
-        selected: true,
-      ),
-      ImportFile(
-        id: '2',
-        name: 'Kuljetustiedot_Q1_2025.csv',
-        size: '8,1 Mt',
-        badge: ImportFileBadge.paivitys,
-        selected: true,
-      ),
-      ImportFile(
-        id: '3',
-        name: 'Paatostiedot_Q4_2024.xlsx',
-        size: '1,1 Mt',
-        badge: ImportFileBadge.tarkista,
-      ),
-      ImportFile(
-        id: '4',
-        name: 'Kompostointi_Q1_2025.xlsx',
-        size: '0,4 Mt',
-        badge: ImportFileBadge.uusi,
-      ),
-    ];
+  FutureOr<List<ImportFile>> fetchSharepointFiles() async {
+    final sharepointResponse = await _dio.get('/sharepoint/files');
+    
+    return (sharepointResponse.data as List)
+      .map((e) => ImportFile.fromJson(e as Map<String, dynamic>))
+      .toList();
   }
 
   /// Run pre-analysis on selected files.
   Future<List<ImportFile>> analyzeFiles(List<ImportFile> files) async {
-    // TODO: Replace with real API call
+
+    var filePaths = files.map((file) => file.path).toList();
+    print(filePaths);
+
+
+    final analyzedResponse = await _dio.post('/sharepoint/pull', 
+      queryParameters: {'paths': filePaths}
+    );
+
+    /* if (analyzedResponse) {
+      print(files);
+      var analyzed = files.map((f) {
+        f.name
+
+
+        return f.copyWith(
+            analysisStatus: AnalysisStatus.analyzed,
+            analysis: const ImportAnalysis(
+              rowCount: 1938,
+              newCount: 1204,
+              updateCount: 3871,
+            ));
+      });
+    } */
     await Future.delayed(const Duration(milliseconds: 500));
     return files.map((f) {
       switch (f.name) {
