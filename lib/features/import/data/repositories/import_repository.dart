@@ -26,28 +26,34 @@ class ImportRepository {
   Future<List<ImportFile>> analyzeFiles(List<ImportFile> files) async {
 
     var filePaths = files.map((file) => file.path).toList();
-    print(filePaths);
 
-
-    final analyzedResponse = await _dio.post('/sharepoint/pull', 
+    final response = await _dio.post('/sharepoint/pull', 
       queryParameters: {'paths': filePaths}
     );
 
-    /* if (analyzedResponse) {
-      print(files);
-      var analyzed = files.map((f) {
-        f.name
+    final analyzedResponse = SharepointPullResult.fromJson(response.data as Map<String, dynamic>);
 
+    if (analyzedResponse.downloaded.isNotEmpty) {
+      print(analyzedResponse.downloaded);
+
+      var analyzed = files.map((f) {
+      SharepointDownloadedFile? analyzedFile; 
+        for (var file in analyzedResponse.downloaded) {
+          if (file.filename == f.name) {
+            analyzedFile = file;
+            break;
+          }
+        }
 
         return f.copyWith(
             analysisStatus: AnalysisStatus.analyzed,
             analysis: const ImportAnalysis(
-              rowCount: 1938,
-              newCount: 1204,
-              updateCount: 3871,
+              rowCount: analyzedFile ? analyzedFile.rows : null,
+              newCount: 7357,
+              updateCount: 7357,
             ));
       });
-    } */
+    }
     await Future.delayed(const Duration(milliseconds: 500));
     return files.map((f) {
       switch (f.name) {
