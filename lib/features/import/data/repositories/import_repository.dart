@@ -7,6 +7,7 @@ import 'package:jkrfront/features/import/data/models/sharepoint_item.dart';
 
 import '../models/import_file.dart';
 import '../models/import_queue_item.dart';
+import '../models/file_type_enum.dart';
 
 /// Repository for import operations.
 /// All methods return stub/dummy data for now — no backend calls.
@@ -33,10 +34,11 @@ class ImportRepository {
 
     final analyzedResponse = SharepointPullResult.fromJson(response.data as Map<String, dynamic>);
 
+    List<ImportFile> analyzed = [];
     if (analyzedResponse.downloaded.isNotEmpty) {
       print(analyzedResponse.downloaded);
 
-      var analyzed = files.map((f) {
+      analyzed = files.map((f) {
       SharepointDownloadedFile? analyzedFile; 
         for (var file in analyzedResponse.downloaded) {
           if (file.filename == f.name) {
@@ -47,67 +49,51 @@ class ImportRepository {
 
         return f.copyWith(
             analysisStatus: AnalysisStatus.analyzed,
-            analysis: const ImportAnalysis(
-              rowCount: analyzedFile ? analyzedFile.rows : null,
+            analysis: ImportAnalysis(
+              rowCount: analyzedFile?.rows ?? 0,
               newCount: 7357,
               updateCount: 7357,
-            ));
-      });
+              
+            ),
+            pathOnServer: analyzedFile?.targetPath);
+      }).toList();
     }
-    await Future.delayed(const Duration(milliseconds: 500));
-    return files.map((f) {
-      switch (f.name) {
-        case 'DVV_Q1_2025.csv':
-          return f.copyWith(
-            analysisStatus: AnalysisStatus.analyzed,
-            analysis: const ImportAnalysis(
-              rowCount: 1938,
-              newCount: 1204,
-              updateCount: 3871,
-            ),
-          );
-        case 'Kuljetustiedot_Q1_2025.csv':
-          return f.copyWith(
-            analysisStatus: AnalysisStatus.analyzed,
-            analysis: const ImportAnalysis(
-              rowCount: 12479,
-              newCount: 0,
-              updateCount: 12445,
-              unmatchedCount: 34,
-            ),
-          );
-        case 'Paatostiedot_Q4_2024.xlsx':
-          return f.copyWith(
-            analysisStatus: AnalysisStatus.error,
-            analysis: const ImportAnalysis(
-              rowCount: 0,
-              errorMessage:
-                  'Virhe otsikoissa: sarake "paatospvm" puuttuu tai väärässä muodossa',
-            ),
-          );
-        default:
-          return f.copyWith(
-            analysisStatus: AnalysisStatus.analyzed,
-            analysis: const ImportAnalysis(rowCount: 412, newCount: 412),
-          );
-      }
-    }).toList();
+
+    return analyzed;
   }
+  
 
   /// Start import for analyzed files.
   Future<List<ImportQueueItem>> startImport(List<ImportFile> files) async {
-    // TODO: Replace with real API call
-    await Future.delayed(const Duration(milliseconds: 200));
-    return files
+
+    final sortedFiles = files
         .where((f) =>
             f.analysisStatus == AnalysisStatus.analyzed &&
             f.analysis?.hasError != true)
-        .map((f) => ImportQueueItem(
-              id: f.id,
-              fileName: f.name,
-              totalCount: f.analysis?.rowCount ?? 0,
-            ))
-        .toList();
+        .toList()
+      ..sort((a, b) {
+          final aIndex = FileType.values.indexWhere((e) => e.type == a.type);
+          final bIndex = FileType.values.indexWhere((e) => e.type == b.type);
+          final aOrder = aIndex == -1 ? FileType.values.length : aIndex;
+          final bOrder = bIndex == -1 ? FileType.values.length : bIndex;
+          return aOrder.compareTo(bOrder);
+        });
+
+    print('calling backend');
+    final response = await _dio.post('/jkr/batch_import', 
+      data: sortedFiles.map((f) => {
+          'filename': f.name,
+          'type': f.fileType,
+          'target_path': f.pathOnServer,
+        }).toList()
+    );
+    print('returning from backend $response');
+
+    return sortedFiles.map((file) => ImportQueueItem(
+          id: file.id,
+          fileName: file.name,
+          totalCount: file.analysis?.rowCount ?? 0,
+        )).toList();
   }
 
   /// Run velvoitetarkistus for a given date.

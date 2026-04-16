@@ -8,9 +8,11 @@ class ImportFile {
   factory ImportFile.fromJson(Map<String, dynamic> json) {
     return ImportFile(
       id: json['id'] as String,
-      type: json['type'],
+      type: json['type'] as String,
+      fileType: json['type'] as String,
       name: json['name'] as String,
       path: json['path'] as String,
+      pathOnServer: json['target_path'] as String,
       size: (json['size'] as int) >= 1000000
           ? '${((json['size'] as int) / 1000000).toStringAsFixed(1)} MB'
           : '${((json['size'] as int) / 1000).toStringAsFixed(1)} kB',
@@ -28,6 +30,8 @@ class ImportFile {
     required this.webUrl,
     required this.badge,
     required this.path,
+    this.fileType,
+    this.pathOnServer,
     this.lastModified = '',
     this.selected = false,
     this.analysisStatus = AnalysisStatus.pending,
@@ -38,8 +42,10 @@ class ImportFile {
   final String id;
   final String name;
   final String path;
+  final String? pathOnServer;
   final String size;
   final String type;
+  final String? fileType;
   final String webUrl;
   final String lastModified;
   final ImportFileBadge badge;
@@ -52,8 +58,10 @@ class ImportFile {
     String? id,
     String? name,
     String? path,
+    String? pathOnServer,
     String? size,
     String? type,
+    String? fileType,
     ImportFileBadge? badge,
     String? webUrl,
     String? lastModified,
@@ -65,6 +73,8 @@ class ImportFile {
       id: id ?? this.id,
       name: name ?? this.name,
       path: path ?? this.path,
+      pathOnServer: pathOnServer ?? this.pathOnServer,
+      fileType: fileType ?? this.fileType,
       size: size ?? this.size,
       type: type ?? this.type,
       webUrl: webUrl ?? this.webUrl,

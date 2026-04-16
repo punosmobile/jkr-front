@@ -57,22 +57,6 @@ class SharepointPullResult {
 }
 
 class SharepointDownloadedFile {
-  final String filename;
-  final int? size;
-  final String? targetPath;  
-  final String? sharepointPath;
-  final String type;
-  final bool runnable;
-
-  const SharepointDownloadedFile({
-    required this.filename,
-    this.size,
-    this.targetPath,
-    this.sharepointPath,
-    required this.runnable,
-    required this.type,
-  });
-
   factory SharepointDownloadedFile.fromJson(Map<String, dynamic> json) {
     return SharepointDownloadedFile(
       filename: json['filename'] as String? ?? '',
@@ -80,9 +64,29 @@ class SharepointDownloadedFile {
       targetPath: json['target_path'] as String?,
       sharepointPath: json['sharepoint_path'] as String?,
       runnable: json['runnable'] as bool,
-      type: json['type'] as String
+      type: json['type'] as String,
+      rows: json['rows'] as int
     );
   }
+
+  final String filename;
+  final int? size;
+  final String? targetPath;  
+  final String? sharepointPath;
+  final String type;
+  final int rows;
+  final bool runnable;
+
+  const SharepointDownloadedFile({
+    required this.filename,
+    required this.runnable,
+    required this.type,
+    required this.rows,
+    this.size,
+    this.targetPath,
+    this.sharepointPath,
+    
+  });
 }
 
 class SharepointPullError {
