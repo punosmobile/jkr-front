@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_theme.dart';
+import '../../core/config/env_config.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Navigation item definition for the sidebar.
 class SidebarNavItem {
@@ -28,63 +29,64 @@ class SidebarSection {
 class AppSidebar extends StatelessWidget {
   final String activeViewId;
   final String userName;
-  final String envLabel;
+  final String appVersion;
+  final String appBuildNumber;
+  final String? backendVersion;
+  final Environment environment;
   final bool dbConnected;
   final ValueChanged<String> onNavigate;
   final VoidCallback? onLogout;
-  final VoidCallback? onSettingsPressed;
 
   const AppSidebar({
     super.key,
     required this.activeViewId,
     required this.userName,
-    required this.envLabel,
+    required this.appVersion,
+    required this.appBuildNumber,
+    this.backendVersion,
+    required this.environment,
     required this.dbConnected,
     required this.onNavigate,
     this.onLogout,
-    this.onSettingsPressed,
   });
 
-  static const List<SidebarSection> sections = [
+  static List<SidebarSection> buildSections(AppLocalizations l10n) => [
     SidebarSection(items: [
-      SidebarNavItem(id: 'dashboard', label: 'Dashboard', icon: Icons.dashboard_outlined),
-      SidebarNavItem(id: 'import', label: 'Tietojen tuonti', icon: Icons.download_outlined),
-      SidebarNavItem(id: 'sharepoint', label: 'SharePoint', icon: Icons.cloud_outlined),
-      SidebarNavItem(id: 'realogi', label: 'Reaaliaikainen loki', icon: Icons.play_arrow_outlined),
-      SidebarNavItem(id: 'raportit', label: 'Raportit', icon: Icons.grid_view_outlined),
-      SidebarNavItem(id: 'varmuuskopiot', label: 'Varmuuskopiot', icon: Icons.backup_outlined),
-      SidebarNavItem(id: 'dbdocs', label: 'Tietokantadok.', icon: Icons.menu_book_outlined),
-      SidebarNavItem(id: 'ohjeet', label: 'Ohjeet & tuki', icon: Icons.help_outline),
+      SidebarNavItem(id: 'dashboard', label: l10n.navDashboard, icon: Icons.dashboard_outlined),
+      SidebarNavItem(id: 'import', label: l10n.navImport, icon: Icons.download_outlined),
+      SidebarNavItem(id: 'sharepoint', label: l10n.navSharepoint, icon: Icons.cloud_outlined),
+      SidebarNavItem(id: 'realogi', label: l10n.navRealtimeLog, icon: Icons.play_arrow_outlined),
+      SidebarNavItem(id: 'raportit', label: l10n.navReports, icon: Icons.grid_view_outlined),
+      SidebarNavItem(id: 'varmuuskopiot', label: l10n.navBackups, icon: Icons.backup_outlined),
+      SidebarNavItem(id: 'dbdocs', label: l10n.navDbDocs, icon: Icons.menu_book_outlined),
+      SidebarNavItem(id: 'ohjeet', label: l10n.navHelp, icon: Icons.help_outline),
     ]),
-    SidebarSection(header: 'Suunnitellut ominaisuudet', items: [
-      SidebarNavItem(id: 'kohteet', label: 'Kohteet', icon: Icons.apartment_outlined, isPlanned: true),
-      SidebarNavItem(id: 'kartta', label: 'Karttanäkymä', icon: Icons.map_outlined, isPlanned: true),
-      SidebarNavItem(id: 'tietokanta', label: 'Tietokanta', icon: Icons.storage_outlined, isPlanned: true),
-      SidebarNavItem(id: 'lokit', label: 'Lokit & historia', icon: Icons.list_alt_outlined, isPlanned: true),
+    SidebarSection(header: l10n.navPlannedFeatures, items: [
+      SidebarNavItem(id: 'kohteet', label: l10n.navTargets, icon: Icons.apartment_outlined, isPlanned: true),
+      SidebarNavItem(id: 'kartta', label: l10n.navMap, icon: Icons.map_outlined, isPlanned: true),
+      SidebarNavItem(id: 'tietokanta', label: l10n.navDatabase, icon: Icons.storage_outlined, isPlanned: true),
+      SidebarNavItem(id: 'lokit', label: l10n.navLogs, icon: Icons.list_alt_outlined, isPlanned: true),
     ]),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: 240,
-      color: AppTheme.primaryColor,
+      color: environment.color,
       child: Column(
         children: [
-          // Logo area
-          _buildLogoArea(),
-          // DB status
-          _buildDbStatus(),
-          // Navigation
-          Expanded(child: _buildNavigation()),
-          // Bottom area
-          _buildBottomArea(),
+          _buildLogoArea(l10n),
+          _buildDbStatus(l10n),
+          Expanded(child: _buildNavigation(l10n)),
+          _buildBottomArea(l10n),
         ],
       ),
     );
   }
 
-  Widget _buildLogoArea() {
+  Widget _buildLogoArea(AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
       decoration: BoxDecoration(
@@ -96,7 +98,7 @@ class AppSidebar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Lahden seudun\njätehuoltoviranomainen',
+            l10n.sidebarOrgName,
             style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w500,
@@ -106,7 +108,7 @@ class AppSidebar extends StatelessWidget {
           ),
           const SizedBox(height: 1),
           Text(
-            'JKR Tiedonhallinta',
+            l10n.sidebarAppName,
             style: TextStyle(
               fontSize: 10,
               color: Colors.white.withValues(alpha: 0.5),
@@ -114,12 +116,20 @@ class AppSidebar extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'v0.7.5',
+            'Frontend v$appVersion+$appBuildNumber',
             style: TextStyle(
               fontSize: 10,
               color: Colors.white.withValues(alpha: 0.35),
             ),
           ),
+          if (backendVersion != null)
+            Text(
+              'Backend v$backendVersion',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.white.withValues(alpha: 0.35),
+              ),
+            ),
           const SizedBox(height: 6),
           Container(
             width: double.infinity,
@@ -130,7 +140,7 @@ class AppSidebar extends StatelessWidget {
               borderRadius: BorderRadius.circular(5),
             ),
             child: Text(
-              envLabel,
+              environment.label,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 12,
@@ -145,7 +155,7 @@ class AppSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildDbStatus() {
+  Widget _buildDbStatus(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Row(
@@ -160,7 +170,7 @@ class AppSidebar extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            dbConnected ? 'Kantayhteys OK' : 'Ei yhteyttä',
+            dbConnected ? l10n.dbConnectionOk : l10n.dbNoConnection,
             style: TextStyle(
               fontSize: 11,
               color: Colors.white.withValues(alpha: 0.55),
@@ -171,7 +181,8 @@ class AppSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildNavigation() {
+  Widget _buildNavigation(AppLocalizations l10n) {
+    final sections = buildSections(l10n);
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 6),
       children: [
@@ -200,7 +211,7 @@ class AppSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomArea() {
+  Widget _buildBottomArea(AppLocalizations l10n) {
     return Container(
       decoration: BoxDecoration(
         border: Border(
@@ -210,18 +221,10 @@ class AppSidebar extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       child: Column(
         children: [
-          // Settings button
-          _SidebarButton(
-            icon: Icons.settings_outlined,
-            label: 'Ympäristö värit',
-            onTap: onSettingsPressed,
-            hasBorder: false,
-          ),
-          const SizedBox(height: 6),
           // Logout button
           _SidebarButton(
             icon: Icons.logout,
-            label: 'Kirjaudu ulos',
+            label: l10n.logout,
             onTap: onLogout,
             hasBorder: true,
           ),

@@ -24,5 +24,59 @@ class AppLocalizationsFi extends AppLocalizations {
   String get error => 'Virhe';
 
   @override
-  String get retry => 'YritÃ¤ uudelleen';
+  String get retry => 'Yritä uudelleen';
+
+  @override
+  String get sidebarOrgName => 'Lahden seudun\njätehuoltoviranomainen';
+
+  @override
+  String get sidebarAppName => 'JKR Tiedonhallinta';
+
+  @override
+  String get navDashboard => 'Dashboard';
+
+  @override
+  String get navImport => 'Tietojen tuonti';
+
+  @override
+  String get navSharepoint => 'SharePoint';
+
+  @override
+  String get navRealtimeLog => 'Reaaliaikainen loki';
+
+  @override
+  String get navReports => 'Raportit';
+
+  @override
+  String get navBackups => 'Varmuuskopiot';
+
+  @override
+  String get navDbDocs => 'Tietokantadok.';
+
+  @override
+  String get navHelp => 'Ohjeet & tuki';
+
+  @override
+  String get navPlannedFeatures => 'Suunnitellut ominaisuudet';
+
+  @override
+  String get navTargets => 'Kohteet';
+
+  @override
+  String get navMap => 'Karttanäkymä';
+
+  @override
+  String get navDatabase => 'Tietokanta';
+
+  @override
+  String get navLogs => 'Lokit & historia';
+
+  @override
+  String get dbConnectionOk => 'Kantayhteys OK';
+
+  @override
+  String get dbNoConnection => 'Ei yhteyttä';
+
+  @override
+  String get logout => 'Kirjaudu ulos';
 }
