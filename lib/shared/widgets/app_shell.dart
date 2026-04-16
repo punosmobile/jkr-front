@@ -36,6 +36,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
   late final AnimationController _sidebarAnimCtrl;
   late final Animation<double> _sidebarAnimation;
   bool _sidebarCollapsed = false;
+  bool _importActive = false;
 
   static const double _sidebarWidth = 240;
   static const double _collapsedWidth = 48;
@@ -233,10 +234,41 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
                   userName: _parseUsername(),
                   isNarrow: isNarrow,
                 ),
+                if (_importActive) _buildImportBanner(),
                 Expanded(
                   child: widget.child,
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImportBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
+      color: const Color(0xFFD97706),
+      child: Row(
+        children: [
+          const _PulsingDot(),
+          const SizedBox(width: 10),
+          const Text(
+            'Tietojen syöttö käynnissä — Matti Meikäläinen',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            'Arvioitu valmistumisaika: 4 min',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.85),
+              fontSize: 11,
             ),
           ),
         ],
@@ -292,6 +324,50 @@ class _Topbar extends StatelessWidget {
             style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── PULSING DOT ─────────────────────────────────────────────────────────────
+
+class _PulsingDot extends StatefulWidget {
+  const _PulsingDot();
+
+  @override
+  State<_PulsingDot> createState() => _PulsingDotState();
+}
+
+class _PulsingDotState extends State<_PulsingDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0.35, end: 0.9).animate(_ctrl),
+      child: Container(
+        width: 7,
+        height: 7,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+        ),
       ),
     );
   }

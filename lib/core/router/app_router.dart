@@ -77,13 +77,6 @@ class AppRouter {
               ),
             ),
             GoRoute(
-              path: '/sharepoint',
-              name: 'sharepoint',
-              pageBuilder: (_, state) => const NoTransitionPage(
-                child: SharepointBrowserPage(),
-              ),
-            ),
-            GoRoute(
               path: '/realogi',
               name: 'realogi',
               pageBuilder: (_, state) => const NoTransitionPage(
