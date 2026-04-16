@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/config/env_config.dart';
+import '../../core/theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Navigation item definition for the sidebar.
@@ -36,6 +37,7 @@ class AppSidebar extends StatelessWidget {
   final bool dbConnected;
   final ValueChanged<String> onNavigate;
   final VoidCallback? onLogout;
+  final VoidCallback? onCollapse;
 
   const AppSidebar({
     super.key,
@@ -48,6 +50,7 @@ class AppSidebar extends StatelessWidget {
     required this.dbConnected,
     required this.onNavigate,
     this.onLogout,
+    this.onCollapse,
   });
 
   static List<SidebarSection> buildSections(AppLocalizations l10n) => [
@@ -97,6 +100,8 @@ class AppSidebar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Reserve space for the collapse button (rendered by AppShell)
+          if (onCollapse != null) const SizedBox(height: 20),
           Text(
             l10n.sidebarOrgName,
             style: TextStyle(

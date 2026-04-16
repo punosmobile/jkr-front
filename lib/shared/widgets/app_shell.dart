@@ -29,14 +29,26 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin {
   bool _dbConnected = false;
   String? _backendVersion;
   Timer? _healthTimer;
+  late final AnimationController _sidebarAnimCtrl;
+  late final Animation<double> _sidebarAnimation;
+  bool _sidebarCollapsed = false;
+
+  static const double _sidebarWidth = 240;
+  static const double _collapsedWidth = 48;
+  static const _animDuration = Duration(milliseconds: 250);
 
   @override
   void initState() {
     super.initState();
+    _sidebarAnimCtrl = AnimationController(vsync: this, duration: _animDuration);
+    _sidebarAnimation = CurvedAnimation(
+      parent: _sidebarAnimCtrl,
+      curve: Curves.easeInOut,
+    );
     _checkHealth();
     _healthTimer = Timer.periodic(
       const Duration(seconds: 30),
@@ -47,7 +59,17 @@ class _AppShellState extends State<AppShell> {
   @override
   void dispose() {
     _healthTimer?.cancel();
+    _sidebarAnimCtrl.dispose();
     super.dispose();
+  }
+
+  void _toggleSidebar() {
+    setState(() => _sidebarCollapsed = !_sidebarCollapsed);
+    if (_sidebarCollapsed) {
+      _sidebarAnimCtrl.forward();
+    } else {
+      _sidebarAnimCtrl.reverse();
+    }
   }
 
   Future<void> _checkHealth() async {
@@ -132,17 +154,75 @@ class _AppShellState extends State<AppShell> {
         children: [
           // Sidebar — hidden on narrow screens (use drawer instead)
           if (!isNarrow)
-            AppSidebar(
-              activeViewId: activeView,
-              userName: _parseUsername(),
-              appVersion: getIt<PackageInfo>().version,
-              appBuildNumber: getIt<PackageInfo>().buildNumber,
-              backendVersion: _backendVersion,
-              environment: Environment.current,
-              dbConnected: _dbConnected,
-              onNavigate: (id) => context.go('/$id'),
-              onLogout: () =>
-                  context.read<AuthBloc>().add(const AuthLogoutRequested()),
+            AnimatedBuilder(
+              animation: _sidebarAnimation,
+              builder: (context, child) {
+                final t = _sidebarAnimation.value;
+                final width = _sidebarWidth + (_collapsedWidth - _sidebarWidth) * t;
+                // Button position: expanded top-right → collapsed center
+                const expandedLeft = _sidebarWidth - 16 - 20; // 204
+                const collapsedLeft = (_collapsedWidth - 20) / 2; // 14
+                final btnLeft = expandedLeft + (collapsedLeft - expandedLeft) * t;
+                return SizedBox(
+                  width: width,
+                  child: ClipRect(
+                    child: Stack(
+                      children: [
+                        // Full sidebar — fades out as it collapses
+                        Opacity(
+                          opacity: (1 - t * 1.5).clamp(0.0, 1.0),
+                          child: OverflowBox(
+                            alignment: Alignment.centerLeft,
+                            minWidth: _sidebarWidth,
+                            maxWidth: _sidebarWidth,
+                            child: child!,
+                          ),
+                        ),
+                        // Collapsed strip background
+                        if (t > 0)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: Container(
+                                color: Environment.current.color.withValues(
+                                  alpha: t,
+                                ),
+                              ),
+                            ),
+                          ),
+                        // Animated collapse/expand button
+                        Positioned(
+                          left: btnLeft,
+                          top: 14,
+                          child: GestureDetector(
+                            onTap: _toggleSidebar,
+                            child: Transform.rotate(
+                              angle: 3.14159 * t,
+                              child: Icon(
+                                Icons.chevron_left,
+                                size: 20,
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+              child: AppSidebar(
+                activeViewId: activeView,
+                userName: _parseUsername(),
+                appVersion: getIt<PackageInfo>().version,
+                appBuildNumber: getIt<PackageInfo>().buildNumber,
+                backendVersion: _backendVersion,
+                environment: Environment.current,
+                dbConnected: _dbConnected,
+                onNavigate: (id) => context.go('/$id'),
+                onLogout: () =>
+                    context.read<AuthBloc>().add(const AuthLogoutRequested()),
+                onCollapse: _toggleSidebar,
+              ),
             ),
           // Main content area
           Expanded(

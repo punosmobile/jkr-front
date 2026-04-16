@@ -77,6 +77,8 @@ class _MyAppState extends State<MyApp> {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
+        // TODO: Replace with user-selectable locale if/when language switching is implemented.
+        locale: const Locale('fi'),
         supportedLocales: const [
           Locale('en'),
           Locale('fi'),
