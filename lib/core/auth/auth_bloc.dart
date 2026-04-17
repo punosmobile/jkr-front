@@ -38,7 +38,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthState.loading());
     // Redirect-login: sivu ohjautuu Microsoftille.
     // Käyttäjä palaa takaisin ja AuthCheckRequested käsittelee tuloksen.
-    await _authService.login();
+    try {
+      final success = await _authService.login();
+      if (!success) {
+        emit(const AuthState.error('Kirjautuminen epäonnistui'));
+      }
+    } catch (e) {
+      emit(AuthState.error('Kirjautumisvirhe: $e'));
+    }
   }
 
   Future<void> _onLogoutRequested(

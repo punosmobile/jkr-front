@@ -36,18 +36,6 @@ class AuthService {
     }
   }
 
-  /// Kirjaudu sisään popup-menetelmällä
-  Future<bool> loginPopup() async {
-    try {
-      final token = await MsalJsInterop.loginPopup();
-      _cachedToken = token;
-      return token != null;
-    } catch (e) {
-      debugPrint('Azure AD login popup error: $e');
-      return false;
-    }
-  }
-
   /// Kirjaudu ulos
   Future<void> logout() async {
     _cachedToken = null;
