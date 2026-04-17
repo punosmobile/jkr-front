@@ -1,3 +1,5 @@
+import 'package:jkrfront/features/import/data/models/file_type_enum.dart';
+
 /// Represents a file or folder item from SharePoint.
 class SharepointItem {
   final String name;
@@ -65,6 +67,7 @@ class SharepointDownloadedFile {
       sharepointPath: json['sharepoint_path'] as String?,
       runnable: json['runnable'] as bool,
       type: json['type'] as String,
+      fileType: json['fileType'] as String,
       rows: json['rows'] as int
     );
   }
@@ -74,6 +77,7 @@ class SharepointDownloadedFile {
   final String? targetPath;  
   final String? sharepointPath;
   final String type;
+  final String fileType;
   final int rows;
   final bool runnable;
 
@@ -82,6 +86,7 @@ class SharepointDownloadedFile {
     required this.runnable,
     required this.type,
     required this.rows,
+    required this.fileType,
     this.size,
     this.targetPath,
     this.sharepointPath,

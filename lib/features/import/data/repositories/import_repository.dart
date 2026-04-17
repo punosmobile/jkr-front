@@ -34,10 +34,10 @@ class ImportRepository {
 
     final analyzedResponse = SharepointPullResult.fromJson(response.data as Map<String, dynamic>);
 
-    List<ImportFile> analyzed = [];
+    List<ImportFile> sortedFiles = [];
     if (analyzedResponse.downloaded.isNotEmpty) {
-      print(analyzedResponse.downloaded);
-
+      
+      List<ImportFile> analyzed = [];
       analyzed = files.map((f) {
       SharepointDownloadedFile? analyzedFile; 
         for (var file in analyzedResponse.downloaded) {
@@ -53,20 +53,14 @@ class ImportRepository {
               rowCount: analyzedFile?.rows ?? 0,
               newCount: 7357,
               updateCount: 7357,
-              
             ),
-            pathOnServer: analyzedFile?.targetPath);
+            pathOnServer: analyzedFile?.targetPath,
+            fileType: analyzedFile?.fileType as String
+          );
       }).toList();
-    }
 
-    return analyzed;
-  }
-  
-
-  /// Start import for analyzed files.
-  Future<List<ImportQueueItem>> startImport(List<ImportFile> files) async {
-
-    final sortedFiles = files
+      // Sort the files based on predetermined order
+      sortedFiles = analyzed
         .where((f) =>
             f.analysisStatus == AnalysisStatus.analyzed &&
             f.analysis?.hasError != true)
@@ -78,18 +72,26 @@ class ImportRepository {
           final bOrder = bIndex == -1 ? FileType.values.length : bIndex;
           return aOrder.compareTo(bOrder);
         });
+    }
 
-    print('calling backend');
+    return sortedFiles;
+  }
+  
+
+  /// Start import for analyzed files.
+  Future<List<ImportQueueItem>> startImport(List<ImportFile> files) async {
+
+
     final response = await _dio.post('/jkr/batch_import', 
-      data: sortedFiles.map((f) => {
+      data: files.map((f) => {
           'filename': f.name,
-          'type': f.fileType,
+          'type': f.type,
+          'fileType': f.fileType,
           'target_path': f.pathOnServer,
         }).toList()
     );
-    print('returning from backend $response');
 
-    return sortedFiles.map((file) => ImportQueueItem(
+    return files.map((file) => ImportQueueItem(
           id: file.id,
           fileName: file.name,
           totalCount: file.analysis?.rowCount ?? 0,

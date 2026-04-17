@@ -9,10 +9,10 @@ class ImportFile {
     return ImportFile(
       id: json['id'] as String,
       type: json['type'] as String,
-      fileType: json['type'] as String,
+      fileType: json['fileType'] as String?,
       name: json['name'] as String,
-      path: json['path'] as String,
-      pathOnServer: json['target_path'] as String,
+      path: json['path'] as String? ?? '',
+      pathOnServer: json['target_path'] as String?,
       size: (json['size'] as int) >= 1000000
           ? '${((json['size'] as int) / 1000000).toStringAsFixed(1)} MB'
           : '${((json['size'] as int) / 1000).toStringAsFixed(1)} kB',
@@ -30,7 +30,7 @@ class ImportFile {
     required this.webUrl,
     required this.badge,
     required this.path,
-    this.fileType,
+    this.fileType = '',
     this.pathOnServer,
     this.lastModified = '',
     this.selected = false,
