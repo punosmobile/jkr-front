@@ -23,5 +23,19 @@
     "navLogs": "Loggar & historik",
     "dbConnectionOk": "DB-anslutning OK",
     "dbNoConnection": "Ingen anslutning",
-    "logout": "Logga ut"
+    "logout": "Logga ut",
+    "loginBrandBadge": "Lahti JKR",
+    "loginCompactDescription": "Lahtis avfallsregister samlar datainmatning, uppföljning och rapportering i en vy.",
+    "loginBrandTitle": "Lahtis avfalls\nregister",
+    "loginBrandDescription": "Ett enhetligt gränssnitt för datainmatning, dokumentation och daglig uppföljning. Logga in med ditt Microsoft-konto.",
+    "loginTitle": "Logga in",
+    "loginDescription": "Använd din organisations Microsoft-konto.",
+    "loginEnvironmentDevelopment": "Utveckling",
+    "loginEnvironmentTest": "Test",
+    "loginEnvironmentProduction": "Produktion",
+    "loginButton": "Fortsätt med Microsoft",
+    "loginButtonLoading": "Loggar in...",
+    "loginBrowserHint": "Webbläsaren öppnar Microsoft-inloggning och återvänder sedan till den här applikationen.",
+    "loginErrorFailed": "Inloggningen misslyckades. Försök igen.",
+    "loginErrorGeneric": "Inloggningen kunde inte slutföras just nu."
 }

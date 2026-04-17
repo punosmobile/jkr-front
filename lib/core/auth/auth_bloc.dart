@@ -35,10 +35,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final success = await _authService.login();
       if (!success) {
-        emit(const AuthState.error('Login failed'));
+        emit(const AuthState.error(AuthErrorCode.loginFailed));
       }
     } catch (e) {
-      emit(AuthState.error('Login error: $e'));
+      emit(AuthState.error(AuthErrorCode.loginError, errorDetails: e.toString()));
     }
   }
 

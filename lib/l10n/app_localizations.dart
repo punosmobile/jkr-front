@@ -240,6 +240,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Log out'**
   String get logout;
+
+  /// Brand badge text shown on the login page
+  ///
+  /// In en, this message translates to:
+  /// **'Lahti JKR'**
+  String get loginBrandBadge;
+
+  /// Compact header description shown on the login page
+  ///
+  /// In en, this message translates to:
+  /// **'The Lahti Waste Management Register brings data entry, monitoring, and reporting into one view.'**
+  String get loginCompactDescription;
+
+  /// Large brand title shown on the login page
+  ///
+  /// In en, this message translates to:
+  /// **'Lahti Waste Management\nRegister'**
+  String get loginBrandTitle;
+
+  /// Brand-side description shown on the login page
+  ///
+  /// In en, this message translates to:
+  /// **'A unified interface for data entry, documentation, and daily follow-up. Sign in with your Microsoft account.'**
+  String get loginBrandDescription;
+
+  /// Login card title
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get loginTitle;
+
+  /// Login card description
+  ///
+  /// In en, this message translates to:
+  /// **'Use your organization\'s Microsoft account.'**
+  String get loginDescription;
+
+  /// Environment chip label for the development environment on the login page
+  ///
+  /// In en, this message translates to:
+  /// **'Development'**
+  String get loginEnvironmentDevelopment;
+
+  /// Environment chip label for the test environment on the login page
+  ///
+  /// In en, this message translates to:
+  /// **'Test'**
+  String get loginEnvironmentTest;
+
+  /// Environment chip label for the production environment on the login page
+  ///
+  /// In en, this message translates to:
+  /// **'Production'**
+  String get loginEnvironmentProduction;
+
+  /// Primary login button label
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Microsoft'**
+  String get loginButton;
+
+  /// Primary login button label while loading
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in...'**
+  String get loginButtonLoading;
+
+  /// Helper text below the login button
+  ///
+  /// In en, this message translates to:
+  /// **'Your browser opens Microsoft sign-in and returns you to this application.'**
+  String get loginBrowserHint;
+
+  /// Error message shown when starting login fails without additional details
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in failed. Please try again.'**
+  String get loginErrorFailed;
+
+  /// Generic error message shown when login throws an unexpected error
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in could not be completed right now.'**
+  String get loginErrorGeneric;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
