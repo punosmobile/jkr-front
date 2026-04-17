@@ -24,30 +24,18 @@ class AppRouter {
 
   static GoRouter createRouter(AuthBloc authBloc) {
     final refreshNotifier = _AuthBlocRefreshNotifier(authBloc);
-    final startsAuthenticated =
-        authBloc.state.status == AuthStatus.authenticated;
 
     return GoRouter(
-      initialLocation: startsAuthenticated ? dashboard : login,
-      overridePlatformDefaultLocation: true,
+      // Use the browser location when present so deep links still work.
+      // The initialLocation is only a fallback when there is no platform URL.
+      initialLocation: login,
       debugLogDiagnostics: true,
       refreshListenable: refreshNotifier,
       redirect: (context, state) {
-        final authStatus = authBloc.state.status;
-        final isOnLogin = state.matchedLocation == login;
-
-        // While authentication is unresolved, keep the app on the login route
-        // so protected UI cannot render prematurely.
-        if (authStatus == AuthStatus.initial ||
-            authStatus == AuthStatus.loading) {
-          return isOnLogin ? null : login;
-        }
-
-        final isAuthenticated = authStatus == AuthStatus.authenticated;
-
-        if (!isAuthenticated && !isOnLogin) return login;
-        if (isAuthenticated && isOnLogin) return dashboard;
-        return null;
+        return redirectLocation(
+          authStatus: authBloc.state.status,
+          matchedLocation: state.matchedLocation,
+        );
       },
       routes: [
         GoRoute(
@@ -166,6 +154,25 @@ class AppRouter {
         ),
       ),
     );
+  }
+
+  static String? redirectLocation({
+    required AuthStatus authStatus,
+    required String matchedLocation,
+  }) {
+    final isOnLogin = matchedLocation == login;
+
+    // While authentication is unresolved, keep the app on the login route
+    // so protected UI cannot render prematurely.
+    if (authStatus == AuthStatus.initial || authStatus == AuthStatus.loading) {
+      return isOnLogin ? null : login;
+    }
+
+    final isAuthenticated = authStatus == AuthStatus.authenticated;
+
+    if (!isAuthenticated && !isOnLogin) return login;
+    if (isAuthenticated && isOnLogin) return dashboard;
+    return null;
   }
 }
 

@@ -13,6 +13,12 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
+    final isProtectedRequest = options.extra[requiresAuthKey] == true;
+    if (!isProtectedRequest) {
+      handler.next(options);
+      return;
+    }
+
     final authService = getIt<AuthService>();
     final token = await authService.getAccessTokenSilently();
     if (token != null) {

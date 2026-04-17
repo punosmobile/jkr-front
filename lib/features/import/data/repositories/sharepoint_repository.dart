@@ -1,19 +1,14 @@
-import 'package:dio/dio.dart';
-
+import '../../../../core/config/env_config.dart';
 import '../../../../core/di/injection.dart';
-import '../../../../core/network/dio_client.dart';
-import '../../../../core/network/interceptors/auth_interceptor.dart';
+import '../../../../core/network/protected_api_client.dart';
 import '../models/sharepoint_item.dart';
 
 class SharepointRepository {
-  final Dio _dio = getIt<DioClient>().dio;
-  static final Options _authOptions = Options(
-    extra: {AuthInterceptor.requiresAuthKey: true},
-  );
+  final ProtectedApiClient _api = getIt<ProtectedApiClient>();
 
   /// Check whether SharePoint integration is configured on the backend.
   Future<SharepointStatus> fetchStatus() async {
-    final response = await _dio.get('/sharepoint/status', options: _authOptions);
+    final response = await _api.get('/sharepoint/status');
     return SharepointStatus.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -23,10 +18,9 @@ class SharepointRepository {
     if (folder != null && folder.isNotEmpty) {
       queryParams['folder'] = folder;
     }
-    final response = await _dio.get(
+    final response = await _api.get(
       '/sharepoint/files',
       queryParameters: queryParams,
-      options: _authOptions,
     );
     final List<dynamic> data = response.data as List<dynamic>;
     return data
@@ -34,11 +28,10 @@ class SharepointRepository {
         .toList();
   }
 
-  /// Get the download URL for a SharePoint file at [path].
+  /// Get the download URL for a SharePoint file at [filePath].
   /// Returns the full URL to stream/download from the backend.
-  String getDownloadUrl(String path) {
-    final baseUrl = _dio.options.baseUrl;
-    return '$baseUrl/sharepoint/download?path=${Uri.encodeQueryComponent(path)}';
+  String getDownloadUrl(String filePath) {
+    return '${EnvConfig.apiBaseUrl}/sharepoint/download?path=${Uri.encodeQueryComponent(filePath)}';
   }
 
   /// Pull files from SharePoint to the backend server's /data/input directory.
@@ -54,10 +47,9 @@ class SharepointRepository {
     if (subfolder != null && subfolder.isNotEmpty) {
       queryParams['subfolder'] = subfolder;
     }
-    final response = await _dio.post(
+    final response = await _api.post(
       '/sharepoint/pull',
       queryParameters: queryParams,
-      options: _authOptions,
     );
     return SharepointPullResult.fromJson(response.data as Map<String, dynamic>);
   }
