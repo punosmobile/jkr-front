@@ -2,13 +2,17 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/network/interceptors/auth_interceptor.dart';
 import '../models/db_column_doc.dart';
 
 class DocumentationRepository {
   final Dio _dio = getIt<DioClient>().dio;
+  static final Options _authOptions = Options(
+    extra: {AuthInterceptor.requiresAuthKey: true},
+  );
 
   Future<List<DbColumnDoc>> fetchDocumentation() async {
-    final response = await _dio.get('/db/documentation');
+    final response = await _dio.get('/db/documentation', options: _authOptions);
     final List<dynamic> data = response.data as List<dynamic>;
     return data
         .map((e) => DbColumnDoc.fromJson(e as Map<String, dynamic>))

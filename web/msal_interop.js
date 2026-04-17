@@ -3,8 +3,6 @@
 
 let msalInstance = null;
 
-const _logoutFlagKey = "jkr.logged_out";
-
 // Capture the hash before Flutter modifies it.
 const _savedHash = window.location.hash;
 
@@ -56,21 +54,9 @@ function initMsal(clientId, tenantId, redirectUri) {
   }
 
   _msalInitPromise = msalInstance.handleRedirectPromise().then(function (response) {
-    // If the user explicitly logged out of the app, suppress automatic
-    // sign-in restoration until they press the login button again.
-    if (localStorage.getItem(_logoutFlagKey) && !response) {
-      msalInstance.setActiveAccount(null);
-      clearMsalStorage();
-      return null;
-    }
-
     if (response && response.account) {
       msalInstance.setActiveAccount(response.account);
       return response.accessToken || null;
-    }
-    const accounts = msalInstance.getAllAccounts();
-    if (accounts.length > 0) {
-      msalInstance.setActiveAccount(accounts[0]);
     }
     return null;
   }).catch(function (error) {
@@ -83,8 +69,6 @@ function initMsal(clientId, tenantId, redirectUri) {
 
 function msalLogin(scopes) {
   if (!msalInstance) return Promise.reject("MSAL not initialized");
-
-  localStorage.removeItem(_logoutFlagKey);
 
   const loginRequest = {
     scopes: scopes,
@@ -123,12 +107,25 @@ function msalGetToken(scopes) {
     });
 }
 
+function msalGetTokenSilent(scopes) {
+  if (!msalInstance) return Promise.reject("MSAL not initialized");
+
+  const account = msalInstance.getActiveAccount();
+  if (!account) return Promise.resolve(null);
+
+  return msalInstance.acquireTokenSilent({
+    scopes: scopes,
+    account: account,
+  }).then(function (response) {
+    return response.accessToken || null;
+  }).catch(function () {
+    return null;
+  });
+}
+
 function msalLogout() {
   if (!msalInstance) return Promise.resolve();
 
-  // Prevent the next app startup from restoring the session automatically.
-  localStorage.setItem(_logoutFlagKey, "true");
-  msalInstance.setActiveAccount(null);
   _msalInitPromise = null;
 
   const account = msalInstance.getAllAccounts()[0];
@@ -149,19 +146,34 @@ function msalGetAccount() {
   });
 }
 
-function msalIsLoggedIn() {
+function msalHasAccount() {
   if (!msalInstance) return false;
-  if (localStorage.getItem(_logoutFlagKey)) return false;
-
   const account = msalInstance.getActiveAccount();
   const allAccounts = msalInstance.getAllAccounts();
 
+  return account !== null || allAccounts.length > 0;
+}
+
+function msalRestoreActiveAccount() {
+  if (!msalInstance) return false;
+
+  const account = msalInstance.getActiveAccount();
+  if (account) return true;
+
+  const allAccounts = msalInstance.getAllAccounts();
   if (!account && allAccounts.length > 0) {
     msalInstance.setActiveAccount(allAccounts[0]);
     return true;
   }
 
-  return account !== null;
+  return false;
+}
+
+function msalClearSessionData() {
+  if (msalInstance) {
+    msalInstance.setActiveAccount(null);
+  }
+  clearMsalStorage();
 }
 
 function msalClearHash() {

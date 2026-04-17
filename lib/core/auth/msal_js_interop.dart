@@ -16,14 +16,23 @@ external JSPromise<JSAny?> _msalLogin(JSArray<JSString> scopes);
 @JS('msalGetToken')
 external JSPromise<JSString?> _msalGetToken(JSArray<JSString> scopes);
 
+@JS('msalGetTokenSilent')
+external JSPromise<JSString?> _msalGetTokenSilent(JSArray<JSString> scopes);
+
 @JS('msalLogout')
 external JSPromise<JSAny?> _msalLogout();
 
 @JS('msalGetAccount')
 external JSString? _msalGetAccount();
 
-@JS('msalIsLoggedIn')
-external JSBoolean _msalIsLoggedIn();
+@JS('msalHasAccount')
+external JSBoolean _msalHasAccount();
+
+@JS('msalRestoreActiveAccount')
+external JSBoolean _msalRestoreActiveAccount();
+
+@JS('msalClearSessionData')
+external void _msalClearSessionData();
 
 @JS('msalClearHash')
 external void _msalClearHash();
@@ -62,6 +71,14 @@ class MsalJsInterop {
     return result?.toDart;
   }
 
+  /// Gets an access token using silent acquisition only.
+  static Future<String?> getAccessTokenSilently() async {
+    final result =
+        await _msalGetTokenSilent(_scopesToJsArray(EnvConfig.azureScopes))
+            .toDart;
+    return result?.toDart;
+  }
+
   /// Starts sign-out.
   static Future<void> logout() async {
     await _msalLogout().toDart;
@@ -72,6 +89,12 @@ class MsalJsInterop {
     return _msalGetAccount()?.toDart;
   }
 
-  /// Returns whether the app currently considers the user authenticated.
-  static bool get isLoggedIn => _msalIsLoggedIn().toDart;
+  /// Returns whether MSAL currently has an active or cached account.
+  static bool get hasAccount => _msalHasAccount().toDart;
+
+  /// Restores the first cached account as the active account, if needed.
+  static bool restoreActiveAccount() => _msalRestoreActiveAccount().toDart;
+
+  /// Clears MSAL account and storage data controlled by the web layer.
+  static void clearSessionData() => _msalClearSessionData();
 }

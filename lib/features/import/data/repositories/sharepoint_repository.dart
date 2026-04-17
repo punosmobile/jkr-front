@@ -2,14 +2,18 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/network/interceptors/auth_interceptor.dart';
 import '../models/sharepoint_item.dart';
 
 class SharepointRepository {
   final Dio _dio = getIt<DioClient>().dio;
+  static final Options _authOptions = Options(
+    extra: {AuthInterceptor.requiresAuthKey: true},
+  );
 
   /// Check whether SharePoint integration is configured on the backend.
   Future<SharepointStatus> fetchStatus() async {
-    final response = await _dio.get('/sharepoint/status');
+    final response = await _dio.get('/sharepoint/status', options: _authOptions);
     return SharepointStatus.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -22,6 +26,7 @@ class SharepointRepository {
     final response = await _dio.get(
       '/sharepoint/files',
       queryParameters: queryParams,
+      options: _authOptions,
     );
     final List<dynamic> data = response.data as List<dynamic>;
     return data
@@ -52,6 +57,7 @@ class SharepointRepository {
     final response = await _dio.post(
       '/sharepoint/pull',
       queryParameters: queryParams,
+      options: _authOptions,
     );
     return SharepointPullResult.fromJson(response.data as Map<String, dynamic>);
   }

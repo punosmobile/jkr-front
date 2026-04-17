@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:async';
 
 import 'auth_event.dart';
 import 'auth_service.dart';
@@ -6,6 +7,7 @@ import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthService _authService;
+  late final StreamSubscription<bool> _sessionStateSubscription;
 
   AuthBloc({required AuthService authService})
       : _authService = authService,
@@ -16,6 +18,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         ) {
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
+    on<_AuthSessionChanged>(_onSessionChanged);
+
+    _sessionStateSubscription = _authService.sessionStateChanges.listen((isAuthenticated) {
+      add(_AuthSessionChanged(isAuthenticated));
+    });
   }
 
   Future<void> _onLoginRequested(
@@ -43,4 +50,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     // navigate the browser away before Flutter re-renders the login route.
     await _authService.logout();
   }
+
+  void _onSessionChanged(
+    _AuthSessionChanged event,
+    Emitter<AuthState> emit,
+  ) {
+    emit(
+      event.isAuthenticated
+          ? const AuthState.authenticated()
+          : const AuthState.unauthenticated(),
+    );
+  }
+
+  @override
+  Future<void> close() async {
+    await _sessionStateSubscription.cancel();
+    return super.close();
+  }
+}
+
+class _AuthSessionChanged extends AuthEvent {
+  const _AuthSessionChanged(this.isAuthenticated);
+
+  final bool isAuthenticated;
+
+  @override
+  List<Object?> get props => [isAuthenticated];
 }
