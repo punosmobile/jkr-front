@@ -24,19 +24,23 @@ class AppRouter {
 
   static GoRouter createRouter(AuthBloc authBloc) {
     final refreshNotifier = _AuthBlocRefreshNotifier(authBloc);
+    final startsAuthenticated =
+        authBloc.state.status == AuthStatus.authenticated;
 
     return GoRouter(
-      initialLocation: dashboard,
+      initialLocation: startsAuthenticated ? dashboard : login,
+      overridePlatformDefaultLocation: true,
       debugLogDiagnostics: true,
       refreshListenable: refreshNotifier,
       redirect: (context, state) {
         final authStatus = authBloc.state.status;
         final isOnLogin = state.matchedLocation == login;
 
-        // Älä ohjaa mihinkään kun tila on vielä lataamassa
+        // While authentication is unresolved, keep the app on the login route
+        // so protected UI cannot render prematurely.
         if (authStatus == AuthStatus.initial ||
             authStatus == AuthStatus.loading) {
-          return null;
+          return isOnLogin ? null : login;
         }
 
         final isAuthenticated = authStatus == AuthStatus.authenticated;
@@ -165,7 +169,7 @@ class AppRouter {
   }
 }
 
-/// GoRouter refreshListenable joka kuuntelee AuthBlocin tilan muutoksia
+/// GoRouter refreshListenable that mirrors AuthBloc state changes.
 class _AuthBlocRefreshNotifier extends ChangeNotifier {
   late final StreamSubscription<AuthState> _subscription;
 

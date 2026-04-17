@@ -8,7 +8,6 @@ import 'package:jkrfront/l10n/app_localizations.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'core/auth/auth_bloc.dart';
-import 'core/auth/auth_event.dart';
 import 'core/auth/auth_service.dart';
 import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
@@ -49,8 +48,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _authBloc = AuthBloc(authService: getIt<AuthService>())
-      ..add(const AuthCheckRequested());
+    _authBloc = AuthBloc(authService: getIt<AuthService>());
     _router = AppRouter.createRouter(_authBloc);
   }
 

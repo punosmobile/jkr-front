@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'auth_event.dart';
@@ -10,25 +9,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   AuthBloc({required AuthService authService})
       : _authService = authService,
-        super(const AuthState.initial()) {
-    on<AuthCheckRequested>(_onCheckRequested);
+        super(
+          authService.isLoggedIn
+              ? const AuthState.authenticated()
+              : const AuthState.unauthenticated(),
+        ) {
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
-  }
-
-  Future<void> _onCheckRequested(
-    AuthCheckRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(const AuthState.loading());
-    // MSAL on jo initialisoitu main()-funktiossa
-    final loggedIn = _authService.isLoggedIn;
-    debugPrint('[AuthBloc] isLoggedIn=$loggedIn');
-    if (loggedIn) {
-      emit(const AuthState.authenticated());
-    } else {
-      emit(const AuthState.unauthenticated());
-    }
   }
 
   Future<void> _onLoginRequested(
@@ -36,15 +23,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthState.loading());
-    // Redirect-login: sivu ohjautuu Microsoftille.
-    // Käyttäjä palaa takaisin ja AuthCheckRequested käsittelee tuloksen.
+    // Redirect login navigates away from the app. When the user returns,
+    // app startup re-evaluates the authentication state.
     try {
       final success = await _authService.login();
       if (!success) {
-        emit(const AuthState.error('Kirjautuminen epäonnistui'));
+        emit(const AuthState.error('Login failed'));
       }
     } catch (e) {
-      emit(AuthState.error('Kirjautumisvirhe: $e'));
+      emit(AuthState.error('Login error: $e'));
     }
   }
 
@@ -52,7 +39,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
+    // Do not emit unauthenticated here. logoutRedirect() must be allowed to
+    // navigate the browser away before Flutter re-renders the login route.
     await _authService.logout();
-    emit(const AuthState.unauthenticated());
   }
 }

@@ -9,12 +9,12 @@ class AuthService {
   String? _cachedToken;
   bool _initialized = false;
 
-  /// Initialisoi MSAL. Kutsutaan kerran sovelluksen käynnistyksessä.
+  /// Initializes MSAL once during app startup.
   Future<void> initialize() async {
     if (_initialized) return;
     try {
       final token = await MsalJsInterop.initialize();
-      if (token != null) {
+      if (token != null && token.isNotEmpty) {
         _cachedToken = token;
       }
       _initialized = true;
@@ -23,12 +23,11 @@ class AuthService {
     }
   }
 
-  /// Kirjaudu sisään Azure AD:lla (redirect-menetelmä)
+  /// Starts Azure AD sign-in via redirect.
   Future<bool> login() async {
     try {
       await MsalJsInterop.loginRedirect();
-      // Redirect tapahtuu — tämä koodi ei jatku.
-      // Token saadaan kun käyttäjä palaa takaisin (initialize käsittelee).
+      // Redirect navigates away. The token is handled on the next startup.
       return true;
     } catch (e) {
       debugPrint('Azure AD login error: $e');
@@ -36,13 +35,13 @@ class AuthService {
     }
   }
 
-  /// Kirjaudu ulos
+  /// Starts Azure AD sign-out.
   Future<void> logout() async {
     _cachedToken = null;
     await MsalJsInterop.logout();
   }
 
-  /// Hae access token (silent ensin, sitten interactive)
+  /// Gets an access token, preferring silent acquisition first.
   Future<String?> getAccessToken() async {
     try {
       final token = await MsalJsInterop.getAccessToken();
@@ -54,12 +53,12 @@ class AuthService {
     }
   }
 
-  /// Onko käyttäjä kirjautunut (synkroninen tarkistus)
+  /// Returns whether the current app session is authenticated.
   bool get isLoggedIn => MsalJsInterop.isLoggedIn;
 
-  /// Hae viimeisin token synkronisesti (välimuistista)
+  /// Returns the last cached token, if available.
   String? get cachedToken => _cachedToken;
 
-  /// Hae käyttäjän tiedot JSON-muodossa
+  /// Returns the current account payload as JSON.
   String? get accountJson => MsalJsInterop.getAccountJson();
 }
