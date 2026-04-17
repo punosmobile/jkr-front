@@ -169,17 +169,14 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
                   child: ClipRect(
                     child: Stack(
                       children: [
-                        // Full sidebar — fades out as it collapses
-                        Opacity(
-                          opacity: (1 - t * 1.5).clamp(0.0, 1.0),
-                          child: OverflowBox(
-                            alignment: Alignment.centerLeft,
-                            minWidth: _sidebarWidth,
-                            maxWidth: _sidebarWidth,
-                            child: child!,
-                          ),
+                        // Full sidebar — clipped by SizedBox+ClipRect
+                        OverflowBox(
+                          alignment: Alignment.centerLeft,
+                          minWidth: _sidebarWidth,
+                          maxWidth: _sidebarWidth,
+                          child: child!,
                         ),
-                        // Collapsed strip background
+                        // Text cover — same color as sidebar bg, fades in to hide text
                         if (t > 0)
                           Positioned.fill(
                             child: IgnorePointer(
