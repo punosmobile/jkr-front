@@ -16,8 +16,9 @@ enum FileType {
     LIETE_KOMPOSTOINTI('Lietteen_kompostointi'),
     KOMPOSTOINNIN_LOPETUS('Kompostoinnin_lopettami'),
     KULJETUSTIETO('Salpakierto'),
-    LIETE_PELTOLEVITYS('Lietteenpeltolevitys');
+    LIETE_PELTOLEVITYS('Lietteenpeltolevitys'),
+    TUNTEMATON(null);
 
     const FileType(this.type);
-    final String type;
+    final String? type;
 }
