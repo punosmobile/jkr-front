@@ -65,10 +65,10 @@ class SharepointDownloadedFile {
       size: json['size'] as int?,
       targetPath: json['target_path'] as String?,
       sharepointPath: json['sharepoint_path'] as String?,
-      runnable: json['runnable'] as bool,
-      type: json['type'] as String,
-      fileType: json['fileType'] as String,
-      rows: json['rows'] as int
+      runnable: json['runnable'] as bool? ?? false,
+      type: json['type'] as String? ?? '',
+      fileType: json['fileType'] as String? ?? '',
+      rows: json['rows'] as int?
     );
   }
 
@@ -78,15 +78,15 @@ class SharepointDownloadedFile {
   final String? sharepointPath;
   final String type;
   final String fileType;
-  final int rows;
+  final int? rows;
   final bool runnable;
 
   const SharepointDownloadedFile({
     required this.filename,
     required this.runnable,
     required this.type,
-    required this.rows,
     required this.fileType,
+    this.rows,
     this.size,
     this.targetPath,
     this.sharepointPath,

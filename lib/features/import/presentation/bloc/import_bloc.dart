@@ -61,8 +61,6 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
     emit(state.copyWith(isAnalyzing: true));
     try {
       final analyzed = await repository.analyzeFiles(selected);
-      print('analyzed[0].fileType');
-      print(analyzed[0].fileType);
       emit(state.copyWith(
         isAnalyzing: false,
         analyzedFiles: analyzed,

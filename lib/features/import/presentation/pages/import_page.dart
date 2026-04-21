@@ -374,11 +374,11 @@ class _AnalysisCard extends StatelessWidget {
             child: Opacity(
               opacity: canStartImport ? 1.0 : 0.4,
               child: ElevatedButton.icon(
-                onPressed: canStartImport
-                    ? () => context
+                onPressed: /* canStartImport
+                    ? */ () => context
                         .read<ImportBloc>()
                         .add(const ImportStartImport())
-                    : null,
+                    /* : null, */,
                 icon: const Icon(Icons.download, size: 18),
                 label: const Text(
                   'Aloita tietojen tuonti',
