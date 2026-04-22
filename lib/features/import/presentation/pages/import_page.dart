@@ -81,9 +81,11 @@ class _ImportPageView extends StatelessWidget {
                 children: [
                   _VelvoitetarkistusCard(
                     isRunning: state.isRunningVelvoite,
+                    isImporting: state.isImporting,
                   ),
                   _VelvoitteetCard(
                     isRunning: state.isRunningVelvoite,
+                    isImporting: state.isImporting,
                   ),
                 ],
               ),
@@ -446,7 +448,8 @@ class _AnalyzedFileRow extends StatelessWidget {
 
 class _VelvoitetarkistusCard extends StatefulWidget {
   final bool isRunning;
-  const _VelvoitetarkistusCard({required this.isRunning});
+  final bool isImporting;
+  const _VelvoitetarkistusCard({required this.isRunning, required this.isImporting});
 
   @override
   State<_VelvoitetarkistusCard> createState() =>
@@ -507,7 +510,7 @@ class _VelvoitetarkistusCardState extends State<_VelvoitetarkistusCard> {
                 ],
               ),
               ElevatedButton(
-                onPressed: widget.isRunning
+                onPressed: widget.isRunning || widget.isImporting
                     ? null
                     : () {
                         final date = _dateController.text.trim();
@@ -540,7 +543,8 @@ class _VelvoitetarkistusCardState extends State<_VelvoitetarkistusCard> {
 
 class _VelvoitteetCard extends StatelessWidget {
   final bool isRunning;
-  const _VelvoitteetCard({required this.isRunning});
+  final bool isImporting;
+  const _VelvoitteetCard({required this.isRunning, required this.isImporting});
 
   @override
   Widget build(BuildContext context) {
@@ -559,7 +563,7 @@ class _VelvoitteetCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           ElevatedButton(
-            onPressed: isRunning
+            onPressed: isRunning || isImporting
                 ? null
                 : () => context
                     .read<ImportBloc>()

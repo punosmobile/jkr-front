@@ -120,7 +120,7 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
     ImportRunVelvoitetarkistus event,
     Emitter<ImportState> emit,
   ) async {
-    emit(state.copyWith(isRunningVelvoite: true));
+    emit(state.copyWith(isRunningVelvoite: true, isImporting: true));
     try {
       await repository.runVelvoitetarkistus(event.date);
       emit(state.copyWith(isRunningVelvoite: false));
@@ -136,7 +136,7 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
     ImportSetVelvoitteet event,
     Emitter<ImportState> emit,
   ) async {
-    emit(state.copyWith(isRunningVelvoite: true));
+    emit(state.copyWith(isRunningVelvoite: true, isImporting: true));
     try {
       await repository.setVelvoitteet();
       emit(state.copyWith(isRunningVelvoite: false));

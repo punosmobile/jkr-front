@@ -134,8 +134,8 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
           _importRunner = runner;
           _importDescription = description;
         });
-        _importBloc?.add(ImportTaskStatusChanged(isActive));
       }
+      _importBloc?.add(ImportTaskStatusChanged(isActive));
     } catch (_) {}
   }
 
