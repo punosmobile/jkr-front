@@ -11,6 +11,7 @@ import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/help/presentation/pages/help_page.dart';
 import '../../features/import/presentation/pages/import_page.dart';
 import '../../features/import/presentation/pages/sharepoint_browser_page.dart';
+import '../../features/licenses/presentation/pages/licenses_page.dart';
 import '../../features/planned/presentation/pages/planned_feature_page.dart';
 import '../../features/realtime_log/presentation/pages/realtime_log_page.dart';
 import '../../features/documentation/presentation/pages/documentation_page.dart';
@@ -102,6 +103,13 @@ class AppRouter {
               name: 'dbdocs',
               pageBuilder: (_, state) => const NoTransitionPage(
                 child: DocumentationPage(),
+              ),
+            ),
+            GoRoute(
+              path: '/lisenssit',
+              name: 'lisenssit',
+              pageBuilder: (_, state) => const NoTransitionPage(
+                child: LicensesPage(),
               ),
             ),
             GoRoute(

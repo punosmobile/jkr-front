@@ -134,6 +134,35 @@ class AppSidebar extends StatelessWidget {
                 color: Colors.white.withValues(alpha: 0.35),
               ),
             ),
+          const SizedBox(height: 2),
+          // Pieni, huomaamaton linkki avoimen lähdekoodin lisensseihin.
+          InkWell(
+            onTap: () => onNavigate('lisenssit'),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.copyright_outlined,
+                    size: 10,
+                    color: Colors.white.withValues(alpha: 0.45),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Lisenssit',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.white.withValues(alpha: 0.45),
+                      decoration: TextDecoration.underline,
+                      decorationColor:
+                          Colors.white.withValues(alpha: 0.25),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 6),
           Container(
             width: double.infinity,
