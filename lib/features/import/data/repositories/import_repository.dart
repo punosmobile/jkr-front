@@ -103,14 +103,14 @@ class ImportRepository {
   }
 
   /// Run velvoitetarkistus for a given date.
-  Future<void> runVelvoitetarkistus(String date) async {
-    // TODO: Replace with real API call
-    await Future.delayed(const Duration(milliseconds: 300));
+  Future<Response> runVelvoitetarkistus(String date) async {
+    return await _dio.post('/psql/tallenna_velvoite_status', 
+      data: {'pvm': date}
+    );
   }
 
   /// Set velvoitteet based on imported data.
-  Future<void> setVelvoitteet() async {
-    // TODO: Replace with real API call
-    await Future.delayed(const Duration(milliseconds: 300));
+  Future<Response> setVelvoitteet() async {
+    return await _dio.post('/psql/update_velvoitteet');
   }
 }

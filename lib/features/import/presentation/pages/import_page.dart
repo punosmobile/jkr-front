@@ -65,8 +65,7 @@ class _ImportPageView extends StatelessWidget {
                 minChildWidth: 320,
                 spacing: 14,
                 children: [
-                  _SharepointFilesCard(files: state.sharepointFiles),
-                  const _ManualUploadCard(),
+                  _SharepointFilesCard(files: state.sharepointFiles)
                 ],
               ),
               const SizedBox(height: 14),
@@ -235,69 +234,6 @@ class _FileCheckbox extends StatelessWidget {
   }
 }
 
-// ─── MANUAL UPLOAD CARD ──────────────────────────────────────────────────────
-
-class _ManualUploadCard extends StatelessWidget {
-  const _ManualUploadCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return CardContainer(
-      title: 'Tuo tiedosto käsin',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Tiedosto tuodaan erillään Sharepoint-jonosta.',
-            style: TextStyle(
-              fontSize: 11,
-              color: AppTheme.textTertiary,
-              height: 1.55,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.black.withValues(alpha: 0.20),
-                width: 1.5,
-                strokeAlign: BorderSide.strokeAlignInside,
-              ),
-              borderRadius: BorderRadius.circular(7),
-              color: AppTheme.background2,
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.upload_file, size: 22, color: AppTheme.textTertiary),
-                const SizedBox(height: 6),
-                Text.rich(
-                  TextSpan(
-                    text: 'Vedä tiedosto tähän tai ',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.textTertiary,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: 'selaa',
-                        style: TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // ─── ANALYSIS CARD ───────────────────────────────────────────────────────────
 
