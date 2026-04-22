@@ -26,24 +26,16 @@ class AppRouter {
     final refreshNotifier = _AuthBlocRefreshNotifier(authBloc);
 
     return GoRouter(
-      initialLocation: dashboard,
+      // Use the browser location when present so deep links still work.
+      // The initialLocation is only a fallback when there is no platform URL.
+      initialLocation: login,
       debugLogDiagnostics: true,
       refreshListenable: refreshNotifier,
       redirect: (context, state) {
-        final authStatus = authBloc.state.status;
-        final isOnLogin = state.matchedLocation == login;
-
-        // Älä ohjaa mihinkään kun tila on vielä lataamassa
-        if (authStatus == AuthStatus.initial ||
-            authStatus == AuthStatus.loading) {
-          return null;
-        }
-
-        final isAuthenticated = authStatus == AuthStatus.authenticated;
-
-        if (!isAuthenticated && !isOnLogin) return login;
-        if (isAuthenticated && isOnLogin) return dashboard;
-        return null;
+        return redirectLocation(
+          authStatus: authBloc.state.status,
+          matchedLocation: state.matchedLocation,
+        );
       },
       routes: [
         GoRoute(
@@ -163,9 +155,28 @@ class AppRouter {
       ),
     );
   }
+
+  static String? redirectLocation({
+    required AuthStatus authStatus,
+    required String matchedLocation,
+  }) {
+    final isOnLogin = matchedLocation == login;
+
+    // While authentication is unresolved, keep the app on the login route
+    // so protected UI cannot render prematurely.
+    if (authStatus == AuthStatus.initial || authStatus == AuthStatus.loading) {
+      return isOnLogin ? null : login;
+    }
+
+    final isAuthenticated = authStatus == AuthStatus.authenticated;
+
+    if (!isAuthenticated && !isOnLogin) return login;
+    if (isAuthenticated && isOnLogin) return dashboard;
+    return null;
+  }
 }
 
-/// GoRouter refreshListenable joka kuuntelee AuthBlocin tilan muutoksia
+/// GoRouter refreshListenable that mirrors AuthBloc state changes.
 class _AuthBlocRefreshNotifier extends ChangeNotifier {
   late final StreamSubscription<AuthState> _subscription;
 

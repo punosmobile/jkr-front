@@ -1,18 +1,29 @@
 // MSAL.js interop for Flutter web
-// Konfiguraatio tulee Dart-puolelta initMsal()-kutsulla
+// Configuration is passed from Dart via initMsal().
 
 let msalInstance = null;
 
-// Tallenna hash heti sivun latautuessa ennen kuin Flutter muuttaa sitä
+// Capture the hash before Flutter modifies it.
 const _savedHash = window.location.hash;
 
-// Promise joka valmistuu kun MSAL on alustettu (estetään tuplaalustus)
+// Reuse a single initialization promise to avoid double initialization.
 let _msalInitPromise = null;
 
+function clearMsalStorage() {
+  Object.keys(localStorage).forEach(function(key) {
+    const normalized = key.toLowerCase();
+    if (normalized.includes("msal") ||
+        normalized.includes("login.microsoftonline") ||
+        normalized.includes("accesstoken") ||
+        normalized.includes("idtoken") ||
+        normalized.includes("refreshtoken")) {
+      localStorage.removeItem(key);
+    }
+  });
+}
+
 function initMsal(clientId, tenantId, redirectUri) {
-  // Jos MSAL on jo alustettu tai alustumassa, palauta olemassa oleva promise
   if (_msalInitPromise) {
-    console.log("[MSAL] Already initialized, returning existing promise");
     return _msalInitPromise;
   }
 
@@ -37,27 +48,15 @@ function initMsal(clientId, tenantId, redirectUri) {
 
   msalInstance = new msal.PublicClientApplication(msalConfig);
 
-  // Palauta tallennettu hash URL:iin ennen handleRedirectPromise-kutsua
-  // (Flutter path URL strategy saattaa poistaa sen ennen tätä)
+  // Restore the saved hash before handleRedirectPromise().
   if (_savedHash && _savedHash.includes("code=")) {
-    console.log("[MSAL] Restoring saved hash for redirect handling");
     window.location.hash = _savedHash;
   }
 
-  // Käsittele redirect-vastaukset (v2:ssa ei tarvita initialize()-kutsua)
   _msalInitPromise = msalInstance.handleRedirectPromise().then(function (response) {
-    console.log("[MSAL] handleRedirectPromise response:", response);
     if (response && response.account) {
-      console.log("[MSAL] Redirect login onnistui, account:", response.account.username);
       msalInstance.setActiveAccount(response.account);
-      return response.accessToken || "redirect_ok";
-    }
-    // Tarkista onko jo kirjautunut tili
-    const accounts = msalInstance.getAllAccounts();
-    console.log("[MSAL] Existing accounts count:", accounts.length, "accounts:", JSON.stringify(accounts.map(a => a.username)));
-    if (accounts.length > 0) {
-      msalInstance.setActiveAccount(accounts[0]);
-      console.log("[MSAL] Set active account:", accounts[0].username);
+      return response.accessToken || null;
     }
     return null;
   }).catch(function (error) {
@@ -78,19 +77,6 @@ function msalLogin(scopes) {
   return msalInstance.loginRedirect(loginRequest);
 }
 
-function msalLoginPopup(scopes) {
-  if (!msalInstance) return Promise.reject("MSAL not initialized");
-
-  const loginRequest = {
-    scopes: scopes,
-  };
-
-  return msalInstance.loginPopup(loginRequest).then(function (response) {
-    msalInstance.setActiveAccount(response.account);
-    return response.accessToken;
-  });
-}
-
 function msalGetToken(scopes) {
   if (!msalInstance) return Promise.reject("MSAL not initialized");
 
@@ -108,7 +94,8 @@ function msalGetToken(scopes) {
       return response.accessToken;
     })
     .catch(function (error) {
-      // Silent token acquisition failed, try interactive
+      // Fall back to an interactive popup only when silent acquisition is not
+      // possible for the current browser session.
       if (error instanceof msal.InteractionRequiredAuthError) {
         return msalInstance
           .acquireTokenPopup(silentRequest)
@@ -120,9 +107,31 @@ function msalGetToken(scopes) {
     });
 }
 
+function msalGetTokenSilent(scopes) {
+  if (!msalInstance) return Promise.reject("MSAL not initialized");
+
+  const account = msalInstance.getActiveAccount();
+  if (!account) return Promise.resolve(null);
+
+  return msalInstance.acquireTokenSilent({
+    scopes: scopes,
+    account: account,
+  }).then(function (response) {
+    return response.accessToken || null;
+  }).catch(function () {
+    return null;
+  });
+}
+
 function msalLogout() {
   if (!msalInstance) return Promise.resolve();
-  return msalInstance.logoutRedirect();
+
+  _msalInitPromise = null;
+
+  const account = msalInstance.getAllAccounts()[0];
+  return msalInstance.logoutRedirect({
+    account: account || undefined,
+  });
 }
 
 function msalGetAccount() {
@@ -137,25 +146,38 @@ function msalGetAccount() {
   });
 }
 
-function msalIsLoggedIn() {
-  if (!msalInstance) {
-    console.log("[MSAL] isLoggedIn: msalInstance is null");
-    return false;
-  }
+function msalHasAccount() {
+  if (!msalInstance) return false;
   const account = msalInstance.getActiveAccount();
   const allAccounts = msalInstance.getAllAccounts();
-  console.log("[MSAL] isLoggedIn check: activeAccount=", account, "allAccounts=", allAccounts.length);
-  // Jos active account ei ole asetettu mutta tilejä on, aseta ensimmäinen
+
+  return account !== null || allAccounts.length > 0;
+}
+
+function msalRestoreActiveAccount() {
+  if (!msalInstance) return false;
+
+  const account = msalInstance.getActiveAccount();
+  if (account) return true;
+
+  const allAccounts = msalInstance.getAllAccounts();
   if (!account && allAccounts.length > 0) {
     msalInstance.setActiveAccount(allAccounts[0]);
-    console.log("[MSAL] isLoggedIn: auto-set active account:", allAccounts[0].username);
     return true;
   }
-  return account !== null;
+
+  return false;
+}
+
+function msalClearSessionData() {
+  if (msalInstance) {
+    msalInstance.setActiveAccount(null);
+  }
+  clearMsalStorage();
 }
 
 function msalClearHash() {
-  // Puhdista Azure AD:n palauttama #code=... fragmentti URL:stä
+  // Remove the Azure AD #code=... fragment from the URL.
   if (window.location.hash && window.location.hash.includes("code=")) {
     history.replaceState(null, "", window.location.pathname);
   }
