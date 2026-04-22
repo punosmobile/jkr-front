@@ -79,4 +79,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get logout => 'Log out';
+
+  @override
+  String get loginBrandBadge => 'Lahti JKR';
+
+  @override
+  String get loginCompactDescription => 'The Lahti Waste Management Register brings data entry, monitoring, and reporting into one view.';
+
+  @override
+  String get loginBrandTitle => 'Lahti Waste Management\nRegister';
+
+  @override
+  String get loginBrandDescription => 'A unified interface for data entry, documentation, and daily follow-up. Sign in with your Microsoft account.';
+
+  @override
+  String get loginTitle => 'Sign in';
+
+  @override
+  String get loginDescription => 'Use your organization\'s Microsoft account.';
+
+  @override
+  String get loginEnvironmentDevelopment => 'Development';
+
+  @override
+  String get loginEnvironmentTest => 'Test';
+
+  @override
+  String get loginEnvironmentProduction => 'Production';
+
+  @override
+  String get loginButton => 'Continue with Microsoft';
+
+  @override
+  String get loginButtonLoading => 'Signing in...';
+
+  @override
+  String get loginBrowserHint => 'Your browser opens Microsoft sign-in and returns you to this application.';
+
+  @override
+  String get loginErrorFailed => 'Sign-in failed. Please try again.';
+
+  @override
+  String get loginErrorGeneric => 'Sign-in could not be completed right now.';
 }

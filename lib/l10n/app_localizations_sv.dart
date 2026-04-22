@@ -79,4 +79,46 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get logout => 'Logga ut';
+
+  @override
+  String get loginBrandBadge => 'Lahti JKR';
+
+  @override
+  String get loginCompactDescription => 'Lahtis avfallsregister samlar datainmatning, uppföljning och rapportering i en vy.';
+
+  @override
+  String get loginBrandTitle => 'Lahtis avfalls\nregister';
+
+  @override
+  String get loginBrandDescription => 'Ett enhetligt gränssnitt för datainmatning, dokumentation och daglig uppföljning. Logga in med ditt Microsoft-konto.';
+
+  @override
+  String get loginTitle => 'Logga in';
+
+  @override
+  String get loginDescription => 'Använd din organisations Microsoft-konto.';
+
+  @override
+  String get loginEnvironmentDevelopment => 'Utveckling';
+
+  @override
+  String get loginEnvironmentTest => 'Test';
+
+  @override
+  String get loginEnvironmentProduction => 'Produktion';
+
+  @override
+  String get loginButton => 'Fortsätt med Microsoft';
+
+  @override
+  String get loginButtonLoading => 'Loggar in...';
+
+  @override
+  String get loginBrowserHint => 'Webbläsaren öppnar Microsoft-inloggning och återvänder sedan till den här applikationen.';
+
+  @override
+  String get loginErrorFailed => 'Inloggningen misslyckades. Försök igen.';
+
+  @override
+  String get loginErrorGeneric => 'Inloggningen kunde inte slutföras just nu.';
 }

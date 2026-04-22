@@ -79,4 +79,46 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get logout => 'Kirjaudu ulos';
+
+  @override
+  String get loginBrandBadge => 'Lahti JKR';
+
+  @override
+  String get loginCompactDescription => 'Lahden Jätehuollon rekisteri kokoaa tiedonsyötön, seurannan ja raportoinnin samaan näkymään.';
+
+  @override
+  String get loginBrandTitle => 'Lahden Jätehuollon\nrekisteri';
+
+  @override
+  String get loginBrandDescription => 'Yhtenäinen käyttöliittymä tiedonsyöttöön, dokumentaatioon ja päivittäiseen seurantaan. Kirjaudu sisään Microsoft-tilillä.';
+
+  @override
+  String get loginTitle => 'Kirjaudu sisään';
+
+  @override
+  String get loginDescription => 'Käytä organisaatiosi Microsoft-tunnusta.';
+
+  @override
+  String get loginEnvironmentDevelopment => 'Kehitys';
+
+  @override
+  String get loginEnvironmentTest => 'Testi';
+
+  @override
+  String get loginEnvironmentProduction => 'Tuotanto';
+
+  @override
+  String get loginButton => 'Jatka Microsoft-tilillä';
+
+  @override
+  String get loginButtonLoading => 'Kirjaudutaan...';
+
+  @override
+  String get loginBrowserHint => 'Selain avaa Microsoftin kirjautumisen ja palauttaa sinut takaisin tähän sovellukseen.';
+
+  @override
+  String get loginErrorFailed => 'Kirjautuminen epäonnistui. Yritä uudelleen.';
+
+  @override
+  String get loginErrorGeneric => 'Kirjautumista ei voitu suorittaa juuri nyt.';
 }

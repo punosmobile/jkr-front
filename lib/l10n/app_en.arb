@@ -94,5 +94,61 @@
     "logout": "Log out",
     "@logout": {
         "description": "Logout button"
+    },
+    "loginBrandBadge": "Lahti JKR",
+    "@loginBrandBadge": {
+        "description": "Brand badge text shown on the login page"
+    },
+    "loginCompactDescription": "The Lahti Waste Management Register brings data entry, monitoring, and reporting into one view.",
+    "@loginCompactDescription": {
+        "description": "Compact header description shown on the login page"
+    },
+    "loginBrandTitle": "Lahti Waste Management\nRegister",
+    "@loginBrandTitle": {
+        "description": "Large brand title shown on the login page"
+    },
+    "loginBrandDescription": "A unified interface for data entry, documentation, and daily follow-up. Sign in with your Microsoft account.",
+    "@loginBrandDescription": {
+        "description": "Brand-side description shown on the login page"
+    },
+    "loginTitle": "Sign in",
+    "@loginTitle": {
+        "description": "Login card title"
+    },
+    "loginDescription": "Use your organization's Microsoft account.",
+    "@loginDescription": {
+        "description": "Login card description"
+    },
+    "loginEnvironmentDevelopment": "Development",
+    "@loginEnvironmentDevelopment": {
+        "description": "Environment chip label for the development environment on the login page"
+    },
+    "loginEnvironmentTest": "Test",
+    "@loginEnvironmentTest": {
+        "description": "Environment chip label for the test environment on the login page"
+    },
+    "loginEnvironmentProduction": "Production",
+    "@loginEnvironmentProduction": {
+        "description": "Environment chip label for the production environment on the login page"
+    },
+    "loginButton": "Continue with Microsoft",
+    "@loginButton": {
+        "description": "Primary login button label"
+    },
+    "loginButtonLoading": "Signing in...",
+    "@loginButtonLoading": {
+        "description": "Primary login button label while loading"
+    },
+    "loginBrowserHint": "Your browser opens Microsoft sign-in and returns you to this application.",
+    "@loginBrowserHint": {
+        "description": "Helper text below the login button"
+    },
+    "loginErrorFailed": "Sign-in failed. Please try again.",
+    "@loginErrorFailed": {
+        "description": "Error message shown when starting login fails without additional details"
+    },
+    "loginErrorGeneric": "Sign-in could not be completed right now.",
+    "@loginErrorGeneric": {
+        "description": "Generic error message shown when login throws an unexpected error"
     }
 }

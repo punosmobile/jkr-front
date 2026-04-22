@@ -23,5 +23,19 @@
     "navLogs": "Lokit & historia",
     "dbConnectionOk": "Kantayhteys OK",
     "dbNoConnection": "Ei yhteyttä",
-    "logout": "Kirjaudu ulos"
+    "logout": "Kirjaudu ulos",
+    "loginBrandBadge": "Lahti JKR",
+    "loginCompactDescription": "Lahden Jätehuollon rekisteri kokoaa tiedonsyötön, seurannan ja raportoinnin samaan näkymään.",
+    "loginBrandTitle": "Lahden Jätehuollon\nrekisteri",
+    "loginBrandDescription": "Yhtenäinen käyttöliittymä tiedonsyöttöön, dokumentaatioon ja päivittäiseen seurantaan. Kirjaudu sisään Microsoft-tilillä.",
+    "loginTitle": "Kirjaudu sisään",
+    "loginDescription": "Käytä organisaatiosi Microsoft-tunnusta.",
+    "loginEnvironmentDevelopment": "Kehitys",
+    "loginEnvironmentTest": "Testi",
+    "loginEnvironmentProduction": "Tuotanto",
+    "loginButton": "Jatka Microsoft-tilillä",
+    "loginButtonLoading": "Kirjaudutaan...",
+    "loginBrowserHint": "Selain avaa Microsoftin kirjautumisen ja palauttaa sinut takaisin tähän sovellukseen.",
+    "loginErrorFailed": "Kirjautuminen epäonnistui. Yritä uudelleen.",
+    "loginErrorGeneric": "Kirjautumista ei voitu suorittaa juuri nyt."
 }
