@@ -86,7 +86,7 @@ class ImportRepository {
   Future<List<ImportQueueItem>> startImport(List<ImportFile> files) async {
 
 
-    final response = await _dio.post('/jkr/batch_import', 
+    final response = await _dio.post('/jkr/batch_import',
       data: files.map((f) => {
           'filename': f.name,
           'type': f.type,
@@ -95,11 +95,28 @@ class ImportRepository {
         }).toList()
     );
 
+    final taskId = (response.data as Map<String, dynamic>?)?['task_id'] as String?
+        ?? (response.data as Map<String, dynamic>?)?['id'] as String?;
+
     return files.map((file) => ImportQueueItem(
           id: file.id,
           fileName: file.name,
           totalCount: file.analysis?.rowCount ?? 0,
+          taskId: taskId,
         )).toList();
+  }
+
+  /// Fetch the status of a single backend task.
+  Future<({bool isFinished, bool hasError, String? errorOutput})> fetchTaskStatus(String taskId) async {
+    final response = await _dio.get('/tasks/$taskId');
+    final data = response.data as Map<String, dynamic>;
+    final status = data['status'] as String? ?? '';
+    final isFinished = status != 'pending' && status != 'running';
+    final exitCode = data['exit_code'] as int?;
+    final errorText = data['error'] as String? ?? '';
+    final hasError = (exitCode != null && exitCode != 0) || errorText.isNotEmpty;
+    final errorOutput = hasError ? errorText : null;
+    return (isFinished: isFinished, hasError: hasError, errorOutput: errorOutput);
   }
 
   /// Run velvoitetarkistus for a given date.

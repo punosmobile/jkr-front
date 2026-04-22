@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../data/models/import_queue_item.dart';
 import '../../data/repositories/import_repository.dart';
 import 'import_event.dart';
 import 'import_state.dart';
@@ -16,8 +17,45 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
     on<ImportStartImport>(_onStartImport);
     on<ImportRunVelvoitetarkistus>(_onRunVelvoitetarkistus);
     on<ImportSetVelvoitteet>(_onSetVelvoitteet);
-    on<ImportTaskStatusChanged>((event, emit) =>
-        emit(state.copyWith(isImporting: event.isActive)));
+    on<ImportTaskStatusChanged>(_onTaskStatusChanged);
+  }
+
+  Future<void> _onTaskStatusChanged(
+    ImportTaskStatusChanged event,
+    Emitter<ImportState> emit,
+  ) async {
+    emit(state.copyWith(isImporting: event.isActive));
+
+    final pendingItems = state.queueItems.where((i) =>
+        i.taskId != null &&
+        i.status != ImportQueueStatus.completed &&
+        i.status != ImportQueueStatus.error);
+
+    if (!event.isActive && pendingItems.isNotEmpty) {
+      final taskIds = pendingItems
+          .map((i) => i.taskId!)
+          .toSet();
+
+      final updatedItems = List<ImportQueueItem>.from(state.queueItems);
+      for (final taskId in taskIds) {
+        try {
+          final result = await repository.fetchTaskStatus(taskId);
+          if (result.isFinished) {
+            for (int i = 0; i < updatedItems.length; i++) {
+              if (updatedItems[i].taskId == taskId) {
+                updatedItems[i] = updatedItems[i].copyWith(
+                  status: result.hasError
+                      ? ImportQueueStatus.error
+                      : ImportQueueStatus.completed,
+                  errorOutput: result.errorOutput,
+                );
+              }
+            }
+          }
+        } catch (_) {}
+      }
+      emit(state.copyWith(queueItems: updatedItems));
+    }
   }
 
   Future<void> _onLoadFiles(

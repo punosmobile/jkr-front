@@ -682,11 +682,18 @@ class _ImportProgressRow extends StatelessWidget {
                 ),
               ),
               Text(
-                'Käsittelyssä',
-                style: TextStyle(fontSize: 11, color: AppTheme.textTertiary),
+                _statusText,
+                style: TextStyle(fontSize: 11, color: _color),
               ),
             ],
           ),
+          if (item.errorOutput != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              item.errorOutput!,
+              style: TextStyle(fontSize: 11, color: AppTheme.red, height: 1.4),
+            ),
+          ],
           const SizedBox(height: 6),
           /*ClipRRect( // TODO prosessoinnin prosentuaalista seurausta ei ole vielä implementoitu
             borderRadius: BorderRadius.circular(2),
