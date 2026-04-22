@@ -132,6 +132,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retry'**
   String get retry;
+
+  /// Organization name in sidebar
+  ///
+  /// In en, this message translates to:
+  /// **'Lahti region\nwaste management authority'**
+  String get sidebarOrgName;
+
+  /// Application name in sidebar
+  ///
+  /// In en, this message translates to:
+  /// **'JKR Data Management'**
+  String get sidebarAppName;
+
+  /// Navigation: Dashboard
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get navDashboard;
+
+  /// Navigation: Data import
+  ///
+  /// In en, this message translates to:
+  /// **'Data import'**
+  String get navImport;
+
+  /// Navigation: SharePoint
+  ///
+  /// In en, this message translates to:
+  /// **'SharePoint'**
+  String get navSharepoint;
+
+  /// Navigation: Real-time log
+  ///
+  /// In en, this message translates to:
+  /// **'Real-time log'**
+  String get navRealtimeLog;
+
+  /// Navigation: Reports
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get navReports;
+
+  /// Navigation: Backups
+  ///
+  /// In en, this message translates to:
+  /// **'Backups'**
+  String get navBackups;
+
+  /// Navigation: Database documentation
+  ///
+  /// In en, this message translates to:
+  /// **'Database docs'**
+  String get navDbDocs;
+
+  /// Navigation: Help and support
+  ///
+  /// In en, this message translates to:
+  /// **'Help & support'**
+  String get navHelp;
+
+  /// Section header: Planned features
+  ///
+  /// In en, this message translates to:
+  /// **'Planned features'**
+  String get navPlannedFeatures;
+
+  /// Navigation: Targets
+  ///
+  /// In en, this message translates to:
+  /// **'Targets'**
+  String get navTargets;
+
+  /// Navigation: Map view
+  ///
+  /// In en, this message translates to:
+  /// **'Map view'**
+  String get navMap;
+
+  /// Navigation: Database
+  ///
+  /// In en, this message translates to:
+  /// **'Database'**
+  String get navDatabase;
+
+  /// Navigation: Logs and history
+  ///
+  /// In en, this message translates to:
+  /// **'Logs & history'**
+  String get navLogs;
+
+  /// Database connection status: connected
+  ///
+  /// In en, this message translates to:
+  /// **'DB connection OK'**
+  String get dbConnectionOk;
+
+  /// Database connection status: disconnected
+  ///
+  /// In en, this message translates to:
+  /// **'No connection'**
+  String get dbNoConnection;
+
+  /// Logout button
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get logout;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

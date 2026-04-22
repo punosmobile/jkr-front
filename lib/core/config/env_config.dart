@@ -1,5 +1,7 @@
 import 'dart:js_interop';
 
+import 'package:flutter/material.dart';
+
 /// Ajonaikainen konfiguraatio-objekti, jonka nginx generoi
 /// ympäristömuuttujista (runtime_config.js).
 @JS('runtimeConfig')
@@ -10,6 +12,7 @@ extension type _RuntimeConfig._(JSObject _) implements JSObject {
   external String? get azureClientId;
   external String? get azureTenantId;
   external String? get azureRedirectUri;
+  external String? get env;
 }
 
 /// Palauttaa runtime-arvon jos saatavilla, muuten --dart-define-arvon.
@@ -21,15 +24,32 @@ String _resolve(String? runtimeValue, String dartDefineValue) {
 
 /// Environment configuration.
 enum Environment {
-  development,
-  staging,
-  production;
+  development(
+    label: 'Kehitys',
+    color: Color.fromARGB(255, 255, 106, 19), // Radiomasto
+  ),
+  test(
+    label: 'Testi',
+    color: Color.fromARGB(255, 242, 199, 92), // Ohra
+  ),
+  production(
+    label: 'Tuotanto',
+    color: Color.fromARGB(255, 0, 79, 113), // Vesijärven sininen
+  );
+
+  final String label;
+  final Color color;
+
+  const Environment({required this.label, required this.color});
 
   static Environment get current {
-    const envName = String.fromEnvironment('ENV', defaultValue: 'local');
+    final runtimeEnv = _runtimeConfig?.env;
+    final envName = (runtimeEnv != null && runtimeEnv.isNotEmpty)
+        ? runtimeEnv
+        : const String.fromEnvironment('ENV', defaultValue: 'dev');
     return switch (envName) {
       'prod' || 'production' => Environment.production,
-      'staging' => Environment.staging,
+      'test' || 'staging' => Environment.test,
       _ => Environment.development,
     };
   }

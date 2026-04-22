@@ -22,5 +22,77 @@
     "retry": "Retry",
     "@retry": {
         "description": "Retry action"
+    },
+    "sidebarOrgName": "Lahti region\nwaste management authority",
+    "@sidebarOrgName": {
+        "description": "Organization name in sidebar"
+    },
+    "sidebarAppName": "JKR Data Management",
+    "@sidebarAppName": {
+        "description": "Application name in sidebar"
+    },
+    "navDashboard": "Dashboard",
+    "@navDashboard": {
+        "description": "Navigation: Dashboard"
+    },
+    "navImport": "Data import",
+    "@navImport": {
+        "description": "Navigation: Data import"
+    },
+    "navSharepoint": "SharePoint",
+    "@navSharepoint": {
+        "description": "Navigation: SharePoint"
+    },
+    "navRealtimeLog": "Real-time log",
+    "@navRealtimeLog": {
+        "description": "Navigation: Real-time log"
+    },
+    "navReports": "Reports",
+    "@navReports": {
+        "description": "Navigation: Reports"
+    },
+    "navBackups": "Backups",
+    "@navBackups": {
+        "description": "Navigation: Backups"
+    },
+    "navDbDocs": "Database docs",
+    "@navDbDocs": {
+        "description": "Navigation: Database documentation"
+    },
+    "navHelp": "Help & support",
+    "@navHelp": {
+        "description": "Navigation: Help and support"
+    },
+    "navPlannedFeatures": "Planned features",
+    "@navPlannedFeatures": {
+        "description": "Section header: Planned features"
+    },
+    "navTargets": "Targets",
+    "@navTargets": {
+        "description": "Navigation: Targets"
+    },
+    "navMap": "Map view",
+    "@navMap": {
+        "description": "Navigation: Map view"
+    },
+    "navDatabase": "Database",
+    "@navDatabase": {
+        "description": "Navigation: Database"
+    },
+    "navLogs": "Logs & history",
+    "@navLogs": {
+        "description": "Navigation: Logs and history"
+    },
+    "dbConnectionOk": "DB connection OK",
+    "@dbConnectionOk": {
+        "description": "Database connection status: connected"
+    },
+    "dbNoConnection": "No connection",
+    "@dbNoConnection": {
+        "description": "Database connection status: disconnected"
+    },
+    "logout": "Log out",
+    "@logout": {
+        "description": "Logout button"
     }
 }
