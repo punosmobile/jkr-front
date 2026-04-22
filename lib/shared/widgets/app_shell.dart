@@ -16,6 +16,18 @@ import '../../core/di/injection.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
+import '../../features/backups/presentation/pages/backups_page.dart';
+import '../../features/dashboard/presentation/pages/dashboard_page.dart';
+import '../../features/help/presentation/pages/help_page.dart';
+import '../../features/import/data/repositories/import_repository.dart';
+import '../../features/import/presentation/bloc/import_bloc.dart';
+import '../../features/import/presentation/bloc/import_event.dart';
+import '../../features/import/presentation/pages/import_page.dart';
+import '../../features/import/presentation/pages/sharepoint_browser_page.dart';
+import '../../features/planned/presentation/pages/planned_feature_page.dart';
+import '../../features/realtime_log/presentation/pages/realtime_log_page.dart';
+import '../../features/documentation/presentation/pages/documentation_page.dart';
+import '../../features/reports/presentation/pages/reports_page.dart';
 import 'app_sidebar.dart';
 
 /// Main application shell with sidebar navigation and content area.
@@ -30,9 +42,12 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin {
+  String _importRunner = '';
+  String _importDescription = '';
   bool _dbConnected = false;
   String? _backendVersion;
   Timer? _healthTimer;
+  ImportBloc? _importBloc;
   late final AnimationController _sidebarAnimCtrl;
   late final Animation<double> _sidebarAnimation;
   bool _sidebarCollapsed = false;
@@ -50,10 +65,16 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
       parent: _sidebarAnimCtrl,
       curve: Curves.easeInOut,
     );
+    _importBloc = ImportBloc(repository: ImportRepository())
+      ..add(const ImportLoadFiles());
     _checkHealth();
+    _checkTasks();
     _healthTimer = Timer.periodic(
       const Duration(seconds: 30),
-      (_) => _checkHealth(),
+      (_) {
+        _checkHealth();
+        _checkTasks();
+      },
     );
   }
 
@@ -61,6 +82,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
   void dispose() {
     _healthTimer?.cancel();
     _sidebarAnimCtrl.dispose();
+    _importBloc?.close();
     super.dispose();
   }
 
@@ -94,6 +116,30 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
     }
   }
 
+  Future<void> _checkTasks() async {
+    try {
+      final dio = getIt<DioClient>().dio;
+      final response = await dio.get('/tasks');
+      final tasks = response.data as List<dynamic>;
+      final running = tasks
+          .cast<Map<String, dynamic>>()
+          .where((t) => t['status'] == 'running')
+          .toList();
+      final isActive = running.isNotEmpty;
+      final runner = isActive ? (running.first['runner'] as String? ?? '') : '';
+      final description = isActive ? (running.first['description'] as String? ?? '') : '';
+      if (mounted && (isActive != _importActive || runner != _importRunner || description != _importDescription)) {
+        setState(() {
+          _importActive = isActive;
+          _importRunner = runner;
+          _importDescription = description;
+        });
+        _importBloc?.add(ImportTaskStatusChanged(isActive));
+      }
+    } catch (_) {}
+  }
+
+
   /// Derive active view ID from the current route location.
   String _activeViewId(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
@@ -111,6 +157,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
     }
     return viewId;
   }
+
 
   String _parseUsername() {
     final authService = getIt<AuthService>();
@@ -130,7 +177,11 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
     final isNarrow = screenWidth < 800;
     final activeView = _activeViewId(context);
 
-    return Scaffold(
+    _importBloc ??= ImportBloc(repository: ImportRepository())
+      ..add(const ImportLoadFiles());
+    return BlocProvider.value(
+      value: _importBloc!,
+      child: Builder(builder: (context) => Scaffold(
       backgroundColor: AppTheme.background3,
       drawer: isNarrow
           ? Drawer(
@@ -231,7 +282,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
                   userName: _parseUsername(),
                   isNarrow: isNarrow,
                 ),
-                if (_importActive) _buildImportBanner(),
+                if (_importActive) _buildImportBanner(_importRunner),
                 Expanded(
                   child: widget.child,
                 ),
@@ -240,10 +291,10 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
           ),
         ],
       ),
-    );
+    )));
   }
 
-  Widget _buildImportBanner() {
+  Widget _buildImportBanner(String runner) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
@@ -252,9 +303,9 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
         children: [
           const _PulsingDot(),
           const SizedBox(width: 10),
-          const Text(
-            'Tietojen syöttö käynnissä — Matti Meikäläinen',
-            style: TextStyle(
+          Text(
+            'Tietojen syöttö käynnissä — $runner',
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -262,7 +313,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
           ),
           const Spacer(),
           Text(
-            'Arvioitu valmistumisaika: 4 min',
+            '', // TODO lisää arvioitu valmistumisaikalaskelma tähän
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.85),
               fontSize: 11,

@@ -51,8 +51,8 @@ class ImportRepository {
               analysisStatus: AnalysisStatus.analyzed,
               analysis: ImportAnalysis(
                 rowCount: analyzedFile?.rows ?? 0,
-                newCount: 7357,
-                updateCount: 7357,
+                newCount: 0, // Näiden selvittäminen käytännössä vaatisi aineiston sisäänlukua. Ei käsitellä vielä
+                updateCount: 0,
               ),
               pathOnServer: analyzedFile?.targetPath,
               fileType: analyzedFile?.fileType as String

@@ -8,7 +8,6 @@ import '../../../../shared/widgets/status_badge.dart';
 import '../../../../shared/widgets/term_line.dart';
 import '../../data/models/import_file.dart';
 import '../../data/models/import_queue_item.dart';
-import '../../data/repositories/import_repository.dart';
 import '../bloc/import_bloc.dart';
 import '../bloc/import_event.dart';
 import '../bloc/import_state.dart';
@@ -18,11 +17,7 @@ class ImportPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => ImportBloc(repository: ImportRepository())
-        ..add(const ImportLoadFiles()),
-      child: const _ImportPageView(),
-    );
+    return const _ImportPageView();
   }
 }
 
@@ -195,8 +190,8 @@ class _SharepointFileRow extends StatelessWidget {
                 file.name,
                 style: TextStyle(fontSize: 12, color: AppTheme.textPrimary),
               ),
-            ),
-            StatusBadge(text: _badgeText, type: _badgeType),
+            ), // TODO tunnista onko tiedosto ajettu aiemmin järjestelmään
+            /* StatusBadge(text: _badgeText, type: _badgeType), */
             const SizedBox(width: 8),
             Text(
               file.size.toString(),
@@ -310,11 +305,12 @@ class _AnalysisCard extends StatelessWidget {
             child: Opacity(
               opacity: canStartImport ? 1.0 : 0.4,
               child: ElevatedButton.icon(
-                onPressed: /* canStartImport
-                    ? */ () => context
+                onPressed: canStartImport
+                    ? () => {
+                      context
                         .read<ImportBloc>()
-                        .add(const ImportStartImport())
-                    /* : null, */,
+                        .add(const ImportStartImport())}
+                    : null,
                 icon: const Icon(Icons.download, size: 18),
                 label: const Text(
                   'Aloita tietojen tuonti',
@@ -599,7 +595,7 @@ class _ImportQueueCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CardContainer(
-      title: 'Tuontijono',
+      title: 'Käsittelyyn lähetetyt tiedostot',
       child: Column(
         children: [
           for (int i = 0; i < items.length; i++) ...[
@@ -607,7 +603,7 @@ class _ImportQueueCard extends StatelessWidget {
             _ImportProgressRow(item: items[i]),
           ],
           const SizedBox(height: 10),
-          // Terminal
+          /* // Terminal // TODO lisätään lokin haku
           Container(
             width: double.infinity,
             height: 110,
@@ -635,7 +631,7 @@ class _ImportQueueCard extends StatelessWidget {
                 ],
               ),
             ),
-          ),
+          ), */
         ],
       ),
     );
@@ -682,13 +678,13 @@ class _ImportProgressRow extends StatelessWidget {
                 ),
               ),
               Text(
-                _statusText,
+                'Käsittelyssä',
                 style: TextStyle(fontSize: 11, color: AppTheme.textTertiary),
               ),
             ],
           ),
           const SizedBox(height: 6),
-          ClipRRect(
+          /*ClipRRect( // TODO prosessoinnin prosentuaalista seurausta ei ole vielä implementoitu
             borderRadius: BorderRadius.circular(2),
             child: LinearProgressIndicator(
               value: item.progress,
@@ -698,7 +694,7 @@ class _ImportProgressRow extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Row(
+           Row( 
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
@@ -715,7 +711,7 @@ class _ImportProgressRow extends StatelessWidget {
                       TextStyle(fontSize: 11, color: AppTheme.textTertiary),
                 ),
             ],
-          ),
+          ), */
         ],
       ),
     );

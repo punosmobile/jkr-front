@@ -16,6 +16,8 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
     on<ImportStartImport>(_onStartImport);
     on<ImportRunVelvoitetarkistus>(_onRunVelvoitetarkistus);
     on<ImportSetVelvoitteet>(_onSetVelvoitteet);
+    on<ImportTaskStatusChanged>((event, emit) =>
+        emit(state.copyWith(isImporting: event.isActive)));
   }
 
   Future<void> _onLoadFiles(

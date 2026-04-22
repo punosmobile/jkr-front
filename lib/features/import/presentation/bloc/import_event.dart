@@ -52,3 +52,9 @@ class ImportUploadFile extends ImportEvent {
   final String fileName;
   const ImportUploadFile(this.fileName);
 }
+
+/// Update import active status based on backend task polling.
+class ImportTaskStatusChanged extends ImportEvent {
+  const ImportTaskStatusChanged(this.isActive);
+  final bool isActive;
+}
