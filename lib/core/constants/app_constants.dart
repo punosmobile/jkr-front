@@ -11,6 +11,7 @@ class AppConstants {
   static const String storageKeyUserId = 'user_id';
   static const String storageKeyThemeMode = 'theme_mode';
   static const String storageKeyLanguage = 'language';
+  static const String storageKeyTrackedReportTaskId = 'tracked_report_task_id';
   
   // UI
   static const double defaultPadding = 16.0;
