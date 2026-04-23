@@ -542,15 +542,11 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
   }
 
   bool _isActiveReportTask(ReportTaskInfo task) {
-    final isActive = task.status == ReportTaskStatus.pending ||
-        task.status == ReportTaskStatus.running;
-    return isActive && _isReportTask(task);
+    return task.isActive && _isReportTask(task);
   }
 
   bool _isReportTask(ReportTaskInfo task) {
-    final isReportCommand = task.command.startsWith('jkr raportti ');
-    final isReportDescription = task.description.startsWith('Raportti:');
-    return isReportCommand || isReportDescription;
+    return task.isReportTask;
   }
 
   bool _hasSharepointUrl(ReportTaskInfo task) {

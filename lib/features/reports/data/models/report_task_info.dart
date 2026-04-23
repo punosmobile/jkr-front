@@ -1,3 +1,4 @@
+import '../../../../core/tasks/app_task_type.dart';
 import 'report_task_response.dart';
 
 class ReportTaskFile {
@@ -30,6 +31,7 @@ class ReportTaskInfo {
   const ReportTaskInfo({
     required this.id,
     required this.status,
+    required this.taskType,
     required this.command,
     required this.description,
     required this.output,
@@ -39,6 +41,7 @@ class ReportTaskInfo {
 
   final String id;
   final ReportTaskStatus status;
+  final AppTaskType taskType;
   final String command;
   final String description;
   final String output;
@@ -48,6 +51,7 @@ class ReportTaskInfo {
   ReportTaskInfo copyWith({
     String? id,
     ReportTaskStatus? status,
+    AppTaskType? taskType,
     String? command,
     String? description,
     String? output,
@@ -57,6 +61,7 @@ class ReportTaskInfo {
     return ReportTaskInfo(
       id: id ?? this.id,
       status: status ?? this.status,
+      taskType: taskType ?? this.taskType,
       command: command ?? this.command,
       description: description ?? this.description,
       output: output ?? this.output,
@@ -71,6 +76,11 @@ class ReportTaskInfo {
     return ReportTaskInfo(
       id: json['id'] as String? ?? '',
       status: ReportTaskStatus.fromJson(json['status'] as String? ?? 'failed'),
+      taskType: AppTaskType.fromApiValue(
+        (json['taskType'] ?? json['task_type']) as String?,
+        command: json['command'] as String? ?? '',
+        description: json['description'] as String? ?? '',
+      ),
       command: json['command'] as String? ?? '',
       description: json['description'] as String? ?? '',
       output: json['output'] as String? ?? '',
@@ -84,6 +94,11 @@ class ReportTaskInfo {
   String? get latestOutputLine => _lastNonEmptyLine(output);
 
   String? get latestErrorLine => _lastNonEmptyLine(error);
+
+  bool get isActive =>
+      status == ReportTaskStatus.pending || status == ReportTaskStatus.running;
+
+  bool get isReportTask => taskType.isReport;
 
   static String? _lastNonEmptyLine(String source) {
     final lines = source

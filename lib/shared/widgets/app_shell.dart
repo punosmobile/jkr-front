@@ -180,11 +180,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
   }
 
   bool _isActiveReportTask(ReportTaskInfo task) {
-    final isReportCommand = task.command.startsWith('jkr raportti ');
-    final isReportDescription = task.description.startsWith('Raportti:');
-    final isActive = task.status == ReportTaskStatus.pending ||
-        task.status == ReportTaskStatus.running;
-    return isActive && (isReportCommand || isReportDescription);
+    return task.isActive && task.isReportTask;
   }
 
   /// Derive active view ID from the current route location.
