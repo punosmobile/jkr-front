@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/tasks/task_activity_cubit.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/card_container.dart';
@@ -58,10 +59,13 @@ class _ReportsViewState extends State<_ReportsView> {
   // Screen layout.
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ReportsBloc, ReportsState>(
-      builder: (context, state) {
+    return BlocBuilder<TaskActivityCubit, TaskActivityState>(
+      builder: (context, activityState) {
+        return BlocBuilder<ReportsBloc, ReportsState>(
+          builder: (context, state) {
         final bloc = context.read<ReportsBloc>();
         final l10n = AppLocalizations.of(context)!;
+        final isImportActive = activityState.isImportActive;
         if (_dateController.text != state.tarkastelupvm) {
           _dateController.value = TextEditingValue(
             text: state.tarkastelupvm,
@@ -70,7 +74,7 @@ class _ReportsViewState extends State<_ReportsView> {
         }
 
         return SingleChildScrollView(
-      // Dialog interactions.
+          // Dialog interactions.
           padding: const EdgeInsets.all(22),
           child: Column(
             children: [
@@ -188,11 +192,13 @@ class _ReportsViewState extends State<_ReportsView> {
                       runSpacing: 8,
                       children: [
                         ElevatedButton.icon(
-                          onPressed: () => bloc.add(
-                            ReportsRunRequested(
-                              locale: Localizations.localeOf(context),
-                            ),
-                          ),
+                          onPressed: isImportActive
+                              ? null
+                              : () => bloc.add(
+                                  ReportsRunRequested(
+                                    locale: Localizations.localeOf(context),
+                                  ),
+                                ),
                           icon: const Icon(Icons.table_chart_outlined, size: 16),
                           label: Text(
                             state.reportRuns.isEmpty
@@ -221,6 +227,8 @@ class _ReportsViewState extends State<_ReportsView> {
               }),
             ],
           ),
+        );
+          },
         );
       },
     );

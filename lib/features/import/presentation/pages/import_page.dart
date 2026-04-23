@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/tasks/task_activity_cubit.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/card_container.dart';
 import '../../../../shared/widgets/responsive_grid.dart';
@@ -8,7 +9,6 @@ import '../../../../shared/widgets/status_badge.dart';
 import '../../../../shared/widgets/term_line.dart';
 import '../../data/models/import_file.dart';
 import '../../data/models/import_queue_item.dart';
-import '../../data/repositories/import_repository.dart';
 import '../bloc/import_bloc.dart';
 import '../bloc/import_event.dart';
 import '../bloc/import_state.dart';
@@ -18,11 +18,7 @@ class ImportPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => ImportBloc(repository: ImportRepository())
-        ..add(const ImportLoadFiles()),
-      child: const _ImportPageView(),
-    );
+    return const _ImportPageView();
   }
 }
 
@@ -31,6 +27,9 @@ class _ImportPageView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final activityState = context.watch<TaskActivityCubit>().state;
+    final isReportsActive = activityState.isReportActive;
+
     return BlocBuilder<ImportBloc, ImportState>(
       builder: (context, state) {
         if (state.status == ImportPageStatus.loading) {
@@ -65,8 +64,10 @@ class _ImportPageView extends StatelessWidget {
                 minChildWidth: 320,
                 spacing: 14,
                 children: [
-                  _SharepointFilesCard(files: state.sharepointFiles),
-                  const _ManualUploadCard(),
+                  _SharepointFilesCard(
+                    files: state.sharepointFiles,
+                    isReportsActive: isReportsActive,
+                  )
                 ],
               ),
               const SizedBox(height: 14),
@@ -77,6 +78,7 @@ class _ImportPageView extends StatelessWidget {
                   isAnalyzing: state.isAnalyzing,
                   hasErrors: state.hasAnalysisErrors,
                   canStartImport: state.canStartImport,
+                  isReportsActive: isReportsActive,
                 ),
               if (state.analyzedFiles.isNotEmpty || state.isAnalyzing)
                 const SizedBox(height: 14),
@@ -87,9 +89,13 @@ class _ImportPageView extends StatelessWidget {
                 children: [
                   _VelvoitetarkistusCard(
                     isRunning: state.isRunningVelvoite,
+                    isImporting: state.isImporting,
+                    isReportsActive: isReportsActive,
                   ),
                   _VelvoitteetCard(
                     isRunning: state.isRunningVelvoite,
+                    isImporting: state.isImporting,
+                    isReportsActive: isReportsActive,
                   ),
                 ],
               ),
@@ -112,7 +118,12 @@ class _ImportPageView extends StatelessWidget {
 
 class _SharepointFilesCard extends StatelessWidget {
   final List<ImportFile> files;
-  const _SharepointFilesCard({required this.files});
+  final bool isReportsActive;
+
+  const _SharepointFilesCard({
+    required this.files,
+    required this.isReportsActive,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +142,9 @@ class _SharepointFilesCard extends StatelessWidget {
                   prev.isAnalyzing != curr.isAnalyzing,
               builder: (context, state) {
                 return ElevatedButton(
-                  onPressed: state.selectedFileCount > 0 && !state.isAnalyzing
+                  onPressed: state.selectedFileCount > 0 &&
+                          !state.isAnalyzing &&
+                          !isReportsActive
                       ? () => context
                           .read<ImportBloc>()
                           .add(const ImportAnalyzeFiles())
@@ -196,11 +209,11 @@ class _SharepointFileRow extends StatelessWidget {
                 file.name,
                 style: TextStyle(fontSize: 12, color: AppTheme.textPrimary),
               ),
-            ),
-            StatusBadge(text: _badgeText, type: _badgeType),
+            ), // TODO tunnista onko tiedosto ajettu aiemmin järjestelmään
+            /* StatusBadge(text: _badgeText, type: _badgeType), */
             const SizedBox(width: 8),
             Text(
-              file.size,
+              file.size.toString(),
               style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
             ),
           ],
@@ -235,69 +248,6 @@ class _FileCheckbox extends StatelessWidget {
   }
 }
 
-// ─── MANUAL UPLOAD CARD ──────────────────────────────────────────────────────
-
-class _ManualUploadCard extends StatelessWidget {
-  const _ManualUploadCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return CardContainer(
-      title: 'Tuo tiedosto käsin',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Tiedosto tuodaan erillään Sharepoint-jonosta.',
-            style: TextStyle(
-              fontSize: 11,
-              color: AppTheme.textTertiary,
-              height: 1.55,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.black.withValues(alpha: 0.20),
-                width: 1.5,
-                strokeAlign: BorderSide.strokeAlignInside,
-              ),
-              borderRadius: BorderRadius.circular(7),
-              color: AppTheme.background2,
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.upload_file, size: 22, color: AppTheme.textTertiary),
-                const SizedBox(height: 6),
-                Text.rich(
-                  TextSpan(
-                    text: 'Vedä tiedosto tähän tai ',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.textTertiary,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: 'selaa',
-                        style: TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // ─── ANALYSIS CARD ───────────────────────────────────────────────────────────
 
@@ -306,16 +256,20 @@ class _AnalysisCard extends StatelessWidget {
   final bool isAnalyzing;
   final bool hasErrors;
   final bool canStartImport;
+  final bool isReportsActive;
 
   const _AnalysisCard({
     required this.files,
     required this.isAnalyzing,
     required this.hasErrors,
     required this.canStartImport,
+    required this.isReportsActive,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveCanStartImport = canStartImport && !isReportsActive;
+
     return CardContainer(
       title: 'Esianalyysi ja tuontijärjestys',
       child: Column(
@@ -372,12 +326,13 @@ class _AnalysisCard extends StatelessWidget {
           const SizedBox(height: 12),
           Center(
             child: Opacity(
-              opacity: canStartImport ? 1.0 : 0.4,
+              opacity: effectiveCanStartImport ? 1.0 : 0.4,
               child: ElevatedButton.icon(
-                onPressed: canStartImport
-                    ? () => context
+                onPressed: effectiveCanStartImport
+                    ? () => {
+                      context
                         .read<ImportBloc>()
-                        .add(const ImportStartImport())
+                        .add(const ImportStartImport())}
                     : null,
                 icon: const Icon(Icons.download, size: 18),
                 label: const Text(
@@ -514,7 +469,14 @@ class _AnalyzedFileRow extends StatelessWidget {
 
 class _VelvoitetarkistusCard extends StatefulWidget {
   final bool isRunning;
-  const _VelvoitetarkistusCard({required this.isRunning});
+  final bool isImporting;
+  final bool isReportsActive;
+
+  const _VelvoitetarkistusCard({
+    required this.isRunning,
+    required this.isImporting,
+    required this.isReportsActive,
+  });
 
   @override
   State<_VelvoitetarkistusCard> createState() =>
@@ -575,7 +537,10 @@ class _VelvoitetarkistusCardState extends State<_VelvoitetarkistusCard> {
                 ],
               ),
               ElevatedButton(
-                onPressed: widget.isRunning
+                onPressed:
+                  widget.isRunning ||
+                    widget.isImporting ||
+                    widget.isReportsActive
                     ? null
                     : () {
                         final date = _dateController.text.trim();
@@ -608,7 +573,14 @@ class _VelvoitetarkistusCardState extends State<_VelvoitetarkistusCard> {
 
 class _VelvoitteetCard extends StatelessWidget {
   final bool isRunning;
-  const _VelvoitteetCard({required this.isRunning});
+  final bool isImporting;
+  final bool isReportsActive;
+
+  const _VelvoitteetCard({
+    required this.isRunning,
+    required this.isImporting,
+    required this.isReportsActive,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -627,7 +599,7 @@ class _VelvoitteetCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           ElevatedButton(
-            onPressed: isRunning
+            onPressed: isRunning || isImporting || isReportsActive
                 ? null
                 : () => context
                     .read<ImportBloc>()
@@ -663,7 +635,7 @@ class _ImportQueueCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CardContainer(
-      title: 'Tuontijono',
+      title: 'Käsittelyyn lähetetyt tiedostot',
       child: Column(
         children: [
           for (int i = 0; i < items.length; i++) ...[
@@ -671,7 +643,7 @@ class _ImportQueueCard extends StatelessWidget {
             _ImportProgressRow(item: items[i]),
           ],
           const SizedBox(height: 10),
-          // Terminal
+          /* // Terminal // TODO lisätään lokin haku
           Container(
             width: double.infinity,
             height: 110,
@@ -699,7 +671,7 @@ class _ImportQueueCard extends StatelessWidget {
                 ],
               ),
             ),
-          ),
+          ), */
         ],
       ),
     );
@@ -747,12 +719,19 @@ class _ImportProgressRow extends StatelessWidget {
               ),
               Text(
                 _statusText,
-                style: TextStyle(fontSize: 11, color: AppTheme.textTertiary),
+                style: TextStyle(fontSize: 11, color: _color),
               ),
             ],
           ),
+          if (item.errorOutput != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              item.errorOutput!,
+              style: TextStyle(fontSize: 11, color: AppTheme.red, height: 1.4),
+            ),
+          ],
           const SizedBox(height: 6),
-          ClipRRect(
+          /*ClipRRect( // TODO prosessoinnin prosentuaalista seurausta ei ole vielä implementoitu
             borderRadius: BorderRadius.circular(2),
             child: LinearProgressIndicator(
               value: item.progress,
@@ -762,7 +741,7 @@ class _ImportProgressRow extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Row(
+           Row( 
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
@@ -779,7 +758,7 @@ class _ImportProgressRow extends StatelessWidget {
                       TextStyle(fontSize: 11, color: AppTheme.textTertiary),
                 ),
             ],
-          ),
+          ), */
         ],
       ),
     );

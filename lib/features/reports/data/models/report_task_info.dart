@@ -34,6 +34,7 @@ class ReportTaskInfo {
     required this.id,
     required this.status,
     required this.taskType,
+    required this.runner,
     required this.command,
     required this.description,
     required this.output,
@@ -44,6 +45,7 @@ class ReportTaskInfo {
   final String id;
   final ReportTaskStatus status;
   final AppTaskType taskType;
+  final String runner;
   final String command;
   final String description;
   final String output;
@@ -54,6 +56,7 @@ class ReportTaskInfo {
     String? id,
     ReportTaskStatus? status,
     AppTaskType? taskType,
+    String? runner,
     String? command,
     String? description,
     String? output,
@@ -64,6 +67,7 @@ class ReportTaskInfo {
       id: id ?? this.id,
       status: status ?? this.status,
       taskType: taskType ?? this.taskType,
+      runner: runner ?? this.runner,
       command: command ?? this.command,
       description: description ?? this.description,
       output: output ?? this.output,
@@ -83,6 +87,7 @@ class ReportTaskInfo {
         command: json['command'] as String? ?? '',
         description: json['description'] as String? ?? '',
       ),
+      runner: json['runner'] as String? ?? '',
       command: json['command'] as String? ?? '',
       description: json['description'] as String? ?? '',
       output: json['output'] as String? ?? '',

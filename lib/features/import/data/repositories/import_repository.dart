@@ -1,111 +1,133 @@
+import 'dart:async';
+
+import 'package:dio/dio.dart';
+import 'package:jkrfront/core/di/injection.dart';
+import 'package:jkrfront/core/network/dio_client.dart';
+import 'package:jkrfront/features/import/data/models/sharepoint_item.dart';
+
 import '../models/import_file.dart';
 import '../models/import_queue_item.dart';
+import '../models/file_type_enum.dart';
 
 /// Repository for import operations.
 /// All methods return stub/dummy data for now — no backend calls.
 class ImportRepository {
+  final Dio _dio = getIt<DioClient>().dio;
+
   /// Fetch available files from Sharepoint.
-  Future<List<ImportFile>> fetchSharepointFiles() async {
-    // TODO: Replace with real API call
-    await Future.delayed(const Duration(milliseconds: 300));
-    return const [
-      ImportFile(
-        id: '1',
-        name: 'DVV_Q1_2025.csv',
-        size: '2,4 Mt',
-        badge: ImportFileBadge.uusi,
-        selected: true,
-      ),
-      ImportFile(
-        id: '2',
-        name: 'Kuljetustiedot_Q1_2025.csv',
-        size: '8,1 Mt',
-        badge: ImportFileBadge.paivitys,
-        selected: true,
-      ),
-      ImportFile(
-        id: '3',
-        name: 'Paatostiedot_Q4_2024.xlsx',
-        size: '1,1 Mt',
-        badge: ImportFileBadge.tarkista,
-      ),
-      ImportFile(
-        id: '4',
-        name: 'Kompostointi_Q1_2025.xlsx',
-        size: '0,4 Mt',
-        badge: ImportFileBadge.uusi,
-      ),
-    ];
+  FutureOr<List<ImportFile>> fetchSharepointFiles() async {
+    final sharepointResponse = await _dio.get('/sharepoint/files');
+    
+    return (sharepointResponse.data as List)
+      .map((e) => ImportFile.fromJson(e as Map<String, dynamic>))
+      .toList();
   }
 
   /// Run pre-analysis on selected files.
   Future<List<ImportFile>> analyzeFiles(List<ImportFile> files) async {
-    // TODO: Replace with real API call
-    await Future.delayed(const Duration(milliseconds: 500));
-    return files.map((f) {
-      switch (f.name) {
-        case 'DVV_Q1_2025.csv':
+
+    var filePaths = files.map((file) => file.path).toList();
+    List<ImportFile> sortedFiles = [];
+    try {
+      final response = await _dio.post('/sharepoint/pull', 
+        queryParameters: {'paths': filePaths}
+      );
+
+      final analyzedResponse = SharepointPullResult.fromJson(response.data as Map<String, dynamic>);
+      
+      if (analyzedResponse.downloaded.isNotEmpty) {
+        List<ImportFile> analyzed = [];
+        analyzed = files.map((f) {
+          SharepointDownloadedFile? analyzedFile; 
+          for (var file in analyzedResponse.downloaded) {
+
+            if (file.filename == f.name) {
+              analyzedFile = file;
+              break;
+            }
+          }
+
           return f.copyWith(
-            analysisStatus: AnalysisStatus.analyzed,
-            analysis: const ImportAnalysis(
-              rowCount: 1938,
-              newCount: 1204,
-              updateCount: 3871,
-            ),
+              analysisStatus: AnalysisStatus.analyzed,
+              analysis: ImportAnalysis(
+                rowCount: analyzedFile?.rows ?? 0,
+                newCount: 0, // Näiden selvittäminen käytännössä vaatisi aineiston sisäänlukua. Ei käsitellä vielä
+                updateCount: 0,
+              ),
+              pathOnServer: analyzedFile?.targetPath,
+              fileType: analyzedFile?.fileType as String
           );
-        case 'Kuljetustiedot_Q1_2025.csv':
-          return f.copyWith(
-            analysisStatus: AnalysisStatus.analyzed,
-            analysis: const ImportAnalysis(
-              rowCount: 12479,
-              newCount: 0,
-              updateCount: 12445,
-              unmatchedCount: 34,
-            ),
-          );
-        case 'Paatostiedot_Q4_2024.xlsx':
-          return f.copyWith(
-            analysisStatus: AnalysisStatus.error,
-            analysis: const ImportAnalysis(
-              rowCount: 0,
-              errorMessage:
-                  'Virhe otsikoissa: sarake "paatospvm" puuttuu tai väärässä muodossa',
-            ),
-          );
-        default:
-          return f.copyWith(
-            analysisStatus: AnalysisStatus.analyzed,
-            analysis: const ImportAnalysis(rowCount: 412, newCount: 412),
-          );
+        }).toList();
+
+        // Sort the files based on predetermined order in the FileType enum
+        sortedFiles = analyzed
+          .where((f) =>
+              f.analysisStatus == AnalysisStatus.analyzed &&
+              f.analysis?.hasError != true)
+          .toList()
+        ..sort((a, b) {
+            final aIndex = FileType.values.indexWhere((e) => e.type == a.fileType);
+            final bIndex = FileType.values.indexWhere((e) => e.type == b.fileType);
+            final aOrder = aIndex == -1 ? FileType.values.length : aIndex;
+            final bOrder = bIndex == -1 ? FileType.values.length : bIndex;
+            return aOrder.compareTo(bOrder);
+          });
       }
-    }).toList();
+    } catch (e) {
+      print(e);
+      print(StackTrace.current);
+    }
+
+    return sortedFiles;
   }
+  
 
   /// Start import for analyzed files.
   Future<List<ImportQueueItem>> startImport(List<ImportFile> files) async {
-    // TODO: Replace with real API call
-    await Future.delayed(const Duration(milliseconds: 200));
-    return files
-        .where((f) =>
-            f.analysisStatus == AnalysisStatus.analyzed &&
-            f.analysis?.hasError != true)
-        .map((f) => ImportQueueItem(
-              id: f.id,
-              fileName: f.name,
-              totalCount: f.analysis?.rowCount ?? 0,
-            ))
-        .toList();
+
+
+    final response = await _dio.post('/jkr/batch_import',
+      data: files.map((f) => {
+          'filename': f.name,
+          'type': f.type,
+          'fileType': f.fileType,
+          'target_path': f.pathOnServer,
+        }).toList()
+    );
+
+    final taskId = (response.data as Map<String, dynamic>?)?['task_id'] as String?
+        ?? (response.data as Map<String, dynamic>?)?['id'] as String?;
+
+    return files.map((file) => ImportQueueItem(
+          id: file.id,
+          fileName: file.name,
+          totalCount: file.analysis?.rowCount ?? 0,
+          taskId: taskId,
+        )).toList();
+  }
+
+  /// Fetch the status of a single backend task.
+  Future<({bool isFinished, bool hasError, String? errorOutput})> fetchTaskStatus(String taskId) async {
+    final response = await _dio.get('/tasks/$taskId');
+    final data = response.data as Map<String, dynamic>;
+    final status = data['status'] as String? ?? '';
+    final isFinished = status != 'pending' && status != 'running';
+    final exitCode = data['exit_code'] as int?;
+    final errorText = data['error'] as String? ?? '';
+    final hasError = (exitCode != null && exitCode != 0) || errorText.isNotEmpty;
+    final errorOutput = hasError ? errorText : null;
+    return (isFinished: isFinished, hasError: hasError, errorOutput: errorOutput);
   }
 
   /// Run velvoitetarkistus for a given date.
-  Future<void> runVelvoitetarkistus(String date) async {
-    // TODO: Replace with real API call
-    await Future.delayed(const Duration(milliseconds: 300));
+  Future<Response> runVelvoitetarkistus(String date) async {
+    return await _dio.post('/psql/tallenna_velvoite_status', 
+      data: {'pvm': date}
+    );
   }
 
   /// Set velvoitteet based on imported data.
-  Future<void> setVelvoitteet() async {
-    // TODO: Replace with real API call
-    await Future.delayed(const Duration(milliseconds: 300));
+  Future<Response> setVelvoitteet() async {
+    return await _dio.post('/psql/update_velvoitteet');
   }
 }

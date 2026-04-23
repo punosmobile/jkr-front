@@ -34,6 +34,7 @@ class ImportState {
   bool get canStartImport =>
       analyzedFiles.isNotEmpty &&
       !hasAnalysisErrors &&
+      !isAnalyzing &&
       !isImporting;
 
   int get selectedFileCount =>

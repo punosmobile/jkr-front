@@ -17,6 +17,9 @@ class DioClient {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
+        extra: {
+          AuthInterceptor.requiresAuthKey: true,
+        },
       ),
     );
 
