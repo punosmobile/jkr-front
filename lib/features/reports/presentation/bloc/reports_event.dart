@@ -1,5 +1,8 @@
+import 'package:flutter/widgets.dart';
+
 import 'package:equatable/equatable.dart';
 
+// Base event types shared by the reports feature.
 abstract class ReportsEvent extends Equatable {
   const ReportsEvent();
 
@@ -7,6 +10,7 @@ abstract class ReportsEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+// Generic value-change event used by simple filter fields.
 abstract class ReportsValueChanged<T> extends ReportsEvent {
   const ReportsValueChanged(this.value);
 
@@ -16,6 +20,7 @@ abstract class ReportsValueChanged<T> extends ReportsEvent {
   List<Object?> get props => [value];
 }
 
+// Filter field events.
 class ReportsDateChanged extends ReportsValueChanged<String> {
   const ReportsDateChanged(super.value);
 }
@@ -40,25 +45,38 @@ class ReportsSewerChanged extends ReportsValueChanged<int> {
   const ReportsSewerChanged(super.value);
 }
 
+// Lifecycle and task events.
 class ReportsInitializeRequested extends ReportsEvent {
-  const ReportsInitializeRequested();
+  const ReportsInitializeRequested({this.locale});
+
+  final Locale? locale;
+
+  @override
+  List<Object?> get props => [locale];
 }
 
 class ReportsRunRequested extends ReportsEvent {
-  const ReportsRunRequested();
+  const ReportsRunRequested({this.locale});
+
+  final Locale? locale;
+
+  @override
+  List<Object?> get props => [locale];
 }
 
 class ReportsStatusPollRequested extends ReportsEvent {
   const ReportsStatusPollRequested();
 }
 
+// Per-run UI interaction events.
 class ReportsCancelRequested extends ReportsEvent {
-  const ReportsCancelRequested(this.runId);
+  const ReportsCancelRequested(this.runId, {this.locale});
 
   final String runId;
+  final Locale? locale;
 
   @override
-  List<Object?> get props => [runId];
+  List<Object?> get props => [runId, locale];
 }
 
 class ReportsRunDismissed extends ReportsEvent {

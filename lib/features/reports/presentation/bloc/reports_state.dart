@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+// Run statuses exposed to the reports UI.
 enum ReportsRunStatus {
   idle,
   submitting,
@@ -11,6 +12,7 @@ enum ReportsRunStatus {
 
 const _unset = Object();
 
+// Serializable filter values attached to a single report run.
 class ReportRunParameters extends Equatable {
   const ReportRunParameters({
     required this.tarkastelupvm,
@@ -61,6 +63,7 @@ class ReportRunParameters extends Equatable {
       ];
 }
 
+// UI-facing state for a single tracked report run.
 class ReportRunState extends Equatable {
   const ReportRunState({
     required this.id,
@@ -104,6 +107,19 @@ class ReportRunState extends Equatable {
 
   bool get shouldPoll => isActive || isWaitingForResultUrl;
 
+  // Resolve copyWith values for nullable fields that support explicit nulling.
+  static T? _resolveNullableField<T>(Object? value, T? currentValue) {
+    if (identical(value, _unset)) {
+      return currentValue;
+    }
+    return value as T?;
+  }
+
+  static T _resolveField<T>(T? value, T currentValue) {
+    return value ?? currentValue;
+  }
+
+  // Keep the copyWith API readable while preserving nullable reset support.
   ReportRunState copyWith({
     String? id,
     Object? taskId = _unset,
@@ -120,31 +136,19 @@ class ReportRunState extends Equatable {
     Object? lastUpdatedAt = _unset,
   }) {
     return ReportRunState(
-      id: id ?? this.id,
-      taskId: taskId == _unset ? this.taskId : taskId as String?,
-      description: description == _unset ? this.description : description as String?,
-      parameters: parameters == _unset
-          ? this.parameters
-          : parameters as ReportRunParameters?,
-      runStatus: runStatus ?? this.runStatus,
-      statusMessage: statusMessage == _unset
-          ? this.statusMessage
-          : statusMessage as String?,
-      errorMessage: errorMessage == _unset
-          ? this.errorMessage
-          : errorMessage as String?,
-      resultFileName: resultFileName == _unset
-          ? this.resultFileName
-          : resultFileName as String?,
-      resultUrl: resultUrl == _unset ? this.resultUrl : resultUrl as String?,
-      sharepointError: sharepointError == _unset
-          ? this.sharepointError
-          : sharepointError as String?,
-      cancelRequested: cancelRequested ?? this.cancelRequested,
-      isCollapsed: isCollapsed ?? this.isCollapsed,
-      lastUpdatedAt: lastUpdatedAt == _unset
-          ? this.lastUpdatedAt
-          : lastUpdatedAt as DateTime?,
+      id: _resolveField(id, this.id),
+      taskId: _resolveNullableField(taskId, this.taskId),
+      description: _resolveNullableField(description, this.description),
+      parameters: _resolveNullableField(parameters, this.parameters),
+      runStatus: _resolveField(runStatus, this.runStatus),
+      statusMessage: _resolveNullableField(statusMessage, this.statusMessage),
+      errorMessage: _resolveNullableField(errorMessage, this.errorMessage),
+      resultFileName: _resolveNullableField(resultFileName, this.resultFileName),
+      resultUrl: _resolveNullableField(resultUrl, this.resultUrl),
+      sharepointError: _resolveNullableField(sharepointError, this.sharepointError),
+      cancelRequested: _resolveField(cancelRequested, this.cancelRequested),
+      isCollapsed: _resolveField(isCollapsed, this.isCollapsed),
+      lastUpdatedAt: _resolveNullableField(lastUpdatedAt, this.lastUpdatedAt),
     );
   }
 
@@ -166,6 +170,7 @@ class ReportRunState extends Equatable {
       ];
 }
 
+// Page-level state for the reports view.
 class ReportsState extends Equatable {
   const ReportsState({
     this.tarkastelupvm = '',

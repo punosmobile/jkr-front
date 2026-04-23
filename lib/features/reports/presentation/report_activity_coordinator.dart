@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+// Lightweight banner payload shared with the global app shell.
 class ReportBannerSnapshot {
   const ReportBannerSnapshot({
     required this.title,
@@ -12,6 +13,7 @@ class ReportBannerSnapshot {
   final String? taskId;
 }
 
+// Singleton bridge between the reports feature and the global banner UI.
 class ReportActivityCoordinator extends ChangeNotifier {
   ReportActivityCoordinator._();
 
@@ -22,6 +24,7 @@ class ReportActivityCoordinator extends ChangeNotifier {
 
   ReportBannerSnapshot? get snapshot => _snapshot;
 
+  // Publish the latest local banner state.
   void show({
     required String title,
     String? status,
@@ -35,6 +38,7 @@ class ReportActivityCoordinator extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Clear the banner, optionally only for the matching task.
   void clear({String? taskId}) {
     if (_snapshot == null) {
       return;

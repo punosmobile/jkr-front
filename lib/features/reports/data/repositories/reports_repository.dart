@@ -6,9 +6,11 @@ import '../../report_localizations.dart';
 import '../models/report_task_info.dart';
 import '../models/report_task_response.dart';
 
+// API adapter for report-related task endpoints.
 class ReportsRepository {
   final ProtectedApiClient _api = getIt<ProtectedApiClient>();
 
+  // Fetch all backend tasks so the feature can restore and poll report runs.
   Future<List<ReportTaskInfo>> fetchTasks() async {
     final l10n = currentReportLocalizations();
     try {
@@ -26,6 +28,7 @@ class ReportsRepository {
     }
   }
 
+  // Start a new report task with the selected filter values.
   Future<ReportTaskResponse> startReport({
     required String tarkastelupvm,
     required String kunta,
@@ -55,6 +58,7 @@ class ReportsRepository {
     }
   }
 
+  // Fetch a single task when it is missing from the list endpoint.
   Future<ReportTaskInfo> fetchTask(String taskId) async {
     final l10n = currentReportLocalizations();
     try {
@@ -67,6 +71,7 @@ class ReportsRepository {
     }
   }
 
+  // Request cancellation for an active report task.
   Future<String> cancelTask(String taskId) async {
     final l10n = currentReportLocalizations();
     try {
@@ -82,6 +87,7 @@ class ReportsRepository {
     }
   }
 
+  // Normalize Dio failures into user-facing localized error messages.
   String _toLocalizedError(DioException error, String fallback) {
     final l10n = currentReportLocalizations();
     final responseData = error.response?.data;

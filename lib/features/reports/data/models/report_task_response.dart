@@ -1,5 +1,6 @@
 import '../../../../core/tasks/app_task_type.dart';
 
+// Backend task statuses used by the reports feature.
 enum ReportTaskStatus {
   pending,
   running,
@@ -14,6 +15,7 @@ enum ReportTaskStatus {
   }
 }
 
+// Response returned when a new report task is started.
 class ReportTaskResponse {
   const ReportTaskResponse({
     required this.taskId,

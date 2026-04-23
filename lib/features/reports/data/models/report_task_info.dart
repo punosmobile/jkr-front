@@ -1,6 +1,7 @@
 import '../../../../core/tasks/app_task_type.dart';
 import 'report_task_response.dart';
 
+// File metadata attached to a completed report task.
 class ReportTaskFile {
   const ReportTaskFile({
     this.filename,
@@ -27,6 +28,7 @@ class ReportTaskFile {
   }
 }
 
+// Backend task payload enriched with helpers used by the reports UI.
 class ReportTaskInfo {
   const ReportTaskInfo({
     required this.id,
@@ -100,6 +102,7 @@ class ReportTaskInfo {
 
   bool get isReportTask => taskType.isReport;
 
+  // Use the most recent non-empty line from task output/error streams.
   static String? _lastNonEmptyLine(String source) {
     final lines = source
         .split('\n')

@@ -12,19 +12,22 @@ import '../bloc/reports_bloc.dart';
 import '../bloc/reports_event.dart';
 import '../bloc/reports_state.dart';
 
+// Feature entry point that wires the reports page to its bloc.
 class ReportsPage extends StatelessWidget {
   const ReportsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context);
     return BlocProvider(
       create: (_) => ReportsBloc(repository: ReportsRepository())
-        ..add(const ReportsInitializeRequested()),
+        ..add(ReportsInitializeRequested(locale: locale)),
       child: const _ReportsView(),
     );
   }
 }
 
+// Main reports screen containing filters and tracked report runs.
 class _ReportsView extends StatefulWidget {
   const _ReportsView();
 
@@ -39,6 +42,7 @@ class _ReportsViewState extends State<_ReportsView> {
     vertical: 16,
   );
 
+  // Widget lifecycle.
   @override
   void initState() {
     super.initState();
@@ -51,6 +55,7 @@ class _ReportsViewState extends State<_ReportsView> {
     super.dispose();
   }
 
+  // Screen layout.
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ReportsBloc, ReportsState>(
@@ -65,6 +70,7 @@ class _ReportsViewState extends State<_ReportsView> {
         }
 
         return SingleChildScrollView(
+      // Dialog interactions.
           padding: const EdgeInsets.all(22),
           child: Column(
             children: [
@@ -182,7 +188,11 @@ class _ReportsViewState extends State<_ReportsView> {
                       runSpacing: 8,
                       children: [
                         ElevatedButton.icon(
-                          onPressed: () => bloc.add(const ReportsRunRequested()),
+                          onPressed: () => bloc.add(
+                            ReportsRunRequested(
+                              locale: Localizations.localeOf(context),
+                            ),
+                          ),
                           icon: const Icon(Icons.table_chart_outlined, size: 16),
                           label: Text(
                             state.reportRuns.isEmpty
@@ -243,10 +253,16 @@ class _ReportsViewState extends State<_ReportsView> {
     );
 
     if (confirmed == true && mounted) {
-      bloc.add(ReportsCancelRequested(runId));
+      bloc.add(
+        ReportsCancelRequested(
+          runId,
+          locale: Localizations.localeOf(context),
+        ),
+      );
     }
   }
 
+  // Filter field builders.
   Widget _buildDateField(
     BuildContext context, {
     required String label,
@@ -255,47 +271,36 @@ class _ReportsViewState extends State<_ReportsView> {
     required ValueChanged<String> onChanged,
   }) {
     final l10n = AppLocalizations.of(context)!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: AppTheme.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 4),
-        TextField(
-          controller: controller,
-          readOnly: true,
-          onTap: () => _selectDate(context, selectedValue, onChanged),
-          decoration: _fieldDecoration(
-            hintText: l10n.reportsDateNoFilter,
-            suffixIcon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (selectedValue.isNotEmpty)
-                  IconButton(
-                    tooltip: l10n.reportsDateClearTooltip,
-                    onPressed: () {
-                      controller.clear();
-                      onChanged('');
-                    },
-                    icon: const Icon(Icons.close_rounded, size: 18),
-                  ),
+    return _buildLabeledField(
+      label: label,
+      child: TextField(
+        controller: controller,
+        readOnly: true,
+        onTap: () => _selectDate(context, selectedValue, onChanged),
+        decoration: _fieldDecoration(
+          hintText: l10n.reportsDateNoFilter,
+          suffixIcon: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (selectedValue.isNotEmpty)
                 IconButton(
-                  tooltip: l10n.reportsDateSelectTooltip,
-                  onPressed: () => _selectDate(context, selectedValue, onChanged),
-                  icon: const Icon(Icons.calendar_month_outlined, size: 18),
+                  tooltip: l10n.reportsDateClearTooltip,
+                  onPressed: () {
+                    controller.clear();
+                    onChanged('');
+                  },
+                  icon: const Icon(Icons.close_rounded, size: 18),
                 ),
-              ],
-            ),
+              IconButton(
+                tooltip: l10n.reportsDateSelectTooltip,
+                onPressed: () => _selectDate(context, selectedValue, onChanged),
+                icon: const Icon(Icons.calendar_month_outlined, size: 18),
+              ),
+            ],
           ),
-          style: const TextStyle(fontSize: 12),
         ),
-      ],
+        style: const TextStyle(fontSize: 12),
+      ),
     );
   }
 
@@ -334,12 +339,43 @@ class _ReportsViewState extends State<_ReportsView> {
     }
   }
 
+  // Shared field decoration helpers.
   static Widget _buildDropdownField<T>({
     required String label,
     required T value,
     required bool enabled,
     required List<_DropdownItem<T>> items,
     required ValueChanged<T> onChanged,
+  }) {
+    return _buildLabeledField(
+      label: label,
+      child: DropdownButtonFormField<T>(
+        initialValue: value,
+        isExpanded: true,
+        decoration: _fieldDecoration(),
+        items: items
+            .map(
+              (item) => DropdownMenuItem<T>(
+                value: item.value,
+                child: Text(item.label, overflow: TextOverflow.ellipsis),
+              ),
+            )
+            .toList(),
+        onChanged: enabled
+          // Sorting helpers.
+            ? (newValue) {
+                if (newValue != null) {
+                  onChanged(newValue);
+                }
+              }
+            : null,
+      ),
+    );
+  }
+
+  static Widget _buildLabeledField({
+    required String label,
+    required Widget child,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,26 +389,7 @@ class _ReportsViewState extends State<_ReportsView> {
           ),
         ),
         const SizedBox(height: 4),
-        DropdownButtonFormField<T>(
-          initialValue: value,
-          isExpanded: true,
-          decoration: _fieldDecoration(),
-          items: items
-              .map(
-                (item) => DropdownMenuItem<T>(
-                  value: item.value,
-                  child: Text(item.label, overflow: TextOverflow.ellipsis),
-                ),
-              )
-              .toList(),
-          onChanged: enabled
-              ? (newValue) {
-                  if (newValue != null) {
-                    onChanged(newValue);
-                  }
-                }
-              : null,
-        ),
+        child,
       ],
     );
   }
@@ -418,6 +435,7 @@ class _ReportsViewState extends State<_ReportsView> {
     };
   }
 
+  // Static option sources for the filter controls.
   List<_DropdownItem<String>> _municipalities(AppLocalizations l10n) {
     return [
       _DropdownItem(value: '0', label: l10n.reportsAllMunicipalities),
@@ -469,6 +487,7 @@ class _ReportsViewState extends State<_ReportsView> {
   }
 }
 
+// Card widget for a single tracked report run.
 class _ReportRunCard extends StatefulWidget {
   const _ReportRunCard({
     super.key,
@@ -492,11 +511,13 @@ class _ReportRunCardState extends State<_ReportRunCard>
   late final AnimationController _highlightController;
   _RunHighlightTone _highlightTone = _RunHighlightTone.none;
 
+  // Widget bindings.
   ReportRunState get run => widget.run;
   VoidCallback get onDismiss => widget.onDismiss;
   VoidCallback get onCancel => widget.onCancel;
   VoidCallback get onToggleCollapse => widget.onToggleCollapse;
 
+  // Widget lifecycle.
   @override
   void initState() {
     super.initState();
@@ -537,34 +558,12 @@ class _ReportRunCardState extends State<_ReportRunCard>
     super.dispose();
   }
 
+  // Card layout.
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isRunning = run.runStatus == ReportsRunStatus.running ||
-        run.runStatus == ReportsRunStatus.submitting ||
-        run.runStatus == ReportsRunStatus.cancelling;
-    final isCompleted = run.runStatus == ReportsRunStatus.completed;
-    final isFailed = run.runStatus == ReportsRunStatus.failed;
-    final hasResultUrl = run.hasResultUrl;
-    final isWaitingForResultUrl = run.isWaitingForResultUrl;
-
-    final accentColor = isCompleted
-        ? AppTheme.green
-        : isFailed
-            ? AppTheme.red
-            : AppTheme.primaryColor;
-
-    final accentBg = isCompleted
-        ? AppTheme.greenBg
-        : isFailed
-            ? AppTheme.redBg
-            : AppTheme.primaryLight;
-
-    final icon = isCompleted
-        ? Icons.check_circle_outline
-        : isFailed
-            ? Icons.error_outline
-            : Icons.hourglass_top_rounded;
+    final visualState = _visualState(l10n);
+    final parameterItems = _parameterItems(l10n);
 
     return AnimatedBuilder(
       animation: _highlightController,
@@ -612,10 +611,9 @@ class _ReportRunCardState extends State<_ReportRunCard>
               ? CrossFadeState.showFirst
               : CrossFadeState.showSecond,
           firstChild: _buildCollapsedCard(
-            context,
-            accentBg: accentBg,
-            accentColor: accentColor,
-            icon: icon,
+            context: context,
+            visualState: visualState,
+            parameterItems: parameterItems,
           ),
           secondChild: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -627,10 +625,10 @@ class _ReportRunCardState extends State<_ReportRunCard>
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: accentBg,
+                      color: visualState.accentBackground,
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Icon(icon, color: accentColor),
+                    child: Icon(visualState.icon, color: visualState.accentColor),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -638,26 +636,16 @@ class _ReportRunCardState extends State<_ReportRunCard>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _title(l10n),
+                          visualState.title,
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                             color: AppTheme.textPrimary,
                           ),
                         ),
-                        if (_parameterItems(l10n).isNotEmpty) ...[
+                        if (parameterItems.isNotEmpty) ...[
                           const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: _parameterItems(l10n).map((item) {
-                              return _ParameterChip(
-                                label: item.label,
-                                value: item.value,
-                                isHighlighted: item.isHighlighted,
-                              );
-                            }).toList(growable: false),
-                          ),
+                          _buildParameterChips(parameterItems),
                         ],
                         const SizedBox(height: 8),
                         Wrap(
@@ -666,14 +654,14 @@ class _ReportRunCardState extends State<_ReportRunCard>
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Text(
-                              _subtitle(l10n),
+                              visualState.subtitle,
                               style: TextStyle(
                                 fontSize: 12,
                                 height: 1.45,
                                 color: AppTheme.textSecondary,
                               ),
                             ),
-                            if (isRunning)
+                            if (visualState.isRunning)
                               _PollingStatusChip(lastUpdatedAt: run.lastUpdatedAt),
                             if (_highlightController.isAnimating &&
                                 _highlightTone == _RunHighlightTone.completed)
@@ -714,12 +702,12 @@ class _ReportRunCardState extends State<_ReportRunCard>
               if (run.statusMessage != null && run.statusMessage!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 _MessageBox(
-                  title: isCompleted
+                  title: visualState.isCompleted
                       ? l10n.reportsStatusTitleReady
                       : l10n.reportsStatusTitleCurrent,
                   message: run.statusMessage!,
-                  color: accentColor,
-                  background: accentBg,
+                  color: visualState.accentColor,
+                  background: visualState.accentBackground,
                 ),
               ],
               if (run.errorMessage != null && run.errorMessage!.isNotEmpty) ...[
@@ -735,7 +723,7 @@ class _ReportRunCardState extends State<_ReportRunCard>
                 const SizedBox(height: 12),
                 _InfoRow(label: l10n.reportsFileLabel, value: run.resultFileName!),
               ],
-              if (hasResultUrl) ...[
+              if (run.hasResultUrl) ...[
                 const SizedBox(height: 8),
                 _MessageBox(
                   title: l10n.reportsSharepointLinkAvailableTitle,
@@ -760,24 +748,22 @@ class _ReportRunCardState extends State<_ReportRunCard>
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  if (isRunning)
+                  if (visualState.isRunning)
                     OutlinedButton.icon(
                       onPressed: onCancel,
                       icon: const Icon(Icons.close, size: 16),
                       label: Text(l10n.reportsCancelButton),
                     ),
-                  if (!isRunning)
+                  if (!visualState.isRunning)
                     FilledButton(
                       onPressed: onDismiss,
                       child: Text(
-                        isCompleted ? l10n.reportsOkButton : l10n.reportsCloseButton,
+                        visualState.isCompleted
+                            ? l10n.reportsOkButton
+                            : l10n.reportsCloseButton,
                       ),
                     ),
-                  if (hasResultUrl || isWaitingForResultUrl)
-                    _ReportResultActionButton(
-                      resultUrl: run.resultUrl,
-                      showLinkPending: isWaitingForResultUrl,
-                    ),
+                  if (_shouldShowResultAction) _buildResultActionButton(),
                 ],
               ),
             ],
@@ -787,15 +773,13 @@ class _ReportRunCardState extends State<_ReportRunCard>
     );
   }
 
+  // Collapsed card layout.
   Widget _buildCollapsedCard({
-    BuildContext context,
-    required Color accentBg,
-    required Color accentColor,
-    required IconData icon,
+    required BuildContext context,
+    required _RunCardVisualState visualState,
+    required List<_ParameterSummaryItem> parameterItems,
   }) {
     final l10n = AppLocalizations.of(context)!;
-    final hasResultUrl = run.hasResultUrl;
-    final isWaitingForResultUrl = run.isWaitingForResultUrl;
 
     return Material(
       color: Colors.transparent,
@@ -810,10 +794,10 @@ class _ReportRunCardState extends State<_ReportRunCard>
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: accentBg,
+                  color: visualState.accentBackground,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: accentColor, size: 18),
+                child: Icon(visualState.icon, color: visualState.accentColor, size: 18),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -821,7 +805,7 @@ class _ReportRunCardState extends State<_ReportRunCard>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _title(l10n),
+                      visualState.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -830,19 +814,9 @@ class _ReportRunCardState extends State<_ReportRunCard>
                         color: AppTheme.textPrimary,
                       ),
                     ),
-                    if (_parameterItems(l10n).isNotEmpty) ...[
+                    if (parameterItems.isNotEmpty) ...[
                       const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _parameterItems(l10n).map((item) {
-                          return _ParameterChip(
-                            label: item.label,
-                            value: item.value,
-                            isHighlighted: item.isHighlighted,
-                          );
-                        }).toList(growable: false),
-                      ),
+                      _buildParameterChips(parameterItems),
                     ],
                   ],
                 ),
@@ -851,11 +825,8 @@ class _ReportRunCardState extends State<_ReportRunCard>
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (hasResultUrl || isWaitingForResultUrl) ...[
-                    _ReportResultActionButton(
-                      resultUrl: run.resultUrl,
-                      showLinkPending: isWaitingForResultUrl,
-                    ),
+                  if (_shouldShowResultAction) ...[
+                    _buildResultActionButton(),
                     const SizedBox(width: 8),
                   ],
                   IconButton(
@@ -873,31 +844,99 @@ class _ReportRunCardState extends State<_ReportRunCard>
     );
   }
 
-  String _title(AppLocalizations l10n) {
+  // Shared card helpers.
+  bool get _shouldShowResultAction {
+    return run.hasResultUrl || run.isWaitingForResultUrl;
+  }
+
+  Widget _buildResultActionButton() {
+    return _ReportResultActionButton(
+      resultUrl: run.resultUrl,
+      showLinkPending: run.isWaitingForResultUrl,
+    );
+  }
+
+  Widget _buildParameterChips(List<_ParameterSummaryItem> items) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: items.map((item) {
+        return _ParameterChip(
+          label: item.label,
+          value: item.value,
+          isHighlighted: item.isHighlighted,
+        );
+      }).toList(growable: false),
+    );
+  }
+
+  // Visual-state mapping.
+  _RunCardVisualState _visualState(AppLocalizations l10n) {
     return switch (run.runStatus) {
-      ReportsRunStatus.submitting => l10n.reportsRunStatusStarting,
-      ReportsRunStatus.running => l10n.reportsRunStatusRunning,
-      ReportsRunStatus.cancelling => l10n.reportsRunStatusCancelling,
-      ReportsRunStatus.completed => l10n.reportsRunStatusCompleted,
-      ReportsRunStatus.failed => l10n.reportsRunStatusFailed,
-      ReportsRunStatus.idle => '',
+      ReportsRunStatus.submitting => _RunCardVisualState(
+          title: l10n.reportsRunStatusStarting,
+          subtitle: l10n.reportsRunSubtitleRunning,
+          accentColor: AppTheme.primaryColor,
+          accentBackground: AppTheme.primaryLight,
+          icon: Icons.hourglass_top_rounded,
+          isRunning: true,
+          isCompleted: false,
+          isFailed: false,
+        ),
+      ReportsRunStatus.running => _RunCardVisualState(
+          title: l10n.reportsRunStatusRunning,
+          subtitle: l10n.reportsRunSubtitleRunning,
+          accentColor: AppTheme.primaryColor,
+          accentBackground: AppTheme.primaryLight,
+          icon: Icons.hourglass_top_rounded,
+          isRunning: true,
+          isCompleted: false,
+          isFailed: false,
+        ),
+      ReportsRunStatus.cancelling => _RunCardVisualState(
+          title: l10n.reportsRunStatusCancelling,
+          subtitle: l10n.reportsRunSubtitleCancelling,
+          accentColor: AppTheme.primaryColor,
+          accentBackground: AppTheme.primaryLight,
+          icon: Icons.hourglass_top_rounded,
+          isRunning: true,
+          isCompleted: false,
+          isFailed: false,
+        ),
+      ReportsRunStatus.completed => _RunCardVisualState(
+          title: l10n.reportsRunStatusCompleted,
+          subtitle: l10n.reportsRunSubtitleCompleted,
+          accentColor: AppTheme.green,
+          accentBackground: AppTheme.greenBg,
+          icon: Icons.check_circle_outline,
+          isRunning: false,
+          isCompleted: true,
+          isFailed: false,
+        ),
+      ReportsRunStatus.failed => _RunCardVisualState(
+          title: l10n.reportsRunStatusFailed,
+          subtitle: l10n.reportsRunSubtitleFailed,
+          accentColor: AppTheme.red,
+          accentBackground: AppTheme.redBg,
+          icon: Icons.error_outline,
+          isRunning: false,
+          isCompleted: false,
+          isFailed: true,
+        ),
+      ReportsRunStatus.idle => _RunCardVisualState(
+          title: '',
+          subtitle: '',
+          accentColor: AppTheme.primaryColor,
+          accentBackground: AppTheme.primaryLight,
+          icon: Icons.hourglass_top_rounded,
+          isRunning: false,
+          isCompleted: false,
+          isFailed: false,
+        ),
     };
   }
 
-  String _subtitle(AppLocalizations l10n) {
-    return switch (run.runStatus) {
-      ReportsRunStatus.submitting || ReportsRunStatus.running =>
-        l10n.reportsRunSubtitleRunning,
-      ReportsRunStatus.cancelling =>
-        l10n.reportsRunSubtitleCancelling,
-      ReportsRunStatus.completed =>
-        l10n.reportsRunSubtitleCompleted,
-      ReportsRunStatus.failed =>
-        l10n.reportsRunSubtitleFailed,
-      ReportsRunStatus.idle => '',
-    };
-  }
-
+  // Parameter summary mapping.
   List<_ParameterSummaryItem> _parameterItems(AppLocalizations l10n) {
     final parameters = run.parameters;
     if (parameters == null) {
@@ -919,50 +958,91 @@ class _ReportRunCardState extends State<_ReportRunCard>
       ),
       _ParameterSummaryItem(
         label: l10n.reportsParameterApartmentsLabel,
-        value: switch (parameters.huoneistomaara) {
-          4 => l10n.reportsParameterApartmentsMaxFour,
-          5 => l10n.reportsParameterApartmentsMinFive,
-          _ => l10n.reportsParameterApartmentsAll,
-        },
+        value: _apartmentLabel(parameters.huoneistomaara, l10n),
         isHighlighted: parameters.huoneistomaara != 0,
       ),
       _ParameterSummaryItem(
         label: l10n.reportsParameterUrbanAreaLabel,
-        value: switch (parameters.taajama) {
-          1 => l10n.reportsParameterUrbanAreaOver200,
-          2 => l10n.reportsParameterUrbanAreaOver10000,
-          3 => l10n.reportsParameterUrbanAreaBoth,
-          _ => l10n.reportsParameterUrbanAreaNone,
-        },
+        value: _urbanAreaLabel(parameters.taajama, l10n),
         isHighlighted: parameters.taajama != 0,
       ),
       _ParameterSummaryItem(
         label: l10n.reportsParameterPropertyTypeLabel,
-        value: switch (parameters.kohdeTyyppi) {
-          7 => l10n.reportsParameterPropertyTypeResidential,
-          5 => l10n.reportsParameterPropertyTypeHapa,
-          6 => l10n.reportsParameterPropertyTypeBiohapa,
-          8 => l10n.reportsParameterPropertyTypeOther,
-          _ => l10n.reportsParameterPropertyTypeAll,
-        },
+        value: _propertyTypeLabel(parameters.kohdeTyyppi, l10n),
         isHighlighted: parameters.kohdeTyyppi != 0,
       ),
       _ParameterSummaryItem(
         label: l10n.reportsParameterSewerLabel,
-        value: switch (parameters.onkoViemari) {
-          1 => l10n.reportsParameterSewerConnected,
-          2 => l10n.reportsParameterSewerNotConnected,
-          _ => l10n.reportsParameterSewerAll,
-        },
+        value: _sewerLabel(parameters.onkoViemari, l10n),
         isHighlighted: parameters.onkoViemari != 0,
       ),
     ].where((item) => item.isHighlighted).toList(growable: false);
   }
 
+  String _apartmentLabel(int value, AppLocalizations l10n) {
+    return switch (value) {
+      4 => l10n.reportsParameterApartmentsMaxFour,
+      5 => l10n.reportsParameterApartmentsMinFive,
+      _ => l10n.reportsParameterApartmentsAll,
+    };
+  }
+
+  String _urbanAreaLabel(int value, AppLocalizations l10n) {
+    return switch (value) {
+      1 => l10n.reportsParameterUrbanAreaOver200,
+      2 => l10n.reportsParameterUrbanAreaOver10000,
+      3 => l10n.reportsParameterUrbanAreaBoth,
+      _ => l10n.reportsParameterUrbanAreaNone,
+    };
+  }
+
+  String _propertyTypeLabel(int value, AppLocalizations l10n) {
+    return switch (value) {
+      7 => l10n.reportsParameterPropertyTypeResidential,
+      5 => l10n.reportsParameterPropertyTypeHapa,
+      6 => l10n.reportsParameterPropertyTypeBiohapa,
+      8 => l10n.reportsParameterPropertyTypeOther,
+      _ => l10n.reportsParameterPropertyTypeAll,
+    };
+  }
+
+  String _sewerLabel(int value, AppLocalizations l10n) {
+    return switch (value) {
+      1 => l10n.reportsParameterSewerConnected,
+      2 => l10n.reportsParameterSewerNotConnected,
+      _ => l10n.reportsParameterSewerAll,
+    };
+  }
+
 }
 
+// Immutable styling bundle for the run card header.
+class _RunCardVisualState {
+  const _RunCardVisualState({
+    required this.title,
+    required this.subtitle,
+    required this.accentColor,
+    required this.accentBackground,
+    required this.icon,
+    required this.isRunning,
+    required this.isCompleted,
+    required this.isFailed,
+  });
+
+  final String title;
+  final String subtitle;
+  final Color accentColor;
+  final Color accentBackground;
+  final IconData icon;
+  final bool isRunning;
+  final bool isCompleted;
+  final bool isFailed;
+}
+
+// Highlight modes used when a run starts or completes.
 enum _RunHighlightTone { none, started, completed }
 
+// Animated chip shown while polling is in progress.
 class _PollingStatusChip extends StatefulWidget {
   const _PollingStatusChip({required this.lastUpdatedAt});
 
@@ -1020,6 +1100,7 @@ class _PollingStatusChipState extends State<_PollingStatusChip>
   }
 }
 
+// Small reusable status chip used by polling and run highlights.
 class _EventStatusChip extends StatelessWidget {
   const _EventStatusChip({
     required this.label,
@@ -1068,6 +1149,7 @@ class _EventStatusChip extends StatelessWidget {
   }
 }
 
+// Parameter/value pair rendered as a compact summary chip.
 class _ParameterSummaryItem {
   const _ParameterSummaryItem({
     required this.label,
@@ -1080,6 +1162,7 @@ class _ParameterSummaryItem {
   final bool isHighlighted;
 }
 
+// Visual chip used inside expanded and collapsed run cards.
 class _ParameterChip extends StatelessWidget {
   const _ParameterChip({
     required this.label,
@@ -1138,6 +1221,7 @@ class _ParameterChip extends StatelessWidget {
   }
 }
 
+// Button that either opens the result file or shows a pending-link state.
 class _ReportResultActionButton extends StatefulWidget {
   const _ReportResultActionButton({
     required this.resultUrl,
@@ -1174,6 +1258,7 @@ class _ReportResultActionButtonState extends State<_ReportResultActionButton>
     }
   }
 
+  // Keep the pulse animation in sync with the button mode.
   void _syncPulse() {
     if (widget.showLinkPending) {
       _pulseController.repeat(reverse: true);
@@ -1225,7 +1310,9 @@ class _ReportResultActionButtonState extends State<_ReportResultActionButton>
     );
   }
 
+  // Button variants.
   Widget _buildPendingButton(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final buttonTheme = Theme.of(context).elevatedButtonTheme.style;
 
     return AnimatedBuilder(
@@ -1298,6 +1385,7 @@ class _ReportResultActionButtonState extends State<_ReportResultActionButton>
   }
 }
 
+// Generic colored message box used for status, error, and SharePoint notes.
 class _MessageBox extends StatelessWidget {
   const _MessageBox({
     required this.title,
@@ -1346,6 +1434,7 @@ class _MessageBox extends StatelessWidget {
   }
 }
 
+// Step list that visualizes the current report pipeline phase.
 class _ReportStepList extends StatelessWidget {
   const _ReportStepList({required this.run});
 
@@ -1372,6 +1461,7 @@ class _ReportStepList extends StatelessWidget {
     );
   }
 
+  // Step labels.
   List<String> _steps(AppLocalizations l10n) {
     return [
       l10n.reportsStepFetchTargets,
@@ -1381,6 +1471,7 @@ class _ReportStepList extends StatelessWidget {
     ];
   }
 
+  // Map the inferred active step into row statuses.
   _ReportStepVisualStatus _stepStatus(int index, int activeIndex) {
     final isCompleted = run.runStatus == ReportsRunStatus.completed;
     final isFailed = run.runStatus == ReportsRunStatus.failed;
@@ -1399,6 +1490,7 @@ class _ReportStepList extends StatelessWidget {
     return _ReportStepVisualStatus.pending;
   }
 
+  // Infer the current backend phase from the available task text.
   int _activeStepIndex(ReportRunState run) {
     if (run.runStatus == ReportsRunStatus.completed) {
       return 3;
@@ -1436,6 +1528,7 @@ class _ReportStepList extends StatelessWidget {
   }
 }
 
+// Visual states for individual step rows.
 enum _ReportStepVisualStatus {
   pending,
   active,
@@ -1443,6 +1536,7 @@ enum _ReportStepVisualStatus {
   failed,
 }
 
+// Single row inside the report step list.
 class _ReportStepRow extends StatelessWidget {
   const _ReportStepRow({
     required this.label,
@@ -1452,6 +1546,7 @@ class _ReportStepRow extends StatelessWidget {
   final String label;
   final _ReportStepVisualStatus status;
 
+// Two-column key/value row used for task metadata.
   @override
   Widget build(BuildContext context) {
     final isPending = status == _ReportStepVisualStatus.pending;
@@ -1573,6 +1668,7 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
+// Small option model for dropdown fields.
 class _DropdownItem<T> {
   const _DropdownItem({required this.value, required this.label});
 
