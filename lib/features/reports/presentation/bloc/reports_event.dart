@@ -53,9 +53,28 @@ class ReportsStatusPollRequested extends ReportsEvent {
 }
 
 class ReportsCancelRequested extends ReportsEvent {
-  const ReportsCancelRequested();
+  const ReportsCancelRequested(this.runId);
+
+  final String runId;
+
+  @override
+  List<Object?> get props => [runId];
 }
 
-class ReportsDialogDismissed extends ReportsEvent {
-  const ReportsDialogDismissed();
+class ReportsRunDismissed extends ReportsEvent {
+  const ReportsRunDismissed(this.runId);
+
+  final String runId;
+
+  @override
+  List<Object?> get props => [runId];
+}
+
+class ReportsRunCollapseToggled extends ReportsEvent {
+  const ReportsRunCollapseToggled(this.runId);
+
+  final String runId;
+
+  @override
+  List<Object?> get props => [runId];
 }

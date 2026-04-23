@@ -140,6 +140,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
 
   void _syncImportBanner() {
     final nextBanner = _buildImportBannerState(
+      context: context,
       localSnapshot: _activityCoordinator.snapshot,
       backendReports: _activeBackendReports,
     );
@@ -152,37 +153,30 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
   }
 
   _ImportBannerState _buildImportBannerState({
+    required BuildContext context,
     required ReportBannerSnapshot? localSnapshot,
     required List<ReportTaskInfo> backendReports,
   }) {
-    if (localSnapshot != null) {
-      final backendOtherCount = backendReports.where((task) {
-        final localTaskId = localSnapshot.taskId;
-        return localTaskId == null || localTaskId.isEmpty || task.id != localTaskId;
-      }).length;
-
-      final title = backendOtherCount > 0
-          ? '${localSnapshot.title} (+$backendOtherCount muuta)'
-          : localSnapshot.title;
+    final l10n = AppLocalizations.of(context)!;
+    if (backendReports.isNotEmpty) {
+      final title = backendReports.length == 1
+          ? l10n.reportsBannerSingleActive
+          : l10n.reportsBannerMultipleActive(backendReports.length);
 
       return _ImportBannerState.visible(
         title: title,
-        status: localSnapshot.status,
+        status: null,
       );
     }
 
-    if (backendReports.isEmpty) {
-      return const _ImportBannerState.hidden();
+    if (localSnapshot != null) {
+      return _ImportBannerState.visible(
+        title: localSnapshot.title,
+        status: null,
+      );
     }
 
-    final title = backendReports.length == 1
-        ? 'Raportin luonti käynnissä'
-        : 'Raporttien luonti käynnissä (${backendReports.length})';
-
-    return _ImportBannerState.visible(
-      title: title,
-      status: _buildImportBannerStatus(backendReports),
-    );
+    return const _ImportBannerState.hidden();
   }
 
   bool _isActiveReportTask(ReportTaskInfo task) {
@@ -191,21 +185,6 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
     final isActive = task.status == ReportTaskStatus.pending ||
         task.status == ReportTaskStatus.running;
     return isActive && (isReportCommand || isReportDescription);
-  }
-
-  String _buildImportBannerStatus(List<ReportTaskInfo> activeReports) {
-    final primaryTask = activeReports.first;
-    final latestLine = primaryTask.latestOutputLine;
-    if (activeReports.length == 1) {
-      return latestLine ?? primaryTask.description;
-    }
-
-    final otherCount = activeReports.length - 1;
-    if (latestLine != null && latestLine.isNotEmpty) {
-      return '$latestLine + $otherCount muuta aktiivista raporttia';
-    }
-
-    return '${primaryTask.description} + $otherCount muuta aktiivista raporttia';
   }
 
   /// Derive active view ID from the current route location.
@@ -385,21 +364,6 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
                   ),
                 ),
               ),
-              if (_importBanner.status != null && _importBanner.status!.isNotEmpty) ...[
-                const SizedBox(width: 12),
-                Flexible(
-                  child: Text(
-                    _importBanner.status!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.end,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.85),
-                      fontSize: 11,
-                    ),
-                  ),
-                ),
-              ],
               const SizedBox(width: 10),
               Icon(
                 Icons.arrow_forward_rounded,

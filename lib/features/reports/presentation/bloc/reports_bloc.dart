@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -8,6 +9,7 @@ import '../../../../shared/services/storage/secure_storage_service.dart';
 import '../../data/models/report_task_info.dart';
 import '../../data/models/report_task_response.dart';
 import '../../data/repositories/reports_repository.dart';
+import '../../report_localizations.dart';
 import '../report_activity_coordinator.dart';
 import 'reports_event.dart';
 import 'reports_state.dart';
@@ -26,47 +28,80 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     on<ReportsRunRequested>(_onRunRequested);
     on<ReportsStatusPollRequested>(_onStatusPollRequested);
     on<ReportsCancelRequested>(_onCancelRequested);
-    on<ReportsDialogDismissed>(_onDialogDismissed);
+    on<ReportsRunDismissed>(_onRunDismissed);
+    on<ReportsRunCollapseToggled>(_onRunCollapseToggled);
   }
 
   final ReportsRepository _repository;
   final ReportActivityCoordinator _activityCoordinator =
       ReportActivityCoordinator.instance;
   final SecureStorageService _storage = getIt<SecureStorageService>();
-  Timer? _pollTimer;
-  Duration? _currentPollInterval;
 
-  static const Duration _defaultPollInterval = Duration(seconds: 2);
-  static const Duration _restoredPollInterval = Duration(seconds: 1);
+  Timer? _pollTimer;
+  int _localRunSequence = 0;
+
+  static const Duration _pollInterval = Duration(seconds: 1);
 
   Future<void> _onInitializeRequested(
     ReportsInitializeRequested event,
     Emitter<ReportsState> emit,
   ) async {
-    if (_hasTrackedTaskInState) {
+    if (state.reportRuns.isNotEmpty) {
       return;
     }
 
     try {
       final tasks = await _repository.fetchTasks();
-      final activeTask = _selectActiveReportTask(tasks);
-      if (activeTask != null) {
-        await _rememberTrackedTask(activeTask.id);
-        _emitRunningState(activeTask, emit);
-        _setPollingInterval(_restoredPollInterval);
-        return;
+      final trackedTaskIds = await _readTrackedTaskIds();
+      final trackedTaskParams = await _readTrackedTaskParameters();
+      final trackedTaskUiState = await _readTrackedTaskUiState();
+      final reportTasks = tasks.where(_isReportTask).toList();
+      final reportTaskById = {
+        for (final task in reportTasks) task.id: task,
+      };
+
+      final restoredRuns = <ReportRunState>[];
+      final seenIds = <String>{};
+
+      for (final task in reportTasks.where((task) => _shouldRestoreTask(task, trackedTaskIds))) {
+        restoredRuns.add(
+          _runFromTask(
+            task,
+            existing: _restoredRunState(
+              task.id,
+              trackedTaskParams[task.id],
+              isCollapsed: trackedTaskUiState[task.id] ?? false,
+            ),
+          ),
+        );
+        seenIds.add(task.id);
       }
 
-      final trackedTaskId = await _readTrackedTaskId();
-      if (trackedTaskId == null || trackedTaskId.isEmpty) {
-        return;
+      for (final taskId in trackedTaskIds) {
+        if (seenIds.contains(taskId)) {
+          continue;
+        }
+        final task = reportTaskById[taskId] ?? await _tryFetchTask(taskId);
+        if (task == null || !_isReportTask(task)) {
+          continue;
+        }
+        restoredRuns.add(
+          _runFromTask(
+            task,
+            existing: _restoredRunState(
+              task.id,
+              trackedTaskParams[task.id],
+              isCollapsed: trackedTaskUiState[task.id] ?? false,
+            ),
+          ),
+        );
+        seenIds.add(task.id);
       }
 
-      final trackedTask = await _fetchTaskWithListData(trackedTaskId);
-      await _rememberTrackedTask(trackedTask.id);
-      _emitTaskState(trackedTask, emit);
+      final nextState = state.copyWith(reportRuns: restoredRuns);
+      _emitRunState(emit, nextState);
     } catch (_) {
-      // Ignore initialization failures and leave the page usable.
+      _syncActivityCoordinator(state);
     }
   }
 
@@ -116,20 +151,29 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     ReportsRunRequested event,
     Emitter<ReportsState> emit,
   ) async {
-    _stopPolling();
-    _activityCoordinator.show(
-      title: 'Raporttia käynnistetään',
-      status: 'Lähetetään pyyntöä palvelimelle...',
+    final localRunId = _nextLocalRunId();
+    final l10n = currentReportLocalizations();
+    final parameters = ReportRunParameters(
+      tarkastelupvm: state.tarkastelupvm.trim(),
+      kunta: state.kunta,
+      huoneistomaara: state.huoneistomaara,
+      taajama: state.taajama,
+      kohdeTyyppi: state.kohdeTyyppi,
+      onkoViemari: state.onkoViemari,
     );
-    emit(state.copyWith(
+    final submittingRun = ReportRunState(
+      id: localRunId,
+      parameters: parameters,
       runStatus: ReportsRunStatus.submitting,
-      statusMessage: 'Raporttia käynnistetään...',
-      errorMessage: null,
-      resultFileName: null,
-      resultUrl: null,
-      sharepointError: null,
-      cancelRequested: false,
-    ));
+      description: l10n.reportsBlocStartDescription,
+      statusMessage: l10n.reportsBlocSubmittingStatus,
+      lastUpdatedAt: DateTime.now(),
+    );
+
+    _emitRunState(
+      emit,
+      state.copyWith(reportRuns: [submittingRun, ...state.reportRuns]),
+    );
 
     try {
       final response = await _repository.startReport(
@@ -141,32 +185,36 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
         onkoViemari: state.onkoViemari,
       );
 
-      emit(state.copyWith(
-        runStatus: ReportsRunStatus.running,
-        currentTaskId: response.taskId,
-        currentDescription: response.description,
-        statusMessage: response.message,
-        errorMessage: null,
-        resultFileName: null,
-        resultUrl: null,
-        sharepointError: null,
-        cancelRequested: false,
-      ));
-      await _rememberTrackedTask(response.taskId);
-      _activityCoordinator.show(
-        title: 'Raportin luonti käynnissä',
-        status: response.message,
-        taskId: response.taskId,
+      final nextState = _updateRun(
+        localRunId,
+        (run) => run.copyWith(
+          taskId: response.taskId,
+          description: response.description,
+          parameters: parameters,
+          runStatus: ReportsRunStatus.running,
+          statusMessage: response.message,
+          errorMessage: null,
+          resultFileName: null,
+          resultUrl: null,
+          sharepointError: null,
+          cancelRequested: false,
+          isCollapsed: false,
+          lastUpdatedAt: DateTime.now(),
+        ),
       );
-      _setPollingInterval(_defaultPollInterval);
+      _emitRunState(emit, nextState);
     } catch (e) {
-      _activityCoordinator.clear();
-      emit(state.copyWith(
-        runStatus: ReportsRunStatus.failed,
-        errorMessage: e.toString().replaceFirst('Exception: ', ''),
-        statusMessage: null,
-        cancelRequested: false,
-      ));
+      final nextState = _updateRun(
+        localRunId,
+        (run) => run.copyWith(
+          runStatus: ReportsRunStatus.failed,
+          statusMessage: null,
+          errorMessage: e.toString().replaceFirst('Exception: ', ''),
+          cancelRequested: false,
+          lastUpdatedAt: DateTime.now(),
+        ),
+      );
+      _emitRunState(emit, nextState);
     }
   }
 
@@ -174,22 +222,44 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     ReportsStatusPollRequested event,
     Emitter<ReportsState> emit,
   ) async {
-    final taskId = state.currentTaskId;
-    if (taskId == null || taskId.isEmpty) {
-      _stopPolling();
+    final trackedTaskIds = state.reportRuns
+        .map((run) => run.taskId)
+        .whereType<String>()
+        .toSet();
+    if (trackedTaskIds.isEmpty) {
+      _syncPolling(state);
       return;
     }
 
     try {
-      final task = await _fetchTaskWithListData(taskId);
-      _emitTaskState(task, emit, cancelRequested: state.cancelRequested);
-    } catch (e) {
-      _stopPolling();
-      _activityCoordinator.clear(taskId: taskId);
-      emit(state.copyWith(
-        runStatus: ReportsRunStatus.failed,
-        errorMessage: e.toString().replaceFirst('Exception: ', ''),
-      ));
+      final tasks = await _repository.fetchTasks();
+      final reportTaskById = {
+        for (final task in tasks.where(_isReportTask)) task.id: task,
+      };
+
+      final missingTaskIds = trackedTaskIds.where((taskId) => !reportTaskById.containsKey(taskId));
+      for (final taskId in missingTaskIds) {
+        final task = await _tryFetchTask(taskId);
+        if (task != null && _isReportTask(task)) {
+          reportTaskById[taskId] = task;
+        }
+      }
+
+      final updatedRuns = state.reportRuns.map((run) {
+        final taskId = run.taskId;
+        if (taskId == null || taskId.isEmpty) {
+          return run;
+        }
+        final task = reportTaskById[taskId];
+        if (task == null) {
+          return run;
+        }
+        return _runFromTask(task, existing: run);
+      }).toList(growable: false);
+
+      _emitRunState(emit, state.copyWith(reportRuns: updatedRuns));
+    } catch (_) {
+      _syncPolling(state);
     }
   }
 
@@ -197,226 +267,290 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     ReportsCancelRequested event,
     Emitter<ReportsState> emit,
   ) async {
-    final taskId = state.currentTaskId;
-    if (taskId == null || taskId.isEmpty) {
+    final l10n = currentReportLocalizations();
+    final run = _findRun(event.runId);
+    final taskId = run?.taskId;
+    if (run == null || taskId == null || taskId.isEmpty) {
       return;
     }
 
-    emit(state.copyWith(
-      runStatus: ReportsRunStatus.cancelling,
-      cancelRequested: true,
-      statusMessage: 'Peruutetaan raportin luontia...',
-      errorMessage: null,
-    ));
-    _activityCoordinator.show(
-      title: 'Raporttia peruutetaan',
-      status: 'Peruutetaan raportin luontia...',
-      taskId: taskId,
+    _emitRunState(
+      emit,
+      _updateRun(
+        event.runId,
+        (current) => current.copyWith(
+          runStatus: ReportsRunStatus.cancelling,
+          cancelRequested: true,
+          statusMessage: l10n.reportsBlocCancellingStatus,
+          errorMessage: null,
+          lastUpdatedAt: DateTime.now(),
+        ),
+      ),
     );
 
     try {
       final message = await _repository.cancelTask(taskId);
-      _activityCoordinator.show(
-        title: 'Raporttia peruutetaan',
-        status: message,
-        taskId: taskId,
+      _emitRunState(
+        emit,
+        _updateRun(
+          event.runId,
+          (current) => current.copyWith(
+            runStatus: ReportsRunStatus.cancelling,
+            cancelRequested: true,
+            statusMessage: message,
+            lastUpdatedAt: DateTime.now(),
+          ),
+        ),
       );
-      emit(state.copyWith(
-        runStatus: ReportsRunStatus.cancelling,
-        cancelRequested: true,
-        statusMessage: message,
-      ));
       add(const ReportsStatusPollRequested());
     } catch (e) {
-      _stopPolling();
-      _activityCoordinator.clear(taskId: taskId);
-      emit(state.copyWith(
-        runStatus: ReportsRunStatus.failed,
-        cancelRequested: false,
-        errorMessage: e.toString().replaceFirst('Exception: ', ''),
-      ));
+      _emitRunState(
+        emit,
+        _updateRun(
+          event.runId,
+          (current) => current.copyWith(
+            runStatus: ReportsRunStatus.failed,
+            cancelRequested: false,
+            statusMessage: null,
+            errorMessage: e.toString().replaceFirst('Exception: ', ''),
+            lastUpdatedAt: DateTime.now(),
+          ),
+        ),
+      );
     }
   }
 
-  void _onDialogDismissed(
-    ReportsDialogDismissed event,
+  void _onRunDismissed(
+    ReportsRunDismissed event,
     Emitter<ReportsState> emit,
   ) {
-    _stopPolling();
-    _activityCoordinator.clear(taskId: state.currentTaskId);
-    unawaited(_forgetTrackedTask());
-    emit(state.copyWith(runStatus: ReportsRunStatus.idle, clearTransient: true));
+    final nextRuns = state.reportRuns
+        .where((run) => run.id != event.runId)
+        .toList(growable: false);
+    _emitRunState(emit, state.copyWith(reportRuns: nextRuns));
   }
 
-  bool get _hasTrackedTaskInState {
-    final taskId = state.currentTaskId;
-    return taskId != null && taskId.isNotEmpty;
+  void _onRunCollapseToggled(
+    ReportsRunCollapseToggled event,
+    Emitter<ReportsState> emit,
+  ) {
+    final nextState = _updateRun(
+      event.runId,
+      (run) => run.copyWith(isCollapsed: !run.isCollapsed),
+    );
+    _emitRunState(emit, nextState);
   }
 
-  void _setPollingInterval(Duration interval) {
-    _startPollingInternal(interval: interval, triggerImmediately: true);
-  }
-
-  void _startPollingInternal({
-    required Duration interval,
-    required bool triggerImmediately,
-  }) {
-    if (_pollTimer != null && _currentPollInterval == interval) {
-      if (triggerImmediately) {
-        add(const ReportsStatusPollRequested());
+  ReportsState _updateRun(
+    String runId,
+    ReportRunState Function(ReportRunState run) update,
+  ) {
+    final nextRuns = state.reportRuns.map((run) {
+      if (run.id != runId) {
+        return run;
       }
+      return update(run);
+    }).toList(growable: false);
+
+    return state.copyWith(reportRuns: nextRuns);
+  }
+
+  ReportRunState? _findRun(String runId) {
+    for (final run in state.reportRuns) {
+      if (run.id == runId) {
+        return run;
+      }
+    }
+    return null;
+  }
+
+  void _emitRunState(
+    Emitter<ReportsState> emit,
+    ReportsState nextState, {
+    bool persistTrackedIds = true,
+  }) {
+    emit(nextState);
+    _syncActivityCoordinator(nextState);
+    _syncPolling(nextState);
+    if (persistTrackedIds) {
+      unawaited(_persistTrackedRunMetadata(nextState.reportRuns));
+    }
+  }
+
+  ReportRunState _restoredRunState(
+    String taskId,
+    ReportRunParameters? parameters,
+    {
+    required bool isCollapsed,
+  }
+  ) {
+    return ReportRunState(
+      id: taskId,
+      taskId: taskId,
+      parameters: parameters,
+      runStatus: ReportsRunStatus.idle,
+      isCollapsed: isCollapsed,
+      lastUpdatedAt: DateTime.now(),
+    );
+  }
+
+  void _syncPolling(ReportsState nextState) {
+    final shouldPoll = nextState.reportRuns.any(
+      (run) => run.shouldPoll && run.taskId != null && run.taskId!.isNotEmpty,
+    );
+
+    if (!shouldPoll) {
+      _stopPolling();
       return;
     }
 
-    _stopPolling();
-    _currentPollInterval = interval;
-    _pollTimer = Timer.periodic(interval, (_) {
+    if (_pollTimer != null) {
+      return;
+    }
+
+    _pollTimer = Timer.periodic(_pollInterval, (_) {
       add(const ReportsStatusPollRequested());
     });
-    if (triggerImmediately) {
-      add(const ReportsStatusPollRequested());
-    }
+    add(const ReportsStatusPollRequested());
   }
 
   void _stopPolling() {
     _pollTimer?.cancel();
     _pollTimer = null;
-    _currentPollInterval = null;
+  }
+
+  void _syncActivityCoordinator(ReportsState nextState) {
+    final l10n = currentReportLocalizations();
+    final activeRuns = nextState.reportRuns.where((run) => run.isActive).toList();
+    if (activeRuns.isEmpty) {
+      _activityCoordinator.clear();
+      return;
+    }
+
+    final primaryRun = activeRuns.first;
+    final title = activeRuns.length == 1
+        ? (primaryRun.runStatus == ReportsRunStatus.submitting
+        ? l10n.reportsRunStatusStarting
+        : l10n.reportsBannerSingleActive)
+      : l10n.reportsBannerMultipleActive(activeRuns.length);
+
+    _activityCoordinator.show(
+      title: title,
+      status: primaryRun.statusMessage ?? primaryRun.description,
+      taskId: primaryRun.taskId,
+    );
+  }
+
+  ReportRunState _runFromTask(
+    ReportTaskInfo task, {
+    ReportRunState? existing,
+  }) {
+    final isCancelling = existing?.cancelRequested == true;
+
+    switch (task.status) {
+      case ReportTaskStatus.pending:
+      case ReportTaskStatus.running:
+        return ReportRunState(
+          id: existing?.id ?? task.id,
+          taskId: task.id,
+          description: task.description,
+          parameters: existing?.parameters,
+          runStatus: isCancelling
+              ? ReportsRunStatus.cancelling
+              : ReportsRunStatus.running,
+          statusMessage: _buildProgressMessage(task, isCancelling),
+          errorMessage: null,
+          resultFileName: task.resultFile?.filename,
+          resultUrl: task.resultFile?.sharepointUrl,
+          sharepointError: task.resultFile?.sharepointError,
+          cancelRequested: isCancelling,
+          isCollapsed: existing?.isCollapsed ?? false,
+          lastUpdatedAt: DateTime.now(),
+        );
+      case ReportTaskStatus.completed:
+        return ReportRunState(
+          id: existing?.id ?? task.id,
+          taskId: task.id,
+          description: task.description,
+          parameters: existing?.parameters,
+          runStatus: ReportsRunStatus.completed,
+          statusMessage: _buildCompletedMessage(task),
+          errorMessage: null,
+          resultFileName: task.resultFile?.filename,
+          resultUrl: task.resultFile?.sharepointUrl,
+          sharepointError: task.resultFile?.sharepointError,
+          cancelRequested: false,
+          isCollapsed: existing?.isCollapsed ?? false,
+          lastUpdatedAt: DateTime.now(),
+        );
+      case ReportTaskStatus.failed:
+        final wasCancelled = isCancelling ||
+            task.error.contains('pysäytettiin käyttäjän pyynnöstä');
+        return ReportRunState(
+          id: existing?.id ?? task.id,
+          taskId: task.id,
+          description: task.description,
+          parameters: existing?.parameters,
+          runStatus: ReportsRunStatus.failed,
+          statusMessage: null,
+          errorMessage: wasCancelled
+              ? currentReportLocalizations().reportsBlocCancelled
+              : _buildFailedMessage(task),
+          resultFileName: task.resultFile?.filename,
+          resultUrl: task.resultFile?.sharepointUrl,
+          sharepointError: task.resultFile?.sharepointError,
+          cancelRequested: false,
+          isCollapsed: existing?.isCollapsed ?? false,
+          lastUpdatedAt: DateTime.now(),
+        );
+    }
   }
 
   String _buildProgressMessage(ReportTaskInfo task, bool cancelRequested) {
+    final l10n = currentReportLocalizations();
     if (cancelRequested) {
-      return task.latestOutputLine ?? 'Peruutuspyyntö lähetetty. Odotetaan palvelimen kuittausta...';
+      return task.latestOutputLine ??
+          l10n.reportsBlocCancelPending;
     }
     return task.latestOutputLine ??
         (task.description.isNotEmpty
             ? task.description
-            : 'Raporttia muodostetaan...');
+            : l10n.reportsBlocProgressFallback);
   }
 
   String _buildCompletedMessage(ReportTaskInfo task) {
-    if (task.resultFile?.sharepointUrl != null) {
-      return 'Raportti on luotu ja tallennettu SharePointiin.';
+    final l10n = currentReportLocalizations();
+    if (_hasSharepointUrl(task)) {
+      return l10n.reportsBlocCompletedStoredSharepoint;
     }
     if (task.resultFile?.filename != null) {
-      return 'Raportti on luotu. Odotetaan SharePoint-linkkiä...';
+      return l10n.reportsBlocCompletedWaitingLink;
     }
-    return task.latestOutputLine ?? 'Raportti on valmis. Odotetaan SharePoint-linkkiä...';
+    return task.latestOutputLine ??
+        l10n.reportsBlocCompletedReadyWaitingLink;
   }
 
   String _buildFailedMessage(ReportTaskInfo task) {
+    final l10n = currentReportLocalizations();
     return task.latestErrorLine ??
         task.latestOutputLine ??
-        'Raportin luonti epäonnistui.';
+        l10n.reportsBlocFailedGeneric;
   }
 
-  void _emitTaskState(
-    ReportTaskInfo task,
-    Emitter<ReportsState> emit,
-    {bool cancelRequested = false}
-  ) {
-    switch (task.status) {
-      case ReportTaskStatus.pending:
-      case ReportTaskStatus.running:
-        if (_pollTimer == null) {
-          _startPollingInternal(
-            interval: _restoredPollInterval,
-            triggerImmediately: false,
-          );
-        }
-        _emitRunningState(task, emit, cancelRequested: cancelRequested);
-        return;
-      case ReportTaskStatus.completed:
-        _emitCompletedState(task, emit);
-        return;
-      case ReportTaskStatus.failed:
-        _emitFailedState(task, emit, cancelRequested: cancelRequested);
-        return;
-    }
+  bool _shouldRestoreTask(ReportTaskInfo task, List<String> trackedTaskIds) {
+    return _isActiveReportTask(task) || trackedTaskIds.contains(task.id);
   }
 
-  void _emitRunningState(
-    ReportTaskInfo task,
-    Emitter<ReportsState> emit, {
-    bool cancelRequested = false,
-  }) {
-    final progressMessage = _buildProgressMessage(task, cancelRequested);
-    final runStatus = cancelRequested
-        ? ReportsRunStatus.cancelling
-        : ReportsRunStatus.running;
-
-    _activityCoordinator.show(
-      title: cancelRequested ? 'Raporttia peruutetaan' : 'Raportin luonti käynnissä',
-      status: progressMessage,
-      taskId: task.id,
-    );
-    emit(_copyTaskData(
-      task,
-      state.copyWith(
-        runStatus: runStatus,
-        statusMessage: progressMessage,
-        errorMessage: null,
-        cancelRequested: cancelRequested,
-      ),
-    ));
+  bool _isActiveReportTask(ReportTaskInfo task) {
+    final isActive = task.status == ReportTaskStatus.pending ||
+        task.status == ReportTaskStatus.running;
+    return isActive && _isReportTask(task);
   }
 
-  void _emitCompletedState(
-    ReportTaskInfo task,
-    Emitter<ReportsState> emit,
-  ) {
-    _activityCoordinator.clear(taskId: task.id);
-    if (_hasSharepointUrl(task)) {
-      _stopPolling();
-    } else if (_currentPollInterval != _restoredPollInterval) {
-      _startPollingInternal(
-        interval: _restoredPollInterval,
-        triggerImmediately: false,
-      );
-    }
-
-    emit(_copyTaskData(
-      task,
-      state.copyWith(
-        runStatus: ReportsRunStatus.completed,
-        statusMessage: _buildCompletedMessage(task),
-        errorMessage: null,
-        cancelRequested: false,
-      ),
-    ));
-  }
-
-  void _emitFailedState(
-    ReportTaskInfo task,
-    Emitter<ReportsState> emit, {
-    bool cancelRequested = false,
-  }) {
-    _stopPolling();
-    _activityCoordinator.clear(taskId: task.id);
-    final wasCancelled = cancelRequested ||
-        task.error.contains('pysäytettiin käyttäjän pyynnöstä');
-
-    emit(_copyTaskData(
-      task,
-      state.copyWith(
-        runStatus: ReportsRunStatus.failed,
-        statusMessage: null,
-        errorMessage: wasCancelled
-            ? 'Raportin luonti peruttiin.'
-            : _buildFailedMessage(task),
-        cancelRequested: false,
-      ),
-    ));
-  }
-
-  ReportsState _copyTaskData(ReportTaskInfo task, ReportsState nextState) {
-    return nextState.copyWith(
-      currentTaskId: task.id,
-      currentDescription: task.description,
-      resultFileName: task.resultFile?.filename,
-      resultUrl: task.resultFile?.sharepointUrl,
-      sharepointError: task.resultFile?.sharepointError,
-    );
+  bool _isReportTask(ReportTaskInfo task) {
+    final isReportCommand = task.command.startsWith('jkr raportti ');
+    final isReportDescription = task.description.startsWith('Raportti:');
+    return isReportCommand || isReportDescription;
   }
 
   bool _hasSharepointUrl(ReportTaskInfo task) {
@@ -424,63 +558,145 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     return sharepointUrl != null && sharepointUrl.isNotEmpty;
   }
 
-  Future<ReportTaskInfo> _fetchTaskWithListData(String taskId) async {
+  String _nextLocalRunId() {
+    _localRunSequence += 1;
+    return 'local-report-run-$_localRunSequence';
+  }
+
+  Future<ReportTaskInfo?> _tryFetchTask(String taskId) async {
     try {
-      final tasks = await _repository.fetchTasks();
-      for (final task in tasks) {
-        if (task.id == taskId) {
-          return task;
-        }
-      }
+      return await _repository.fetchTask(taskId);
     } catch (_) {
-      // Fall back to single-task fetch if list fetch fails.
-    }
-
-    return _repository.fetchTask(taskId);
-  }
-
-  Future<void> _rememberTrackedTask(String taskId) {
-    return _storage.write(
-      key: AppConstants.storageKeyTrackedReportTaskId,
-      value: taskId,
-    );
-  }
-
-  Future<String?> _readTrackedTaskId() {
-    return _storage.read(key: AppConstants.storageKeyTrackedReportTaskId);
-  }
-
-  Future<void> _forgetTrackedTask() {
-    return _storage.delete(key: AppConstants.storageKeyTrackedReportTaskId);
-  }
-
-  ReportTaskInfo? _selectActiveReportTask(List<ReportTaskInfo> tasks) {
-    final activeTasks = tasks.where(_isActiveReportTask).toList();
-    if (activeTasks.isEmpty) {
       return null;
     }
-
-    for (final task in activeTasks) {
-      if (task.status == ReportTaskStatus.running) {
-        return task;
-      }
-    }
-
-    return activeTasks.first;
   }
 
-  bool _isActiveReportTask(ReportTaskInfo task) {
-    final isActive = task.status == ReportTaskStatus.pending ||
-        task.status == ReportTaskStatus.running;
-    final isReportCommand = task.command.startsWith('jkr raportti ');
-    final isReportDescription = task.description.startsWith('Raportti:');
-    return isActive && (isReportCommand || isReportDescription);
+  Future<List<String>> _readTrackedTaskIds() async {
+    final rawValue = await _storage.read(
+      key: AppConstants.storageKeyTrackedReportTaskId,
+    );
+    if (rawValue == null || rawValue.isEmpty) {
+      return const [];
+    }
+
+    try {
+      final decoded = jsonDecode(rawValue);
+      if (decoded is List) {
+        return decoded.whereType<String>().where((value) => value.isNotEmpty).toList();
+      }
+    } catch (_) {
+      // Fall back to the legacy single-id storage format.
+    }
+
+    return [rawValue];
+  }
+
+  Future<Map<String, ReportRunParameters>> _readTrackedTaskParameters() async {
+    final rawValue = await _storage.read(
+      key: AppConstants.storageKeyTrackedReportTaskParams,
+    );
+    if (rawValue == null || rawValue.isEmpty) {
+      return const {};
+    }
+
+    try {
+      final decoded = jsonDecode(rawValue);
+      if (decoded is! Map) {
+        return const {};
+      }
+
+      final result = <String, ReportRunParameters>{};
+      for (final entry in decoded.entries) {
+        final key = entry.key;
+        final value = entry.value;
+        if (key is! String || value is! Map) {
+          continue;
+        }
+        result[key] = ReportRunParameters.fromJson(
+          Map<String, dynamic>.from(value),
+        );
+      }
+      return result;
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  Future<Map<String, bool>> _readTrackedTaskUiState() async {
+    final rawValue = await _storage.read(
+      key: AppConstants.storageKeyTrackedReportTaskUi,
+    );
+    if (rawValue == null || rawValue.isEmpty) {
+      return const {};
+    }
+
+    try {
+      final decoded = jsonDecode(rawValue);
+      if (decoded is! Map) {
+        return const {};
+      }
+
+      final result = <String, bool>{};
+      for (final entry in decoded.entries) {
+        final key = entry.key;
+        final value = entry.value;
+        if (key is! String || value is! bool) {
+          continue;
+        }
+        result[key] = value;
+      }
+      return result;
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  Future<void> _persistTrackedRunMetadata(List<ReportRunState> runs) async {
+    final taskIds = runs
+        .map((run) => run.taskId)
+        .whereType<String>()
+        .where((taskId) => taskId.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
+
+    final taskParams = <String, Map<String, dynamic>>{};
+    final taskUiState = <String, bool>{};
+    for (final run in runs) {
+      final taskId = run.taskId;
+      if (taskId == null || taskId.isEmpty) {
+        continue;
+      }
+      if (run.parameters != null) {
+        taskParams[taskId] = run.parameters!.toJson();
+      }
+      taskUiState[taskId] = run.isCollapsed;
+    }
+
+    if (taskIds.isEmpty) {
+      await _storage.delete(key: AppConstants.storageKeyTrackedReportTaskId);
+      await _storage.delete(key: AppConstants.storageKeyTrackedReportTaskParams);
+      await _storage.delete(key: AppConstants.storageKeyTrackedReportTaskUi);
+      return;
+    }
+
+    await _storage.write(
+      key: AppConstants.storageKeyTrackedReportTaskId,
+      value: jsonEncode(taskIds),
+    );
+    await _storage.write(
+      key: AppConstants.storageKeyTrackedReportTaskParams,
+      value: jsonEncode(taskParams),
+    );
+    await _storage.write(
+      key: AppConstants.storageKeyTrackedReportTaskUi,
+      value: jsonEncode(taskUiState),
+    );
   }
 
   @override
   Future<void> close() {
     _stopPolling();
-    _activityCoordinator.clear(taskId: state.currentTaskId);
+    _activityCoordinator.clear();
     return super.close();
   }
 }

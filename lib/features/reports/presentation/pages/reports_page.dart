@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/card_container.dart';
 import '../../../../shared/widgets/responsive_grid.dart';
 import '../../data/repositories/reports_repository.dart';
@@ -32,46 +34,10 @@ class _ReportsView extends StatefulWidget {
 
 class _ReportsViewState extends State<_ReportsView> {
   late final TextEditingController _dateController;
-
-  static const _municipalities = <_DropdownItem<String>>[
-    _DropdownItem(value: '0', label: 'Kaikki kunnat'),
-    _DropdownItem(value: 'Asikkala', label: 'Asikkala'),
-    _DropdownItem(value: 'Heinola', label: 'Heinola'),
-    _DropdownItem(value: 'Hollola', label: 'Hollola'),
-    _DropdownItem(value: 'Kärkölä', label: 'Kärkölä'),
-    _DropdownItem(value: 'Lahti', label: 'Lahti'),
-    _DropdownItem(value: 'Myrskylä', label: 'Myrskylä'),
-    _DropdownItem(value: 'Orimattila', label: 'Orimattila'),
-    _DropdownItem(value: 'Padasjoki', label: 'Padasjoki'),
-    _DropdownItem(value: 'Pukkila', label: 'Pukkila'),
-  ];
-
-  static const _propertyTypes = <_DropdownItem<int>>[
-    _DropdownItem(value: 0, label: 'Kaikki / ei rajausta'),
-    _DropdownItem(value: 7, label: 'Asuinkiinteistö'),
-    _DropdownItem(value: 5, label: 'HAPA'),
-    _DropdownItem(value: 6, label: 'Biohapa'),
-    _DropdownItem(value: 8, label: 'Muu'),
-  ];
-
-  static const _sewerOptions = <_DropdownItem<int>>[
-    _DropdownItem(value: 0, label: 'Kaikki'),
-    _DropdownItem(value: 1, label: 'Viemäriverkostossa'),
-    _DropdownItem(value: 2, label: 'Ei viemäriverkostossa'),
-  ];
-
-  static const _apartmentOptions = <_DropdownItem<int>>[
-    _DropdownItem(value: 0, label: 'Kaikki huoneistomäärät'),
-    _DropdownItem(value: 4, label: 'Enintään neljä'),
-    _DropdownItem(value: 5, label: 'Vähintään viisi'),
-  ];
-
-  static const _urbanAreaOptions = <_DropdownItem<int>>[
-    _DropdownItem(value: 0, label: 'Ei rajausta'),
-    _DropdownItem(value: 1, label: 'Yli 200 asukasta'),
-    _DropdownItem(value: 2, label: 'Yli 10 000 asukasta'),
-    _DropdownItem(value: 3, label: 'Molemmat taajamarajaukset'),
-  ];
+  static const _fieldContentPadding = EdgeInsets.symmetric(
+    horizontal: 12,
+    vertical: 16,
+  );
 
   @override
   void initState() {
@@ -90,6 +56,7 @@ class _ReportsViewState extends State<_ReportsView> {
     return BlocBuilder<ReportsBloc, ReportsState>(
       builder: (context, state) {
         final bloc = context.read<ReportsBloc>();
+        final l10n = AppLocalizations.of(context)!;
         if (_dateController.text != state.tarkastelupvm) {
           _dateController.value = TextEditingValue(
             text: state.tarkastelupvm,
@@ -106,7 +73,7 @@ class _ReportsViewState extends State<_ReportsView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Excel-raportti',
+                      l10n.reportsPageTitle,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -115,7 +82,7 @@ class _ReportsViewState extends State<_ReportsView> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Luo JKR-raportti valituilla rajauksilla. Valmis tiedosto tallennetaan oletuksena SharePointiin, ja raportin eteneminen näkyy tässä näkymässä reaaliajassa.',
+                      l10n.reportsPageDescription,
                       style: TextStyle(
                         fontSize: 12,
                         height: 1.5,
@@ -124,7 +91,7 @@ class _ReportsViewState extends State<_ReportsView> {
                     ),
                     const SizedBox(height: 18),
                     Text(
-                      'Rajaukset',
+                      l10n.reportsFiltersTitle,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -136,46 +103,46 @@ class _ReportsViewState extends State<_ReportsView> {
                       minChildWidth: 220,
                       spacing: 12,
                       children: [
-                        _buildTextField(
-                          label: 'Tarkastelupäivämäärä',
-                          hint: 'esim. 31.03.2025',
+                        _buildDateField(
+                          context,
+                          label: l10n.reportsFieldDate,
                           controller: _dateController,
-                          enabled: !state.isBusy,
+                          selectedValue: state.tarkastelupvm,
                           onChanged: (value) => bloc.add(ReportsDateChanged(value)),
                         ),
                         _buildDropdownField<String>(
-                          label: 'Kunta',
+                          label: l10n.reportsFieldMunicipality,
                           value: state.kunta,
-                          enabled: !state.isBusy,
-                          items: _municipalities,
+                          enabled: true,
+                          items: _municipalities(l10n),
                           onChanged: (value) => bloc.add(ReportsMunicipalityChanged(value)),
                         ),
                         _buildDropdownField<int>(
-                          label: 'Huoneistolukumäärä',
+                          label: l10n.reportsFieldApartmentCount,
                           value: state.huoneistomaara,
-                          enabled: !state.isBusy,
-                          items: _apartmentOptions,
+                          enabled: true,
+                          items: _apartmentOptions(l10n),
                           onChanged: (value) => bloc.add(ReportsApartmentCountChanged(value)),
                         ),
                         _buildDropdownField<int>(
-                          label: 'Taajaman rajaus',
+                          label: l10n.reportsFieldUrbanArea,
                           value: state.taajama,
-                          enabled: !state.isBusy,
-                          items: _urbanAreaOptions,
+                          enabled: true,
+                          items: _urbanAreaOptions(l10n),
                           onChanged: (value) => bloc.add(ReportsUrbanAreaChanged(value)),
                         ),
                         _buildDropdownField<int>(
-                          label: 'Kohdetyyppi',
+                          label: l10n.reportsFieldPropertyType,
                           value: state.kohdeTyyppi,
-                          enabled: !state.isBusy,
-                          items: _propertyTypes,
+                          enabled: true,
+                          items: _propertyTypes(l10n),
                           onChanged: (value) => bloc.add(ReportsPropertyTypeChanged(value)),
                         ),
                         _buildDropdownField<int>(
-                          label: 'Viemäriverkosto',
+                          label: l10n.reportsFieldSewer,
                           value: state.onkoViemari,
-                          enabled: !state.isBusy,
-                          items: _sewerOptions,
+                          enabled: true,
+                          items: _sewerOptions(l10n),
                           onChanged: (value) => bloc.add(ReportsSewerChanged(value)),
                         ),
                       ],
@@ -198,7 +165,7 @@ class _ReportsViewState extends State<_ReportsView> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              'Raportin luonti käynnistyy taustalla. “Aja raportti” poistuu käytöstä ajon ajaksi, ja voit seurata tilaa muodostusnäkymässä. Peruuttaminen vaatii erillisen vahvistuksen.',
+                              l10n.reportsInfoParallelRuns,
                               style: TextStyle(
                                 fontSize: 12,
                                 height: 1.45,
@@ -215,21 +182,12 @@ class _ReportsViewState extends State<_ReportsView> {
                       runSpacing: 8,
                       children: [
                         ElevatedButton.icon(
-                          onPressed: state.isBusy
-                              ? null
-                              : () => bloc.add(const ReportsRunRequested()),
-                          icon: state.isBusy
-                              ? const SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(Icons.table_chart_outlined, size: 16),
+                          onPressed: () => bloc.add(const ReportsRunRequested()),
+                          icon: const Icon(Icons.table_chart_outlined, size: 16),
                           label: Text(
-                            state.isBusy ? 'Raporttia ajetaan...' : 'Aja raportti',
+                            state.reportRuns.isEmpty
+                                ? l10n.reportsRunButton
+                                : l10n.reportsRunNewButton,
                           ),
                         ),
                       ],
@@ -237,14 +195,20 @@ class _ReportsViewState extends State<_ReportsView> {
                   ],
                 ),
               ),
-              if (state.runStatus != ReportsRunStatus.idle) ...[
-                const SizedBox(height: 16),
-                _ReportProgressCard(
-                  state: state,
-                  onDismiss: () => bloc.add(const ReportsDialogDismissed()),
-                  onCancel: () => _confirmCancel(context),
-                ),
-              ],
+              if (state.reportRuns.isNotEmpty) const SizedBox(height: 16),
+              ..._sortedReportRuns(state.reportRuns).map((run) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: _ReportRunCard(
+                    key: ValueKey(run.id),
+                    run: run,
+                    onDismiss: () => bloc.add(ReportsRunDismissed(run.id)),
+                    onCancel: () => _confirmCancel(context, run.id),
+                    onToggleCollapse: () =>
+                        bloc.add(ReportsRunCollapseToggled(run.id)),
+                  ),
+                );
+              }),
             ],
           ),
         );
@@ -252,25 +216,26 @@ class _ReportsViewState extends State<_ReportsView> {
     );
   }
 
-  Future<void> _confirmCancel(BuildContext context) async {
+  Future<void> _confirmCancel(BuildContext context, String runId) async {
     final bloc = context.read<ReportsBloc>();
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Peruuta raportin luonti?'),
-          content: const Text(
-            'Raportin muodostus on käynnissä. Haluatko varmasti lähettää peruutuspyynnön?',
+          title: Text(l10n.reportsCancelDialogTitle),
+          content: Text(
+            l10n.reportsCancelDialogContent,
           ),
           actions: [
             OutlinedButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Jatka muodostusta'),
+              child: Text(l10n.reportsCancelDialogContinue),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
               style: FilledButton.styleFrom(backgroundColor: AppTheme.red),
-              child: const Text('Peruuta raportti'),
+              child: Text(l10n.reportsCancelDialogConfirm),
             ),
           ],
         );
@@ -278,17 +243,18 @@ class _ReportsViewState extends State<_ReportsView> {
     );
 
     if (confirmed == true && mounted) {
-      bloc.add(const ReportsCancelRequested());
+      bloc.add(ReportsCancelRequested(runId));
     }
   }
 
-  static Widget _buildTextField({
+  Widget _buildDateField(
+    BuildContext context, {
     required String label,
-    required String hint,
     required TextEditingController controller,
-    required bool enabled,
+    required String selectedValue,
     required ValueChanged<String> onChanged,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -303,13 +269,69 @@ class _ReportsViewState extends State<_ReportsView> {
         const SizedBox(height: 4),
         TextField(
           controller: controller,
-          enabled: enabled,
-          decoration: InputDecoration(hintText: hint),
+          readOnly: true,
+          onTap: () => _selectDate(context, selectedValue, onChanged),
+          decoration: _fieldDecoration(
+            hintText: l10n.reportsDateNoFilter,
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (selectedValue.isNotEmpty)
+                  IconButton(
+                    tooltip: l10n.reportsDateClearTooltip,
+                    onPressed: () {
+                      controller.clear();
+                      onChanged('');
+                    },
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                  ),
+                IconButton(
+                  tooltip: l10n.reportsDateSelectTooltip,
+                  onPressed: () => _selectDate(context, selectedValue, onChanged),
+                  icon: const Icon(Icons.calendar_month_outlined, size: 18),
+                ),
+              ],
+            ),
+          ),
           style: const TextStyle(fontSize: 12),
-          onChanged: onChanged,
         ),
       ],
     );
+  }
+
+  Future<void> _selectDate(
+    BuildContext context,
+    String selectedValue,
+    ValueChanged<String> onChanged,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final selectedDate = await showDatePicker(
+      context: context,
+      initialDate: _parseDate(selectedValue) ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      helpText: l10n.reportsDatePickerHelp,
+      cancelText: l10n.reportsDatePickerCancel,
+      confirmText: l10n.reportsDatePickerConfirm,
+    );
+
+    if (!mounted || selectedDate == null) {
+      return;
+    }
+
+    onChanged(DateFormat('dd.MM.yyyy').format(selectedDate));
+  }
+
+  DateTime? _parseDate(String value) {
+    if (value.trim().isEmpty) {
+      return null;
+    }
+
+    try {
+      return DateFormat('dd.MM.yyyy').parseStrict(value.trim());
+    } catch (_) {
+      return null;
+    }
   }
 
   static Widget _buildDropdownField<T>({
@@ -334,7 +356,7 @@ class _ReportsViewState extends State<_ReportsView> {
         DropdownButtonFormField<T>(
           initialValue: value,
           isExpanded: true,
-          decoration: const InputDecoration(),
+          decoration: _fieldDecoration(),
           items: items
               .map(
                 (item) => DropdownMenuItem<T>(
@@ -354,28 +376,177 @@ class _ReportsViewState extends State<_ReportsView> {
       ],
     );
   }
+
+  static InputDecoration _fieldDecoration({
+    String? hintText,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hintText,
+      isDense: false,
+      contentPadding: _fieldContentPadding,
+      suffixIcon: suffixIcon,
+      suffixIconConstraints: const BoxConstraints(
+        minHeight: 48,
+        minWidth: 48,
+      ),
+    );
+  }
+
+  List<ReportRunState> _sortedReportRuns(List<ReportRunState> runs) {
+    final indexedRuns = runs.indexed.toList(growable: false);
+    indexedRuns.sort((a, b) {
+      final priorityCompare =
+          _runPriority(a.$2).compareTo(_runPriority(b.$2));
+      if (priorityCompare != 0) {
+        return priorityCompare;
+      }
+      return a.$1.compareTo(b.$1);
+    });
+    return indexedRuns.map((entry) => entry.$2).toList(growable: false);
+  }
+
+  int _runPriority(ReportRunState run) {
+    return switch (run.runStatus) {
+      ReportsRunStatus.submitting ||
+      ReportsRunStatus.running ||
+      ReportsRunStatus.cancelling => 0,
+      ReportsRunStatus.completed when run.isWaitingForResultUrl => 1,
+      ReportsRunStatus.completed => 2,
+      ReportsRunStatus.failed => 3,
+      ReportsRunStatus.idle => 4,
+    };
+  }
+
+  List<_DropdownItem<String>> _municipalities(AppLocalizations l10n) {
+    return [
+      _DropdownItem(value: '0', label: l10n.reportsAllMunicipalities),
+      const _DropdownItem(value: 'Asikkala', label: 'Asikkala'),
+      const _DropdownItem(value: 'Heinola', label: 'Heinola'),
+      const _DropdownItem(value: 'Hollola', label: 'Hollola'),
+      const _DropdownItem(value: 'Kärkölä', label: 'Kärkölä'),
+      const _DropdownItem(value: 'Lahti', label: 'Lahti'),
+      const _DropdownItem(value: 'Myrskylä', label: 'Myrskylä'),
+      const _DropdownItem(value: 'Orimattila', label: 'Orimattila'),
+      const _DropdownItem(value: 'Padasjoki', label: 'Padasjoki'),
+      const _DropdownItem(value: 'Pukkila', label: 'Pukkila'),
+    ];
+  }
+
+  List<_DropdownItem<int>> _propertyTypes(AppLocalizations l10n) {
+    return [
+      _DropdownItem(value: 0, label: l10n.reportsPropertyTypeAll),
+      _DropdownItem(value: 7, label: l10n.reportsPropertyTypeResidential),
+      _DropdownItem(value: 5, label: l10n.reportsPropertyTypeHapa),
+      _DropdownItem(value: 6, label: l10n.reportsPropertyTypeBiohapa),
+      _DropdownItem(value: 8, label: l10n.reportsPropertyTypeOther),
+    ];
+  }
+
+  List<_DropdownItem<int>> _sewerOptions(AppLocalizations l10n) {
+    return [
+      _DropdownItem(value: 0, label: l10n.reportsSewerAll),
+      _DropdownItem(value: 1, label: l10n.reportsSewerConnected),
+      _DropdownItem(value: 2, label: l10n.reportsSewerNotConnected),
+    ];
+  }
+
+  List<_DropdownItem<int>> _apartmentOptions(AppLocalizations l10n) {
+    return [
+      _DropdownItem(value: 0, label: l10n.reportsApartmentsAll),
+      _DropdownItem(value: 4, label: l10n.reportsApartmentsMaxFour),
+      _DropdownItem(value: 5, label: l10n.reportsApartmentsMinFive),
+    ];
+  }
+
+  List<_DropdownItem<int>> _urbanAreaOptions(AppLocalizations l10n) {
+    return [
+      _DropdownItem(value: 0, label: l10n.reportsUrbanAreaNone),
+      _DropdownItem(value: 1, label: l10n.reportsUrbanAreaOver200),
+      _DropdownItem(value: 2, label: l10n.reportsUrbanAreaOver10000),
+      _DropdownItem(value: 3, label: l10n.reportsUrbanAreaBoth),
+    ];
+  }
 }
 
-class _ReportProgressCard extends StatelessWidget {
-  const _ReportProgressCard({
-    required this.state,
+class _ReportRunCard extends StatefulWidget {
+  const _ReportRunCard({
+    super.key,
+    required this.run,
     required this.onDismiss,
     required this.onCancel,
+    required this.onToggleCollapse,
   });
 
-  final ReportsState state;
+  final ReportRunState run;
   final VoidCallback onDismiss;
   final VoidCallback onCancel;
+  final VoidCallback onToggleCollapse;
+
+  @override
+  State<_ReportRunCard> createState() => _ReportRunCardState();
+}
+
+class _ReportRunCardState extends State<_ReportRunCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _highlightController;
+  _RunHighlightTone _highlightTone = _RunHighlightTone.none;
+
+  ReportRunState get run => widget.run;
+  VoidCallback get onDismiss => widget.onDismiss;
+  VoidCallback get onCancel => widget.onCancel;
+  VoidCallback get onToggleCollapse => widget.onToggleCollapse;
+
+  @override
+  void initState() {
+    super.initState();
+    _highlightController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+    if (_isNewlyStartedRun(run)) {
+      _playHighlight(_RunHighlightTone.started);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _ReportRunCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.run.runStatus != ReportsRunStatus.completed &&
+        run.runStatus == ReportsRunStatus.completed) {
+      _playHighlight(_RunHighlightTone.completed);
+    }
+  }
+
+  bool _isNewlyStartedRun(ReportRunState run) {
+    return run.id.startsWith('local-report-run-') &&
+        (run.runStatus == ReportsRunStatus.submitting ||
+            run.runStatus == ReportsRunStatus.running);
+  }
+
+  void _playHighlight(_RunHighlightTone tone) {
+    _highlightTone = tone;
+    _highlightController
+      ..stop()
+      ..forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _highlightController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isRunning = state.runStatus == ReportsRunStatus.running ||
-        state.runStatus == ReportsRunStatus.submitting ||
-        state.runStatus == ReportsRunStatus.cancelling;
-    final isCompleted = state.runStatus == ReportsRunStatus.completed;
-    final isFailed = state.runStatus == ReportsRunStatus.failed;
-    final hasResultUrl = state.resultUrl != null && state.resultUrl!.isNotEmpty;
-    final isWaitingForResultUrl = isCompleted && !hasResultUrl;
+    final l10n = AppLocalizations.of(context)!;
+    final isRunning = run.runStatus == ReportsRunStatus.running ||
+        run.runStatus == ReportsRunStatus.submitting ||
+        run.runStatus == ReportsRunStatus.cancelling;
+    final isCompleted = run.runStatus == ReportsRunStatus.completed;
+    final isFailed = run.runStatus == ReportsRunStatus.failed;
+    final hasResultUrl = run.hasResultUrl;
+    final isWaitingForResultUrl = run.isWaitingForResultUrl;
 
     final accentColor = isCompleted
         ? AppTheme.green
@@ -395,149 +566,575 @@ class _ReportProgressCard extends StatelessWidget {
             ? Icons.error_outline
             : Icons.hourglass_top_rounded;
 
-    return CardContainer(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return AnimatedBuilder(
+      animation: _highlightController,
+      builder: (context, child) {
+        final highlight = Curves.easeOutCubic.transform(
+          1 - _highlightController.value,
+        );
+        final highlightColor = switch (_highlightTone) {
+          _RunHighlightTone.started => AppTheme.primaryColor,
+          _RunHighlightTone.completed => AppTheme.green,
+          _RunHighlightTone.none => Colors.transparent,
+        };
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 240),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: highlight > 0
+                ? [
+                    BoxShadow(
+                      color: highlightColor.withValues(alpha: 0.10 * highlight),
+                      blurRadius: 26,
+                      spreadRadius: 2 * highlight,
+                    ),
+                  ]
+                : const [],
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: highlightColor.withValues(alpha: 0.34 * highlight),
+                width: highlight > 0 ? 1.2 : 0.5,
+              ),
+            ),
+            child: child,
+          ),
+        );
+      },
+      child: CardContainer(
+        padding: const EdgeInsets.all(20),
+        child: AnimatedCrossFade(
+          duration: const Duration(milliseconds: 220),
+          crossFadeState: run.isCollapsed
+              ? CrossFadeState.showFirst
+              : CrossFadeState.showSecond,
+          firstChild: _buildCollapsedCard(
+            context,
+            accentBg: accentBg,
+            accentColor: accentColor,
+            icon: icon,
+          ),
+          secondChild: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: accentBg,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(icon, color: accentColor),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _title(l10n),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        if (_parameterItems(l10n).isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: _parameterItems(l10n).map((item) {
+                              return _ParameterChip(
+                                label: item.label,
+                                value: item.value,
+                                isHighlighted: item.isHighlighted,
+                              );
+                            }).toList(growable: false),
+                          ),
+                        ],
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Text(
+                              _subtitle(l10n),
+                              style: TextStyle(
+                                fontSize: 12,
+                                height: 1.45,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                            if (isRunning)
+                              _PollingStatusChip(lastUpdatedAt: run.lastUpdatedAt),
+                            if (_highlightController.isAnimating &&
+                                _highlightTone == _RunHighlightTone.completed)
+                              _EventStatusChip(
+                                label: l10n.reportsEventJustCompleted,
+                                icon: Icons.auto_awesome_rounded,
+                                color: AppTheme.green,
+                                background: AppTheme.greenBg,
+                              ),
+                            if (_highlightController.isAnimating &&
+                                _highlightTone == _RunHighlightTone.started)
+                              _EventStatusChip(
+                                label: l10n.reportsEventStarted,
+                                icon: Icons.fiber_new_rounded,
+                                color: AppTheme.primaryColor,
+                                background: AppTheme.primaryLight,
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: onToggleCollapse,
+                    tooltip: l10n.reportsCollapseTooltip,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.unfold_less_rounded, size: 18),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              _ReportStepList(run: run),
+              const SizedBox(height: 18),
+              if (run.description != null && run.description!.isNotEmpty)
+                _InfoRow(label: l10n.reportsTaskLabel, value: run.description!),
+              if (run.taskId != null && run.taskId!.isNotEmpty)
+                _InfoRow(label: l10n.reportsIdentifierLabel, value: run.taskId!),
+              if (run.statusMessage != null && run.statusMessage!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                _MessageBox(
+                  title: isCompleted
+                      ? l10n.reportsStatusTitleReady
+                      : l10n.reportsStatusTitleCurrent,
+                  message: run.statusMessage!,
+                  color: accentColor,
+                  background: accentBg,
+                ),
+              ],
+              if (run.errorMessage != null && run.errorMessage!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                _MessageBox(
+                  title: l10n.reportsErrorTitle,
+                  message: run.errorMessage!,
+                  color: AppTheme.red,
+                  background: AppTheme.redBg,
+                ),
+              ],
+              if (run.resultFileName != null && run.resultFileName!.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _InfoRow(label: l10n.reportsFileLabel, value: run.resultFileName!),
+              ],
+              if (hasResultUrl) ...[
+                const SizedBox(height: 8),
+                _MessageBox(
+                  title: l10n.reportsSharepointLinkAvailableTitle,
+                  message: run.runStatus == ReportsRunStatus.completed
+                      ? l10n.reportsSharepointLinkAvailableCompleted
+                      : l10n.reportsSharepointLinkAvailableRunning,
+                  color: AppTheme.primaryColor,
+                  background: AppTheme.primaryLight,
+                ),
+              ],
+              if (run.sharepointError != null && run.sharepointError!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                _MessageBox(
+                  title: l10n.reportsSharepointNoticeTitle,
+                  message: run.sharepointError!,
+                  color: AppTheme.amber,
+                  background: AppTheme.amberBg,
+                ),
+              ],
+              const SizedBox(height: 20),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (isRunning)
+                    OutlinedButton.icon(
+                      onPressed: onCancel,
+                      icon: const Icon(Icons.close, size: 16),
+                      label: Text(l10n.reportsCancelButton),
+                    ),
+                  if (!isRunning)
+                    FilledButton(
+                      onPressed: onDismiss,
+                      child: Text(
+                        isCompleted ? l10n.reportsOkButton : l10n.reportsCloseButton,
+                      ),
+                    ),
+                  if (hasResultUrl || isWaitingForResultUrl)
+                    _ReportResultActionButton(
+                      resultUrl: run.resultUrl,
+                      showLinkPending: isWaitingForResultUrl,
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCollapsedCard({
+    BuildContext context,
+    required Color accentBg,
+    required Color accentColor,
+    required IconData icon,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+    final hasResultUrl = run.hasResultUrl;
+    final isWaitingForResultUrl = run.isWaitingForResultUrl;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onToggleCollapse,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   color: accentBg,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: accentColor),
+                child: Icon(icon, color: accentColor, size: 18),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _title,
+                      _title(l10n),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        height: 1.45,
-                        color: AppTheme.textSecondary,
+                    if (_parameterItems(l10n).isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _parameterItems(l10n).map((item) {
+                          return _ParameterChip(
+                            label: item.label,
+                            value: item.value,
+                            isHighlighted: item.isHighlighted,
+                          );
+                        }).toList(growable: false),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
+              const SizedBox(width: 12),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (hasResultUrl || isWaitingForResultUrl) ...[
+                    _ReportResultActionButton(
+                      resultUrl: run.resultUrl,
+                      showLinkPending: isWaitingForResultUrl,
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  IconButton(
+                    onPressed: onToggleCollapse,
+                    tooltip: l10n.reportsExpandTooltip,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.unfold_more_rounded, size: 18),
+                  ),
+                ],
+              ),
             ],
           ),
-          const SizedBox(height: 18),
-          _ReportStepList(state: state),
-          const SizedBox(height: 18),
-          if (state.currentDescription != null && state.currentDescription!.isNotEmpty)
-            _InfoRow(label: 'Tehtävä', value: state.currentDescription!),
-          if (state.currentTaskId != null && state.currentTaskId!.isNotEmpty)
-            _InfoRow(label: 'Tunniste', value: state.currentTaskId!),
-          if (state.statusMessage != null && state.statusMessage!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            _MessageBox(
-              title: isCompleted ? 'Valmis' : 'Tilanne',
-              message: state.statusMessage!,
-              color: accentColor,
-              background: accentBg,
+        ),
+      ),
+    );
+  }
+
+  String _title(AppLocalizations l10n) {
+    return switch (run.runStatus) {
+      ReportsRunStatus.submitting => l10n.reportsRunStatusStarting,
+      ReportsRunStatus.running => l10n.reportsRunStatusRunning,
+      ReportsRunStatus.cancelling => l10n.reportsRunStatusCancelling,
+      ReportsRunStatus.completed => l10n.reportsRunStatusCompleted,
+      ReportsRunStatus.failed => l10n.reportsRunStatusFailed,
+      ReportsRunStatus.idle => '',
+    };
+  }
+
+  String _subtitle(AppLocalizations l10n) {
+    return switch (run.runStatus) {
+      ReportsRunStatus.submitting || ReportsRunStatus.running =>
+        l10n.reportsRunSubtitleRunning,
+      ReportsRunStatus.cancelling =>
+        l10n.reportsRunSubtitleCancelling,
+      ReportsRunStatus.completed =>
+        l10n.reportsRunSubtitleCompleted,
+      ReportsRunStatus.failed =>
+        l10n.reportsRunSubtitleFailed,
+      ReportsRunStatus.idle => '',
+    };
+  }
+
+  List<_ParameterSummaryItem> _parameterItems(AppLocalizations l10n) {
+    final parameters = run.parameters;
+    if (parameters == null) {
+      return const [];
+    }
+
+    return [
+      _ParameterSummaryItem(
+        label: l10n.reportsParameterDayLabel,
+        value: parameters.tarkastelupvm.isEmpty
+            ? l10n.reportsParameterDayNotFiltered
+            : parameters.tarkastelupvm,
+        isHighlighted: parameters.tarkastelupvm.isNotEmpty,
+      ),
+      _ParameterSummaryItem(
+        label: l10n.reportsParameterMunicipalityLabel,
+        value: parameters.kunta == '0' ? l10n.reportsAllMunicipalities : parameters.kunta,
+        isHighlighted: parameters.kunta != '0',
+      ),
+      _ParameterSummaryItem(
+        label: l10n.reportsParameterApartmentsLabel,
+        value: switch (parameters.huoneistomaara) {
+          4 => l10n.reportsParameterApartmentsMaxFour,
+          5 => l10n.reportsParameterApartmentsMinFive,
+          _ => l10n.reportsParameterApartmentsAll,
+        },
+        isHighlighted: parameters.huoneistomaara != 0,
+      ),
+      _ParameterSummaryItem(
+        label: l10n.reportsParameterUrbanAreaLabel,
+        value: switch (parameters.taajama) {
+          1 => l10n.reportsParameterUrbanAreaOver200,
+          2 => l10n.reportsParameterUrbanAreaOver10000,
+          3 => l10n.reportsParameterUrbanAreaBoth,
+          _ => l10n.reportsParameterUrbanAreaNone,
+        },
+        isHighlighted: parameters.taajama != 0,
+      ),
+      _ParameterSummaryItem(
+        label: l10n.reportsParameterPropertyTypeLabel,
+        value: switch (parameters.kohdeTyyppi) {
+          7 => l10n.reportsParameterPropertyTypeResidential,
+          5 => l10n.reportsParameterPropertyTypeHapa,
+          6 => l10n.reportsParameterPropertyTypeBiohapa,
+          8 => l10n.reportsParameterPropertyTypeOther,
+          _ => l10n.reportsParameterPropertyTypeAll,
+        },
+        isHighlighted: parameters.kohdeTyyppi != 0,
+      ),
+      _ParameterSummaryItem(
+        label: l10n.reportsParameterSewerLabel,
+        value: switch (parameters.onkoViemari) {
+          1 => l10n.reportsParameterSewerConnected,
+          2 => l10n.reportsParameterSewerNotConnected,
+          _ => l10n.reportsParameterSewerAll,
+        },
+        isHighlighted: parameters.onkoViemari != 0,
+      ),
+    ].where((item) => item.isHighlighted).toList(growable: false);
+  }
+
+}
+
+enum _RunHighlightTone { none, started, completed }
+
+class _PollingStatusChip extends StatefulWidget {
+  const _PollingStatusChip({required this.lastUpdatedAt});
+
+  final DateTime? lastUpdatedAt;
+
+  @override
+  State<_PollingStatusChip> createState() => _PollingStatusChipState();
+}
+
+class _PollingStatusChipState extends State<_PollingStatusChip>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return _EventStatusChip(
+      label: _label(l10n),
+      icon: Icons.sync,
+      color: AppTheme.primaryColor,
+      background: AppTheme.primaryLight,
+      turns: _controller,
+    );
+  }
+
+  String _label(AppLocalizations l10n) {
+    final lastUpdatedAt = widget.lastUpdatedAt;
+    if (lastUpdatedAt == null) {
+      return l10n.reportsPollingUpdating;
+    }
+
+    final seconds = DateTime.now().difference(lastUpdatedAt).inSeconds;
+    if (seconds <= 1) {
+      return l10n.reportsPollingUpdatedJustNow;
+    }
+    if (seconds < 10) {
+      return l10n.reportsPollingUpdatedSecondsAgo(seconds);
+    }
+    return l10n.reportsPollingUpdating;
+  }
+}
+
+class _EventStatusChip extends StatelessWidget {
+  const _EventStatusChip({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.background,
+    this.turns,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+  final Color background;
+  final Animation<double>? turns;
+
+  @override
+  Widget build(BuildContext context) {
+    final iconWidget = Icon(icon, size: 14, color: color);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (turns != null)
+            RotationTransition(turns: turns!, child: iconWidget)
+          else
+            iconWidget,
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
             ),
-          ],
-          if (state.errorMessage != null && state.errorMessage!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            _MessageBox(
-              title: 'Virhe',
-              message: state.errorMessage!,
-              color: AppTheme.red,
-              background: AppTheme.redBg,
-            ),
-          ],
-          if (state.resultFileName != null && state.resultFileName!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _InfoRow(label: 'Tiedosto', value: state.resultFileName!),
-          ],
-          if (hasResultUrl) ...[
-            const SizedBox(height: 8),
-            _MessageBox(
-              title: 'SharePoint-linkki saatavilla',
-              message: state.runStatus == ReportsRunStatus.completed
-                  ? 'Raportti on avattavissa SharePointissa.'
-                  : 'Raportin SharePoint-linkki on jo saatavilla, vaikka ajo on vielä käynnissä.',
-              color: AppTheme.primaryColor,
-              background: AppTheme.primaryLight,
-            ),
-          ],
-          if (state.sharepointError != null && state.sharepointError!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            _MessageBox(
-              title: 'SharePoint-huomio',
-              message: state.sharepointError!,
-              color: AppTheme.amber,
-              background: AppTheme.amberBg,
-            ),
-          ],
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              if (isRunning)
-                OutlinedButton.icon(
-                  onPressed: onCancel,
-                  icon: const Icon(Icons.close, size: 16),
-                  label: const Text('Peruuta raportin luonti'),
-                ),
-              if (!isRunning)
-                FilledButton(
-                  onPressed: onDismiss,
-                  child: Text(isCompleted ? 'OK' : 'Sulje'),
-                ),
-              if (hasResultUrl || isWaitingForResultUrl)
-                _ReportResultActionButton(
-                  resultUrl: state.resultUrl,
-                  showLinkPending: isWaitingForResultUrl,
-                ),
-            ],
           ),
         ],
       ),
     );
   }
+}
 
-  String get _title {
-    return switch (state.runStatus) {
-      ReportsRunStatus.submitting => 'Raporttia käynnistetään',
-      ReportsRunStatus.running => 'Raporttia muodostetaan',
-      ReportsRunStatus.cancelling => 'Raporttia peruutetaan',
-      ReportsRunStatus.completed => 'Raportti on luotu',
-      ReportsRunStatus.failed => 'Raportin luonti epäonnistui',
-      ReportsRunStatus.idle => '',
-    };
-  }
+class _ParameterSummaryItem {
+  const _ParameterSummaryItem({
+    required this.label,
+    required this.value,
+    required this.isHighlighted,
+  });
 
-  String get _subtitle {
-    return switch (state.runStatus) {
-      ReportsRunStatus.submitting || ReportsRunStatus.running =>
-        'Palvelin muodostaa raporttia taustalla. Näet tähän näkymään raportin viimeisimmän etenemistiedon.',
-      ReportsRunStatus.cancelling =>
-        'Peruutuspyyntö on lähetetty. Odota, että palvelin vahvistaa raportin pysäyttämisen.',
-      ReportsRunStatus.completed =>
-        'Raportti valmistui onnistuneesti. Voit sulkea tämän näkymän OK-painikkeella.',
-      ReportsRunStatus.failed =>
-        'Raportin luonti pysähtyi virheeseen tai peruutukseen. Tarkista alla oleva viesti.',
-      ReportsRunStatus.idle => '',
-    };
+  final String label;
+  final String value;
+  final bool isHighlighted;
+}
+
+class _ParameterChip extends StatelessWidget {
+  const _ParameterChip({
+    required this.label,
+    required this.value,
+    required this.isHighlighted,
+  });
+
+  final String label;
+  final String value;
+  final bool isHighlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    final backgroundColor = isHighlighted
+        ? AppTheme.primaryLight
+        : AppTheme.background2;
+    final borderColor = isHighlighted
+        ? AppTheme.primaryColor.withValues(alpha: 0.35)
+        : Theme.of(context).colorScheme.outlineVariant;
+    final labelColor = isHighlighted
+        ? AppTheme.primaryDark
+        : AppTheme.textSecondary;
+    final valueColor = isHighlighted
+        ? AppTheme.primaryDark
+        : AppTheme.textPrimary;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: borderColor,
+        ),
+      ),
+      child: RichText(
+        text: TextSpan(
+          style: TextStyle(
+            fontSize: 11,
+            color: valueColor,
+            fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.w400,
+          ),
+          children: [
+            TextSpan(
+              text: '$label: ',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: labelColor,
+              ),
+            ),
+            TextSpan(text: value),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -594,6 +1191,7 @@ class _ReportResultActionButtonState extends State<_ReportResultActionButton>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 320),
       reverseDuration: const Duration(milliseconds: 220),
@@ -681,12 +1279,13 @@ class _ReportResultActionButtonState extends State<_ReportResultActionButton>
             ),
           ),
         ),
-        label: const Text('Haetaan linkkiä'),
+        label: Text(l10n.reportsButtonFetchingLink),
       ),
     );
   }
 
   Widget _buildOpenButton() {
+    final l10n = AppLocalizations.of(context)!;
     return ElevatedButton.icon(
       key: const ValueKey('open-report-button'),
       onPressed: () => launchUrl(
@@ -694,7 +1293,7 @@ class _ReportResultActionButtonState extends State<_ReportResultActionButton>
         mode: LaunchMode.externalApplication,
       ),
       icon: const Icon(Icons.open_in_new, size: 16),
-      label: const Text('Avaa raportti'),
+      label: Text(l10n.reportsButtonOpenReport),
     );
   }
 }
@@ -748,29 +1347,24 @@ class _MessageBox extends StatelessWidget {
 }
 
 class _ReportStepList extends StatelessWidget {
-  const _ReportStepList({required this.state});
+  const _ReportStepList({required this.run});
 
-  final ReportsState state;
-
-  static const _steps = <String>[
-    'Haetaan kohdetiedot kannasta',
-    'Sovelletaan velvoiterajaukset',
-    'Muodostetaan raportti',
-    'Viedään SharePointiin',
-  ];
+  final ReportRunState run;
 
   @override
   Widget build(BuildContext context) {
-    final activeIndex = _activeStepIndex(state);
+    final l10n = AppLocalizations.of(context)!;
+    final steps = _steps(l10n);
+    final activeIndex = _activeStepIndex(run);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: List.generate(_steps.length, (index) {
+      children: List.generate(steps.length, (index) {
         final status = _stepStatus(index, activeIndex);
         return Padding(
-          padding: EdgeInsets.only(bottom: index == _steps.length - 1 ? 0 : 12),
+          padding: EdgeInsets.only(bottom: index == steps.length - 1 ? 0 : 12),
           child: _ReportStepRow(
-            label: _steps[index],
+            label: steps[index],
             status: status,
           ),
         );
@@ -778,9 +1372,18 @@ class _ReportStepList extends StatelessWidget {
     );
   }
 
+  List<String> _steps(AppLocalizations l10n) {
+    return [
+      l10n.reportsStepFetchTargets,
+      l10n.reportsStepApplyObligationFilters,
+      l10n.reportsStepCreateReport,
+      l10n.reportsStepExportSharepoint,
+    ];
+  }
+
   _ReportStepVisualStatus _stepStatus(int index, int activeIndex) {
-    final isCompleted = state.runStatus == ReportsRunStatus.completed;
-    final isFailed = state.runStatus == ReportsRunStatus.failed;
+    final isCompleted = run.runStatus == ReportsRunStatus.completed;
+    final isFailed = run.runStatus == ReportsRunStatus.failed;
 
     if (isCompleted) {
       return _ReportStepVisualStatus.completed;
@@ -796,16 +1399,16 @@ class _ReportStepList extends StatelessWidget {
     return _ReportStepVisualStatus.pending;
   }
 
-  int _activeStepIndex(ReportsState state) {
-    if (state.runStatus == ReportsRunStatus.completed) {
-      return _steps.length - 1;
+  int _activeStepIndex(ReportRunState run) {
+    if (run.runStatus == ReportsRunStatus.completed) {
+      return 3;
     }
 
     final text = [
-      state.statusMessage,
-      state.currentDescription,
-      state.sharepointError,
-      state.resultFileName,
+      run.statusMessage,
+      run.description,
+      run.sharepointError,
+      run.resultFileName,
     ].whereType<String>().join(' ').toLowerCase();
 
     if (text.contains('sharepoint')) {
@@ -823,10 +1426,10 @@ class _ReportStepList extends StatelessWidget {
     if (text.contains('kohde') || text.contains('kanta') || text.contains('hae')) {
       return 0;
     }
-    if (state.runStatus == ReportsRunStatus.submitting) {
+    if (run.runStatus == ReportsRunStatus.submitting) {
       return 0;
     }
-    if (state.runStatus == ReportsRunStatus.cancelling) {
+    if (run.runStatus == ReportsRunStatus.cancelling) {
       return 2;
     }
     return 2;
