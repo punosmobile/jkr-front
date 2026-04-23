@@ -10,6 +10,8 @@ class ImportQueueItem {
   final int totalCount;
   final String? estimatedTime;
   final List<String> logLines;
+  final String? taskId;
+  final String? errorOutput;
 
   const ImportQueueItem({
     required this.id,
@@ -20,6 +22,8 @@ class ImportQueueItem {
     this.totalCount = 0,
     this.estimatedTime,
     this.logLines = const [],
+    this.taskId,
+    this.errorOutput,
   });
 
   ImportQueueItem copyWith({
@@ -31,6 +35,8 @@ class ImportQueueItem {
     int? totalCount,
     String? estimatedTime,
     List<String>? logLines,
+    String? taskId,
+    String? errorOutput,
   }) {
     return ImportQueueItem(
       id: id ?? this.id,
@@ -41,6 +47,8 @@ class ImportQueueItem {
       totalCount: totalCount ?? this.totalCount,
       estimatedTime: estimatedTime ?? this.estimatedTime,
       logLines: logLines ?? this.logLines,
+      taskId: taskId ?? this.taskId,
+      errorOutput: errorOutput ?? this.errorOutput,
     );
   }
 }

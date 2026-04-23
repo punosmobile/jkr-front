@@ -1,3 +1,5 @@
+import 'package:jkrfront/features/import/data/models/file_type_enum.dart';
+
 /// Represents a file or folder item from SharePoint.
 class SharepointItem {
   final String name;
@@ -57,23 +59,39 @@ class SharepointPullResult {
 }
 
 class SharepointDownloadedFile {
-  final String filename;
-  final int? size;
-  final String? targetPath;
-
-  const SharepointDownloadedFile({
-    required this.filename,
-    this.size,
-    this.targetPath,
-  });
-
   factory SharepointDownloadedFile.fromJson(Map<String, dynamic> json) {
     return SharepointDownloadedFile(
       filename: json['filename'] as String? ?? '',
       size: json['size'] as int?,
       targetPath: json['target_path'] as String?,
+      sharepointPath: json['sharepoint_path'] as String?,
+      runnable: json['runnable'] as bool? ?? false,
+      type: json['type'] as String? ?? '',
+      fileType: json['fileType'] as String? ?? '',
+      rows: json['rows'] as int?
     );
   }
+
+  final String filename;
+  final int? size;
+  final String? targetPath;  
+  final String? sharepointPath;
+  final String type;
+  final String fileType;
+  final int? rows;
+  final bool runnable;
+
+  const SharepointDownloadedFile({
+    required this.filename,
+    required this.runnable,
+    required this.type,
+    required this.fileType,
+    this.rows,
+    this.size,
+    this.targetPath,
+    this.sharepointPath,
+    
+  });
 }
 
 class SharepointPullError {
