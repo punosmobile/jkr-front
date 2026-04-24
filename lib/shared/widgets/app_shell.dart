@@ -254,6 +254,11 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
     return segment.isEmpty ? 'dashboard' : segment;
   }
 
+  /// Reittikohtaiset nimet näkymille, joita ei näytetä sidebarissa.
+  static const Map<String, String> _extraTitles = {
+    'lisenssit': 'Avoimen lähdekoodin lisenssit',
+  };
+
   /// Look up page title from sidebar sections.
   String _pageTitle(BuildContext context, String viewId) {
     final l10n = AppLocalizations.of(context)!;
@@ -262,7 +267,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
         if (item.id == viewId) return item.label;
       }
     }
-    return viewId;
+    return _extraTitles[viewId] ?? viewId;
   }
 
 
