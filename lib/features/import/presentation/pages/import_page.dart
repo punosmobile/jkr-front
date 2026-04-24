@@ -131,6 +131,45 @@ class _SharepointFilesCard extends StatelessWidget {
       title: 'Saatavilla Sharepointissa — Valmis vietäväksi',
       child: Column(
         children: [
+          BlocBuilder<ImportBloc, ImportState>(
+            buildWhen: (prev, curr) =>
+                prev.selectedFileCount != curr.selectedFileCount ||
+                prev.sharepointFiles.length != curr.sharepointFiles.length,
+            builder: (context, state) {
+              final allSelected = files.isNotEmpty &&
+                  state.selectedFileCount == files.length;
+              return InkWell(
+                onTap: () => context
+                    .read<ImportBloc>()
+                    .add(ImportSetAllSelected(!allSelected)),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 7),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Colors.black.withValues(alpha: 0.10),
+                        width: 0.5,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      _FileCheckbox(checked: allSelected),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Valitse kaikki',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
           for (final file in files)
             _SharepointFileRow(file: file),
           const SizedBox(height: 10),
