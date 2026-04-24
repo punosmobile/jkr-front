@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+import '../../../../core/auth/auth_service.dart';
 import '../../../../core/config/env_config.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/card_container.dart';
 
@@ -65,6 +67,9 @@ class RealtimeLogPage extends StatefulWidget {
 enum _ConnectionStatus { connected, disconnected, connecting }
 
 class _RealtimeLogPageState extends State<RealtimeLogPage> {
+  static const Duration _reconnectDelay = Duration(seconds: 5);
+
+  final AuthService _authService = getIt<AuthService>();
   final List<_LogEntry> _logs = [];
   final ScrollController _scrollController = ScrollController();
 
@@ -74,6 +79,7 @@ class _RealtimeLogPageState extends State<RealtimeLogPage> {
 
   // Simulated streaming
   Timer? _simulationTimer;
+  Timer? _reconnectTimer;
   int _simIndex = 0;
 
   // WebSocket (for real backend)
@@ -88,6 +94,7 @@ class _RealtimeLogPageState extends State<RealtimeLogPage> {
   @override
   void dispose() {
     _simulationTimer?.cancel();
+    _reconnectTimer?.cancel();
     _channel?.sink.close();
     _scrollController.dispose();
     super.dispose();
@@ -95,14 +102,24 @@ class _RealtimeLogPageState extends State<RealtimeLogPage> {
 
   /// Try to connect to the real WebSocket endpoint.
   /// Falls back to simulated log streaming if connection fails.
-  void _connectWebSocket() {
+  Future<void> _connectWebSocket() async {
+    _reconnectTimer?.cancel();
+    _simulationTimer?.cancel();
+    await _channel?.sink.close();
+    _channel = null;
+
+    if (!mounted) return;
     setState(() => _connectionStatus = _ConnectionStatus.connecting);
 
-    final apiBase = EnvConfig.apiBaseUrl;
-    final wsUrl = apiBase
-        .replaceFirst('http://', 'ws://')
-        .replaceFirst('https://', 'wss://');
-    final uri = Uri.parse('$wsUrl/ws/logs');
+    final token = await _authService.getAccessTokenSilently();
+    if (!mounted) return;
+
+    if (token == null || token.isEmpty) {
+      _handleConnectionFailure();
+      return;
+    }
+
+    final uri = _buildWebSocketUri(token: token);
 
     try {
       _channel = WebSocketChannel.connect(uri);
@@ -113,11 +130,12 @@ class _RealtimeLogPageState extends State<RealtimeLogPage> {
           if (_paused) return;
           _addLog(_parseWsMessage(message.toString()));
         },
-        onError: (_) => _fallbackToSimulation(),
-        onDone: () => _fallbackToSimulation(),
+        onError: (_) => _handleConnectionFailure(),
+        onDone: () => _handleConnectionFailure(),
+        cancelOnError: true,
       );
     } catch (_) {
-      _fallbackToSimulation();
+      _handleConnectionFailure();
     }
   }
 
@@ -128,12 +146,28 @@ class _RealtimeLogPageState extends State<RealtimeLogPage> {
     return _LogEntry(level: level, message: raw, timestamp: DateTime.now());
   }
 
-  void _fallbackToSimulation() {
+  void _handleConnectionFailure() {
     _channel?.sink.close();
     _channel = null;
+    _simulationTimer?.cancel();
     if (!mounted) return;
-    setState(() => _connectionStatus = _ConnectionStatus.connected);
-    _startSimulation();
+    setState(() => _connectionStatus = _ConnectionStatus.disconnected);
+
+    if (Environment.isDevelopment) {
+      _startSimulation();
+      _scheduleReconnect();
+    }
+  }
+
+  void _scheduleReconnect() {
+    if (_reconnectTimer?.isActive == true) {
+      return;
+    }
+
+    _reconnectTimer = Timer(_reconnectDelay, () {
+      if (!mounted) return;
+      _connectWebSocket();
+    });
   }
 
   void _startSimulation() {
@@ -176,12 +210,27 @@ class _RealtimeLogPageState extends State<RealtimeLogPage> {
     _simIndex = 0;
   });
 
-  String get _wsDisplayUrl {
+  Uri _buildWebSocketUri({String? token}) {
     final apiBase = EnvConfig.apiBaseUrl;
     final wsUrl = apiBase
         .replaceFirst('http://', 'ws://')
         .replaceFirst('https://', 'wss://');
-    return '$wsUrl/ws/logs';
+    final uri = Uri.parse('$wsUrl/ws/logs');
+
+    if (token == null || token.isEmpty) {
+      return uri;
+    }
+
+    return uri.replace(
+      queryParameters: {
+        ...uri.queryParameters,
+        'token': token,
+      },
+    );
+  }
+
+  String get _wsDisplayUrl {
+    return _buildWebSocketUri().toString();
   }
 
   // ─── BUILD ───────────────────────────────────────────────────────────────
