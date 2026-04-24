@@ -1,11 +1,9 @@
-import 'dart:convert';
-
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/auth/auth_bloc.dart';
@@ -14,7 +12,13 @@ import '../../core/auth/auth_service.dart';
 import '../../core/config/env_config.dart';
 import '../../core/di/injection.dart';
 import '../../core/network/dio_client.dart';
+import '../../core/tasks/app_task_type.dart';
+import '../../core/tasks/task_activity_cubit.dart';
 import '../../core/theme/app_theme.dart';
+import '../../features/reports/data/models/report_task_info.dart';
+import '../../features/reports/data/models/report_task_response.dart';
+import '../../features/reports/data/repositories/reports_repository.dart';
+import '../../features/reports/presentation/report_activity_coordinator.dart';
 import '../../l10n/app_localizations.dart';
 import '../../features/backups/presentation/pages/backups_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
@@ -42,19 +46,28 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin {
+  bool _importActive = false;
   String _importRunner = '';
   String _importDescription = '';
   bool _dbConnected = false;
   String? _backendVersion;
   Timer? _healthTimer;
+  Timer? _tasksTimer;
   ImportBloc? _importBloc;
+  late final TaskActivityCubit _taskActivityCubit;
   late final AnimationController _sidebarAnimCtrl;
   late final Animation<double> _sidebarAnimation;
   bool _sidebarCollapsed = false;
-  bool _importActive = false;
+  _ImportBannerState _importBanner = const _ImportBannerState.hidden();
+  final ReportActivityCoordinator _activityCoordinator =
+      ReportActivityCoordinator.instance;
+  List<ReportTaskInfo> _activeBackendReports = const [];
+  final ReportsRepository _reportsRepository = ReportsRepository();
 
   static const double _sidebarWidth = 240;
   static const double _collapsedWidth = 48;
+  static const _healthRefreshInterval = Duration(seconds: 30);
+  static const _reportRefreshInterval = Duration(seconds: 5);
   static const _animDuration = Duration(milliseconds: 250);
 
   @override
@@ -65,25 +78,38 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
       parent: _sidebarAnimCtrl,
       curve: Curves.easeInOut,
     );
+    _taskActivityCubit = TaskActivityCubit();
     _importBloc = ImportBloc(repository: ImportRepository())
       ..add(const ImportLoadFiles());
+    _activityCoordinator.addListener(_handleReportActivityChanged);
     _checkHealth();
-    _checkTasks();
+    _refreshActiveTasks();
     _healthTimer = Timer.periodic(
-      const Duration(seconds: 30),
-      (_) {
-        _checkHealth();
-        _checkTasks();
-      },
+      _healthRefreshInterval,
+      (_) => _checkHealth(),
+    );
+    _tasksTimer = Timer.periodic(
+      _reportRefreshInterval,
+      (_) => _refreshActiveTasks(),
     );
   }
 
   @override
   void dispose() {
     _healthTimer?.cancel();
+    _tasksTimer?.cancel();
+    _activityCoordinator.removeListener(_handleReportActivityChanged);
     _sidebarAnimCtrl.dispose();
     _importBloc?.close();
+    _taskActivityCubit.close();
     super.dispose();
+  }
+
+  void _handleReportActivityChanged() {
+    if (!mounted) {
+      return;
+    }
+    _syncImportBanner();
   }
 
   void _toggleSidebar() {
@@ -116,29 +142,110 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
     }
   }
 
-  Future<void> _checkTasks() async {
+  Future<void> _refreshActiveTasks() async {
     try {
-      final dio = getIt<DioClient>().dio;
-      final response = await dio.get('/tasks');
-      final tasks = response.data as List<dynamic>;
-      final running = tasks
-          .cast<Map<String, dynamic>>()
-          .where((t) => t['status'] == 'running')
-          .toList();
-      final isActive = running.isNotEmpty;
-      final runner = isActive ? (running.first['runner'] as String? ?? '') : '';
-      final description = isActive ? (running.first['description'] as String? ?? '') : '';
-      if (mounted && (isActive != _importActive || runner != _importRunner || description != _importDescription)) {
-        setState(() {
-          _importActive = isActive;
-          _importRunner = runner;
-          _importDescription = description;
-        });
+      final tasks = await _reportsRepository.fetchTasks();
+      final activeReports = tasks.where(_isActiveReportTask).toList()
+        ..sort((a, b) => a.id.compareTo(b.id));
+      final activeImports = tasks.where(_isActiveImportTask).toList()
+        ..sort((a, b) => a.id.compareTo(b.id));
+
+      if (!mounted) {
+        return;
       }
-      _importBloc?.add(ImportTaskStatusChanged(isActive));
-    } catch (_) {}
+
+      _activeBackendReports = activeReports;
+      _importActive = activeImports.isNotEmpty;
+      _importRunner = _importActive ? activeImports.first.runner : '';
+      _importDescription = _importActive ? activeImports.first.description : '';
+      _syncImportBanner();
+    } catch (_) {
+      if (mounted) {
+        _activeBackendReports = const [];
+        _importActive = false;
+        _importRunner = '';
+        _importDescription = '';
+        _syncImportBanner();
+      }
+    }
   }
 
+  void _syncImportBanner() {
+    final isReportActive =
+        _activeBackendReports.isNotEmpty || _activityCoordinator.snapshot != null;
+    _taskActivityCubit.update(
+      isImportActive: _importActive,
+      isReportActive: isReportActive,
+    );
+    _importBloc?.add(ImportTaskStatusChanged(_importActive));
+
+    final nextBanner = _buildImportBannerState(
+      context: context,
+      isImportActive: _importActive,
+      importRunner: _importRunner,
+      importDescription: _importDescription,
+      localSnapshot: _activityCoordinator.snapshot,
+      backendReports: _activeBackendReports,
+    );
+
+    if (_importBanner != nextBanner) {
+      setState(() {
+        _importBanner = nextBanner;
+      });
+    }
+  }
+
+  _ImportBannerState _buildImportBannerState({
+    required BuildContext context,
+    required bool isImportActive,
+    required String importRunner,
+    required String importDescription,
+    required ReportBannerSnapshot? localSnapshot,
+    required List<ReportTaskInfo> backendReports,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+    if (isImportActive) {
+      final title = importRunner.isNotEmpty
+          ? 'Tietojen syöttö käynnissä — $importRunner'
+          : 'Tietojen syöttö käynnissä';
+
+      return _ImportBannerState.visible(
+        title: title,
+        status: null,
+        route: '/import',
+      );
+    }
+
+    if (backendReports.isNotEmpty) {
+      final title = backendReports.length == 1
+          ? l10n.reportsBannerSingleActive
+          : l10n.reportsBannerMultipleActive(backendReports.length);
+
+      return _ImportBannerState.visible(
+        title: title,
+        status: null,
+        route: '/raportit',
+      );
+    }
+
+    if (localSnapshot != null) {
+      return _ImportBannerState.visible(
+        title: localSnapshot.title,
+        status: localSnapshot.status,
+        route: '/raportit',
+      );
+    }
+
+    return const _ImportBannerState.hidden();
+  }
+
+  bool _isActiveReportTask(ReportTaskInfo task) {
+    return task.isActive && task.isReportTask;
+  }
+
+  bool _isActiveImportTask(ReportTaskInfo task) {
+    return task.isActive && task.taskType == AppTaskType.importTask;
+  }
 
   /// Derive active view ID from the current route location.
   String _activeViewId(BuildContext context) {
@@ -176,20 +283,23 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
     final screenWidth = MediaQuery.of(context).size.width;
     final isNarrow = screenWidth < 800;
     final activeView = _activeViewId(context);
+    final packageInfo = getIt<PackageInfo>();
+    final userName = _parseUsername();
 
-    _importBloc ??= ImportBloc(repository: ImportRepository())
-      ..add(const ImportLoadFiles());
-    return BlocProvider.value(
-      value: _importBloc!,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _importBloc!),
+        BlocProvider.value(value: _taskActivityCubit),
+      ],
       child: Builder(builder: (context) => Scaffold(
       backgroundColor: AppTheme.background3,
       drawer: isNarrow
           ? Drawer(
               child: AppSidebar(
                 activeViewId: activeView,
-                userName: _parseUsername(),
-                appVersion: getIt<PackageInfo>().version,
-                appBuildNumber: getIt<PackageInfo>().buildNumber,
+                userName: userName,
+                appVersion: packageInfo.version,
+                appBuildNumber: packageInfo.buildNumber,
                 backendVersion: _backendVersion,
                 environment: Environment.current,
                 dbConnected: _dbConnected,
@@ -261,9 +371,9 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
               },
               child: AppSidebar(
                 activeViewId: activeView,
-                userName: _parseUsername(),
-                appVersion: getIt<PackageInfo>().version,
-                appBuildNumber: getIt<PackageInfo>().buildNumber,
+                userName: userName,
+                appVersion: packageInfo.version,
+                appBuildNumber: packageInfo.buildNumber,
                 backendVersion: _backendVersion,
                 environment: Environment.current,
                 dbConnected: _dbConnected,
@@ -279,10 +389,10 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
               children: [
                 _Topbar(
                   title: _pageTitle(context, activeView),
-                  userName: _parseUsername(),
+                  userName: userName,
                   isNarrow: isNarrow,
                 ),
-                if (_importActive) _buildImportBanner(_importRunner),
+                if (_importBanner.isVisible) _buildImportBanner(),
                 Expanded(
                   child: widget.child,
                 ),
@@ -294,35 +404,94 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
     )));
   }
 
-  Widget _buildImportBanner(String runner) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
+  Widget _buildImportBanner() {
+    return Material(
       color: const Color(0xFFD97706),
-      child: Row(
-        children: [
-          const _PulsingDot(),
-          const SizedBox(width: 10),
-          Text(
-            'Tietojen syöttö käynnissä — $runner',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+      child: InkWell(
+        onTap: () => context.go(_importBanner.route),
+        hoverColor: Colors.white.withValues(alpha: 0.08),
+        splashColor: Colors.white.withValues(alpha: 0.12),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
+          child: Row(
+            children: [
+              const _PulsingDot(),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _importBanner.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              if ((_importBanner.status ?? '').isNotEmpty) ...[
+                const SizedBox(width: 10),
+                Text(
+                  _importBanner.status!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+              const SizedBox(width: 10),
+              Icon(
+                Icons.arrow_forward_rounded,
+                size: 16,
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
+            ],
           ),
-          const Spacer(),
-          Text(
-            '', // TODO lisää arvioitu valmistumisaikalaskelma tähän
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.85),
-              fontSize: 11,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
+}
+
+class _ImportBannerState {
+  const _ImportBannerState._({
+    required this.isVisible,
+    required this.title,
+    this.status,
+    required this.route,
+  });
+
+  const _ImportBannerState.hidden()
+      : this._(isVisible: false, title: '', route: '');
+
+  const _ImportBannerState.visible({
+    required String title,
+    String? status,
+    required String route,
+  }) : this._(isVisible: true, title: title, status: status, route: route);
+
+  final bool isVisible;
+  final String title;
+  final String? status;
+  final String route;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    return other is _ImportBannerState &&
+        other.isVisible == isVisible &&
+        other.title == title &&
+        other.status == status &&
+        other.route == route;
+  }
+
+  @override
+  int get hashCode => Object.hash(isVisible, title, status, route);
 }
 
 // ─── TOPBAR ──────────────────────────────────────────────────────────────────

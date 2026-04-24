@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/tasks/task_activity_cubit.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/card_container.dart';
 import '../../../../shared/widgets/responsive_grid.dart';
@@ -26,6 +27,9 @@ class _ImportPageView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final activityState = context.watch<TaskActivityCubit>().state;
+    final isReportsActive = activityState.isReportActive;
+
     return BlocBuilder<ImportBloc, ImportState>(
       builder: (context, state) {
         if (state.status == ImportPageStatus.loading) {
@@ -60,7 +64,10 @@ class _ImportPageView extends StatelessWidget {
                 minChildWidth: 320,
                 spacing: 14,
                 children: [
-                  _SharepointFilesCard(files: state.sharepointFiles)
+                  _SharepointFilesCard(
+                    files: state.sharepointFiles,
+                    isReportsActive: isReportsActive,
+                  )
                 ],
               ),
               const SizedBox(height: 14),
@@ -71,6 +78,7 @@ class _ImportPageView extends StatelessWidget {
                   isAnalyzing: state.isAnalyzing,
                   hasErrors: state.hasAnalysisErrors,
                   canStartImport: state.canStartImport,
+                  isReportsActive: isReportsActive,
                 ),
               if (state.analyzedFiles.isNotEmpty || state.isAnalyzing)
                 const SizedBox(height: 14),
@@ -82,10 +90,12 @@ class _ImportPageView extends StatelessWidget {
                   _VelvoitetarkistusCard(
                     isRunning: state.isRunningVelvoite,
                     isImporting: state.isImporting,
+                    isReportsActive: isReportsActive,
                   ),
                   _VelvoitteetCard(
                     isRunning: state.isRunningVelvoite,
                     isImporting: state.isImporting,
+                    isReportsActive: isReportsActive,
                   ),
                 ],
               ),
@@ -108,7 +118,12 @@ class _ImportPageView extends StatelessWidget {
 
 class _SharepointFilesCard extends StatelessWidget {
   final List<ImportFile> files;
-  const _SharepointFilesCard({required this.files});
+  final bool isReportsActive;
+
+  const _SharepointFilesCard({
+    required this.files,
+    required this.isReportsActive,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +142,9 @@ class _SharepointFilesCard extends StatelessWidget {
                   prev.isAnalyzing != curr.isAnalyzing,
               builder: (context, state) {
                 return ElevatedButton(
-                  onPressed: state.selectedFileCount > 0 && !state.isAnalyzing
+                  onPressed: state.selectedFileCount > 0 &&
+                          !state.isAnalyzing &&
+                          !isReportsActive
                       ? () => context
                           .read<ImportBloc>()
                           .add(const ImportAnalyzeFiles())
@@ -239,16 +256,20 @@ class _AnalysisCard extends StatelessWidget {
   final bool isAnalyzing;
   final bool hasErrors;
   final bool canStartImport;
+  final bool isReportsActive;
 
   const _AnalysisCard({
     required this.files,
     required this.isAnalyzing,
     required this.hasErrors,
     required this.canStartImport,
+    required this.isReportsActive,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveCanStartImport = canStartImport && !isReportsActive;
+
     return CardContainer(
       title: 'Esianalyysi ja tuontijärjestys',
       child: Column(
@@ -305,9 +326,9 @@ class _AnalysisCard extends StatelessWidget {
           const SizedBox(height: 12),
           Center(
             child: Opacity(
-              opacity: canStartImport ? 1.0 : 0.4,
+              opacity: effectiveCanStartImport ? 1.0 : 0.4,
               child: ElevatedButton.icon(
-                onPressed: canStartImport
+                onPressed: effectiveCanStartImport
                     ? () => {
                       context
                         .read<ImportBloc>()
@@ -449,7 +470,13 @@ class _AnalyzedFileRow extends StatelessWidget {
 class _VelvoitetarkistusCard extends StatefulWidget {
   final bool isRunning;
   final bool isImporting;
-  const _VelvoitetarkistusCard({required this.isRunning, required this.isImporting});
+  final bool isReportsActive;
+
+  const _VelvoitetarkistusCard({
+    required this.isRunning,
+    required this.isImporting,
+    required this.isReportsActive,
+  });
 
   @override
   State<_VelvoitetarkistusCard> createState() =>
@@ -510,7 +537,10 @@ class _VelvoitetarkistusCardState extends State<_VelvoitetarkistusCard> {
                 ],
               ),
               ElevatedButton(
-                onPressed: widget.isRunning || widget.isImporting
+                onPressed:
+                  widget.isRunning ||
+                    widget.isImporting ||
+                    widget.isReportsActive
                     ? null
                     : () {
                         final date = _dateController.text.trim();
@@ -544,7 +574,13 @@ class _VelvoitetarkistusCardState extends State<_VelvoitetarkistusCard> {
 class _VelvoitteetCard extends StatelessWidget {
   final bool isRunning;
   final bool isImporting;
-  const _VelvoitteetCard({required this.isRunning, required this.isImporting});
+  final bool isReportsActive;
+
+  const _VelvoitteetCard({
+    required this.isRunning,
+    required this.isImporting,
+    required this.isReportsActive,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -563,7 +599,7 @@ class _VelvoitteetCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           ElevatedButton(
-            onPressed: isRunning || isImporting
+            onPressed: isRunning || isImporting || isReportsActive
                 ? null
                 : () => context
                     .read<ImportBloc>()

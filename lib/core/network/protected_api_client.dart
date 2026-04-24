@@ -48,6 +48,22 @@ class ProtectedApiClient {
     );
   }
 
+  Future<Response<T>> delete<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) {
+    return _dio.delete<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: _protectedOptions(options),
+      cancelToken: cancelToken,
+    );
+  }
+
   Options _protectedOptions(Options? options) {
     final currentOptions = options ?? Options();
     return currentOptions.copyWith(

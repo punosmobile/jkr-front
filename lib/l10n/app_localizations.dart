@@ -324,6 +324,690 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign-in could not be completed right now.'**
   String get loginErrorGeneric;
+
+  /// No description provided for @reportsPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel report'**
+  String get reportsPageTitle;
+
+  /// No description provided for @reportsPageDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a JKR report with the selected filters. The completed file is stored in SharePoint by default, and the progress is shown here in real time.'**
+  String get reportsPageDescription;
+
+  /// No description provided for @reportsFiltersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get reportsFiltersTitle;
+
+  /// No description provided for @reportsFieldDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference date'**
+  String get reportsFieldDate;
+
+  /// No description provided for @reportsFieldMunicipality.
+  ///
+  /// In en, this message translates to:
+  /// **'Municipality'**
+  String get reportsFieldMunicipality;
+
+  /// No description provided for @reportsFieldApartmentCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Apartment count'**
+  String get reportsFieldApartmentCount;
+
+  /// No description provided for @reportsFieldUrbanArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Urban area filter'**
+  String get reportsFieldUrbanArea;
+
+  /// No description provided for @reportsFieldPropertyType.
+  ///
+  /// In en, this message translates to:
+  /// **'Property type'**
+  String get reportsFieldPropertyType;
+
+  /// No description provided for @reportsFieldSewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Sewer network'**
+  String get reportsFieldSewer;
+
+  /// No description provided for @reportsInfoParallelRuns.
+  ///
+  /// In en, this message translates to:
+  /// **'You can start multiple reports in parallel with the same or new filters. Each run is shown below as its own card, and the card can be collapsed into a compact status view. Cancellation requires separate confirmation.'**
+  String get reportsInfoParallelRuns;
+
+  /// No description provided for @reportsRunButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Run report'**
+  String get reportsRunButton;
+
+  /// No description provided for @reportsRunNewButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Run new report'**
+  String get reportsRunNewButton;
+
+  /// No description provided for @reportsCancelDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel report generation?'**
+  String get reportsCancelDialogTitle;
+
+  /// No description provided for @reportsCancelDialogContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Report generation is in progress. Do you really want to send a cancellation request?'**
+  String get reportsCancelDialogContent;
+
+  /// No description provided for @reportsCancelDialogContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue generation'**
+  String get reportsCancelDialogContinue;
+
+  /// No description provided for @reportsCancelDialogConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel report'**
+  String get reportsCancelDialogConfirm;
+
+  /// No description provided for @reportsDateNoFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'No date filter'**
+  String get reportsDateNoFilter;
+
+  /// No description provided for @reportsDateClearTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear date'**
+  String get reportsDateClearTooltip;
+
+  /// No description provided for @reportsDateSelectTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Select date'**
+  String get reportsDateSelectTooltip;
+
+  /// No description provided for @reportsDatePickerHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Select reference date'**
+  String get reportsDatePickerHelp;
+
+  /// No description provided for @reportsDatePickerCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get reportsDatePickerCancel;
+
+  /// No description provided for @reportsDatePickerConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get reportsDatePickerConfirm;
+
+  /// No description provided for @reportsAllMunicipalities.
+  ///
+  /// In en, this message translates to:
+  /// **'All municipalities'**
+  String get reportsAllMunicipalities;
+
+  /// No description provided for @reportsPropertyTypeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All / no filter'**
+  String get reportsPropertyTypeAll;
+
+  /// No description provided for @reportsPropertyTypeResidential.
+  ///
+  /// In en, this message translates to:
+  /// **'Residential property'**
+  String get reportsPropertyTypeResidential;
+
+  /// No description provided for @reportsPropertyTypeHapa.
+  ///
+  /// In en, this message translates to:
+  /// **'HAPA'**
+  String get reportsPropertyTypeHapa;
+
+  /// No description provided for @reportsPropertyTypeBiohapa.
+  ///
+  /// In en, this message translates to:
+  /// **'Biohapa'**
+  String get reportsPropertyTypeBiohapa;
+
+  /// No description provided for @reportsPropertyTypeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get reportsPropertyTypeOther;
+
+  /// No description provided for @reportsSewerAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get reportsSewerAll;
+
+  /// No description provided for @reportsSewerConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected to sewer network'**
+  String get reportsSewerConnected;
+
+  /// No description provided for @reportsSewerNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected to sewer network'**
+  String get reportsSewerNotConnected;
+
+  /// No description provided for @reportsApartmentsAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All apartment counts'**
+  String get reportsApartmentsAll;
+
+  /// No description provided for @reportsApartmentsMaxFour.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to four'**
+  String get reportsApartmentsMaxFour;
+
+  /// No description provided for @reportsApartmentsMinFive.
+  ///
+  /// In en, this message translates to:
+  /// **'At least five'**
+  String get reportsApartmentsMinFive;
+
+  /// No description provided for @reportsUrbanAreaNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No filter'**
+  String get reportsUrbanAreaNone;
+
+  /// No description provided for @reportsUrbanAreaOver200.
+  ///
+  /// In en, this message translates to:
+  /// **'More than 200 inhabitants'**
+  String get reportsUrbanAreaOver200;
+
+  /// No description provided for @reportsUrbanAreaOver10000.
+  ///
+  /// In en, this message translates to:
+  /// **'More than 10,000 inhabitants'**
+  String get reportsUrbanAreaOver10000;
+
+  /// No description provided for @reportsUrbanAreaBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Both urban area filters'**
+  String get reportsUrbanAreaBoth;
+
+  /// No description provided for @reportsEventJustCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed just now'**
+  String get reportsEventJustCompleted;
+
+  /// No description provided for @reportsEventStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'New run started'**
+  String get reportsEventStarted;
+
+  /// No description provided for @reportsCollapseTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get reportsCollapseTooltip;
+
+  /// No description provided for @reportsExpandTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand'**
+  String get reportsExpandTooltip;
+
+  /// No description provided for @reportsTaskLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Task'**
+  String get reportsTaskLabel;
+
+  /// No description provided for @reportsIdentifierLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Identifier'**
+  String get reportsIdentifierLabel;
+
+  /// No description provided for @reportsStatusTitleReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get reportsStatusTitleReady;
+
+  /// No description provided for @reportsStatusTitleCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get reportsStatusTitleCurrent;
+
+  /// No description provided for @reportsErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get reportsErrorTitle;
+
+  /// No description provided for @reportsFileLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get reportsFileLabel;
+
+  /// No description provided for @reportsSharepointLinkAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SharePoint link available'**
+  String get reportsSharepointLinkAvailableTitle;
+
+  /// No description provided for @reportsSharepointLinkAvailableCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'The report can now be opened in SharePoint.'**
+  String get reportsSharepointLinkAvailableCompleted;
+
+  /// No description provided for @reportsSharepointLinkAvailableRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'The SharePoint link is already available even though the run is still in progress.'**
+  String get reportsSharepointLinkAvailableRunning;
+
+  /// No description provided for @reportsSharepointNoticeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SharePoint notice'**
+  String get reportsSharepointNoticeTitle;
+
+  /// No description provided for @reportsCancelButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel report generation'**
+  String get reportsCancelButton;
+
+  /// No description provided for @reportsCloseButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get reportsCloseButton;
+
+  /// No description provided for @reportsRunStatusStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting report'**
+  String get reportsRunStatusStarting;
+
+  /// No description provided for @reportsRunStatusRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating report'**
+  String get reportsRunStatusRunning;
+
+  /// No description provided for @reportsRunStatusCancelling.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelling report'**
+  String get reportsRunStatusCancelling;
+
+  /// No description provided for @reportsRunStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Report created'**
+  String get reportsRunStatusCompleted;
+
+  /// No description provided for @reportsRunStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Report generation failed'**
+  String get reportsRunStatusFailed;
+
+  /// No description provided for @reportsRunSubtitleRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'The server is generating the report in the background. You can see the latest progress information here.'**
+  String get reportsRunSubtitleRunning;
+
+  /// No description provided for @reportsRunSubtitleCancelling.
+  ///
+  /// In en, this message translates to:
+  /// **'The cancellation request has been sent. Wait for the server to confirm that the report was stopped.'**
+  String get reportsRunSubtitleCancelling;
+
+  /// No description provided for @reportsRunSubtitleCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'The report finished successfully. You can close this view with the OK button.'**
+  String get reportsRunSubtitleCompleted;
+
+  /// No description provided for @reportsRunSubtitleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Report generation stopped due to an error or cancellation. Check the message below.'**
+  String get reportsRunSubtitleFailed;
+
+  /// No description provided for @reportsParameterDayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get reportsParameterDayLabel;
+
+  /// No description provided for @reportsParameterDayNotFiltered.
+  ///
+  /// In en, this message translates to:
+  /// **'Not filtered'**
+  String get reportsParameterDayNotFiltered;
+
+  /// No description provided for @reportsParameterMunicipalityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Municipality'**
+  String get reportsParameterMunicipalityLabel;
+
+  /// No description provided for @reportsParameterApartmentsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Apartments'**
+  String get reportsParameterApartmentsLabel;
+
+  /// No description provided for @reportsParameterApartmentsAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get reportsParameterApartmentsAll;
+
+  /// No description provided for @reportsParameterApartmentsMaxFour.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to four'**
+  String get reportsParameterApartmentsMaxFour;
+
+  /// No description provided for @reportsParameterApartmentsMinFive.
+  ///
+  /// In en, this message translates to:
+  /// **'At least five'**
+  String get reportsParameterApartmentsMinFive;
+
+  /// No description provided for @reportsParameterUrbanAreaLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Urban area'**
+  String get reportsParameterUrbanAreaLabel;
+
+  /// No description provided for @reportsParameterUrbanAreaNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No filter'**
+  String get reportsParameterUrbanAreaNone;
+
+  /// No description provided for @reportsParameterUrbanAreaOver200.
+  ///
+  /// In en, this message translates to:
+  /// **'More than 200 inhabitants'**
+  String get reportsParameterUrbanAreaOver200;
+
+  /// No description provided for @reportsParameterUrbanAreaOver10000.
+  ///
+  /// In en, this message translates to:
+  /// **'More than 10,000 inhabitants'**
+  String get reportsParameterUrbanAreaOver10000;
+
+  /// No description provided for @reportsParameterUrbanAreaBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Both'**
+  String get reportsParameterUrbanAreaBoth;
+
+  /// No description provided for @reportsParameterPropertyTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Property type'**
+  String get reportsParameterPropertyTypeLabel;
+
+  /// No description provided for @reportsParameterPropertyTypeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get reportsParameterPropertyTypeAll;
+
+  /// No description provided for @reportsParameterPropertyTypeResidential.
+  ///
+  /// In en, this message translates to:
+  /// **'Residential property'**
+  String get reportsParameterPropertyTypeResidential;
+
+  /// No description provided for @reportsParameterPropertyTypeHapa.
+  ///
+  /// In en, this message translates to:
+  /// **'HAPA'**
+  String get reportsParameterPropertyTypeHapa;
+
+  /// No description provided for @reportsParameterPropertyTypeBiohapa.
+  ///
+  /// In en, this message translates to:
+  /// **'Biohapa'**
+  String get reportsParameterPropertyTypeBiohapa;
+
+  /// No description provided for @reportsParameterPropertyTypeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get reportsParameterPropertyTypeOther;
+
+  /// No description provided for @reportsParameterSewerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sewer'**
+  String get reportsParameterSewerLabel;
+
+  /// No description provided for @reportsParameterSewerAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get reportsParameterSewerAll;
+
+  /// No description provided for @reportsParameterSewerConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get reportsParameterSewerConnected;
+
+  /// No description provided for @reportsParameterSewerNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected'**
+  String get reportsParameterSewerNotConnected;
+
+  /// No description provided for @reportsPollingUpdating.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating'**
+  String get reportsPollingUpdating;
+
+  /// No description provided for @reportsPollingUpdatedJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated just now'**
+  String get reportsPollingUpdatedJustNow;
+
+  /// No description provided for @reportsPollingUpdatedSecondsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {seconds}s ago'**
+  String reportsPollingUpdatedSecondsAgo(int seconds);
+
+  /// No description provided for @reportsButtonFetchingLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching link'**
+  String get reportsButtonFetchingLink;
+
+  /// No description provided for @reportsButtonOpenReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Open report'**
+  String get reportsButtonOpenReport;
+
+  /// No description provided for @reportsStepFetchTargets.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching target data from the database'**
+  String get reportsStepFetchTargets;
+
+  /// No description provided for @reportsStepApplyObligationFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Applying obligation filters'**
+  String get reportsStepApplyObligationFilters;
+
+  /// No description provided for @reportsStepCreateReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating report'**
+  String get reportsStepCreateReport;
+
+  /// No description provided for @reportsStepExportSharepoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting to SharePoint'**
+  String get reportsStepExportSharepoint;
+
+  /// No description provided for @reportsBannerSingleActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Report generation in progress'**
+  String get reportsBannerSingleActive;
+
+  /// No description provided for @reportsBannerMultipleActive.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} runs active'**
+  String reportsBannerMultipleActive(int count);
+
+  /// No description provided for @reportsOkButton.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get reportsOkButton;
+
+  /// No description provided for @reportsBlocStartDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting report'**
+  String get reportsBlocStartDescription;
+
+  /// No description provided for @reportsBlocSubmittingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending request to the server...'**
+  String get reportsBlocSubmittingStatus;
+
+  /// No description provided for @reportsBlocCancellingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelling report generation...'**
+  String get reportsBlocCancellingStatus;
+
+  /// No description provided for @reportsBlocCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Report generation was cancelled.'**
+  String get reportsBlocCancelled;
+
+  /// No description provided for @reportsBlocCancelPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancellation request sent. Waiting for server confirmation...'**
+  String get reportsBlocCancelPending;
+
+  /// No description provided for @reportsBlocProgressFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating report...'**
+  String get reportsBlocProgressFallback;
+
+  /// No description provided for @reportsBlocCompletedStoredSharepoint.
+  ///
+  /// In en, this message translates to:
+  /// **'The report has been created and saved to SharePoint.'**
+  String get reportsBlocCompletedStoredSharepoint;
+
+  /// No description provided for @reportsBlocCompletedWaitingLink.
+  ///
+  /// In en, this message translates to:
+  /// **'The report has been created. Waiting for the SharePoint link...'**
+  String get reportsBlocCompletedWaitingLink;
+
+  /// No description provided for @reportsBlocCompletedReadyWaitingLink.
+  ///
+  /// In en, this message translates to:
+  /// **'The report is ready. Waiting for the SharePoint link...'**
+  String get reportsBlocCompletedReadyWaitingLink;
+
+  /// No description provided for @reportsBlocFailedGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Report generation failed.'**
+  String get reportsBlocFailedGeneric;
+
+  /// No description provided for @reportsRepoFetchTasksFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching report tasks failed.'**
+  String get reportsRepoFetchTasksFailed;
+
+  /// No description provided for @reportsRepoStartFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting the report failed.'**
+  String get reportsRepoStartFailed;
+
+  /// No description provided for @reportsRepoFetchStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching report status failed.'**
+  String get reportsRepoFetchStatusFailed;
+
+  /// No description provided for @reportsRepoCancelRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'Report cancellation requested.'**
+  String get reportsRepoCancelRequested;
+
+  /// No description provided for @reportsRepoCancelFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelling the report failed.'**
+  String get reportsRepoCancelFailed;
+
+  /// No description provided for @reportsRepoConnectionTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection timed out. Please try again.'**
+  String get reportsRepoConnectionTimeout;
+
+  /// No description provided for @reportsRepoConnectionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect to the server.'**
+  String get reportsRepoConnectionError;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
