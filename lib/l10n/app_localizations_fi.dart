@@ -467,4 +467,109 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get reportsRepoConnectionError => 'Yhteyttä palvelimeen ei saatu muodostettua.';
+
+  @override
+  String get dashboardLoadError => 'Dashboardin tietojen lataus epäonnistui.';
+
+  @override
+  String get dashboardHeaderDescription => 'Yhteenveto viimeisimmistä ajokerroista, tuonneista ja järjestelmätapahtumista.';
+
+  @override
+  String get dashboardRefresh => 'Päivitä';
+
+  @override
+  String get dashboardSummaryObligationCheckRan => 'Velvoitetarkistus ajettu';
+
+  @override
+  String get dashboardSummaryLatestReportGenerated => 'Viimeisin raportti generoitu';
+
+  @override
+  String get dashboardSummaryLatestDecisionInDatabase => 'Uusin päätös kannassa';
+
+  @override
+  String get dashboardSummaryLatestCompostingNotice => 'Uusin kompostointi-ilmoitus';
+
+  @override
+  String get dashboardSummarySludgeTransportLatestEmptying => 'Lietekulj. viimeisin tyhjennys';
+
+  @override
+  String get dashboardSummaryFixedTransportLatestQuarter => 'Kiinteä kulj. viimeisin kvartaali';
+
+  @override
+  String get dashboardSummaryLatestImport => 'Viimeisin tuonti';
+
+  @override
+  String get dashboardViewDetailsTooltip => 'Näytä lisätiedot';
+
+  @override
+  String get dashboardLatestSystemEvents => 'Viimeisimmät järjestelmätapahtumat';
+
+  @override
+  String get dashboardNoSystemEvents => 'Järjestelmätapahtumia ei ole saatavilla.';
+
+  @override
+  String get dashboardImportLog => 'Tuontiloki';
+
+  @override
+  String get dashboardNoImportLog => 'Tuontilokia ei ole saatavilla.';
+
+  @override
+  String get dashboardImportLogTypeOther => 'Muu';
+
+  @override
+  String get dashboardNoData => 'Dashboardin tietoja ei ole saatavilla.';
+
+  @override
+  String get dashboardNoInfo => 'Ei tietoa';
+
+  @override
+  String get dashboardStatusCompleted => 'Valmis';
+
+  @override
+  String get dashboardStatusFailed => 'Virhe';
+
+  @override
+  String get dashboardStatusRunning => 'Käynnissä';
+
+  @override
+  String get dashboardStatusPending => 'Jonossa';
+
+  @override
+  String get dashboardImportDetailsTitle => 'Tuontilokin tiedot';
+
+  @override
+  String get dashboardSummaryDetailsDescription => 'Kaikki saatavilla olevat tiedot tästä näkymästä.';
+
+  @override
+  String get dashboardCloseTooltip => 'Sulje';
+
+  @override
+  String get dashboardCloseButton => 'Sulje';
+
+  @override
+  String get dashboardFieldId => 'ID';
+
+  @override
+  String get dashboardFieldDate => 'Päivämäärä';
+
+  @override
+  String get dashboardFieldTime => 'Kellonaika';
+
+  @override
+  String get dashboardFieldType => 'Tyyppi';
+
+  @override
+  String get dashboardFieldStatus => 'Status';
+
+  @override
+  String get dashboardFieldResult => 'Tulos';
+
+  @override
+  String get dashboardFieldCommand => 'Komento';
+
+  @override
+  String get dashboardFieldRunner => 'Suorittaja';
+
+  @override
+  String get dashboardFieldDetails => 'Lisätiedot';
 }

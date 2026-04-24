@@ -9,6 +9,13 @@ class MetricCard extends StatelessWidget {
   final Color? valueColor;
   final String? sub;
   final Color? subColor;
+  final double? height;
+  final int labelMaxLines;
+  final int valueMaxLines;
+  final int subMaxLines;
+  final VoidCallback? onTap;
+  final IconData? trailingIcon;
+  final String? trailingTooltip;
 
   const MetricCard({
     super.key,
@@ -18,11 +25,19 @@ class MetricCard extends StatelessWidget {
     this.valueColor,
     this.sub,
     this.subColor,
+    this.height,
+    this.labelMaxLines = 2,
+    this.valueMaxLines = 1,
+    this.subMaxLines = 2,
+    this.onTap,
+    this.trailingIcon,
+    this.trailingTooltip,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final card = Container(
+      height: height,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppTheme.background,
@@ -32,10 +47,35 @@ class MetricCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 11, color: AppTheme.textTertiary)),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: labelMaxLines,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 11, color: AppTheme.textTertiary),
+                ),
+              ),
+              if (trailingIcon != null) ...[
+                const SizedBox(width: 8),
+                Tooltip(
+                  message: trailingTooltip ?? '',
+                  child: Icon(
+                    trailingIcon,
+                    size: 14,
+                    color: AppTheme.textTertiary,
+                  ),
+                ),
+              ],
+            ],
+          ),
           const SizedBox(height: 4),
           Text(
             value,
+            maxLines: valueMaxLines,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: valueFontSize,
               fontWeight: FontWeight.w500,
@@ -44,9 +84,33 @@ class MetricCard extends StatelessWidget {
           ),
           if (sub != null) ...[
             const SizedBox(height: 3),
-            Text(sub!, style: TextStyle(fontSize: 11, color: subColor ?? AppTheme.textTertiary)),
+            Expanded(
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Text(
+                  sub!,
+                  maxLines: subMaxLines,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 11, color: subColor ?? AppTheme.textTertiary),
+                ),
+              ),
+            ),
           ],
         ],
+      ),
+    );
+
+    if (onTap == null) {
+      return card;
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(7),
+        hoverColor: AppTheme.background2,
+        child: card,
       ),
     );
   }
