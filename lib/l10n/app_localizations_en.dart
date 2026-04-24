@@ -467,4 +467,109 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportsRepoConnectionError => 'Could not connect to the server.';
+
+  @override
+  String get dashboardLoadError => 'Loading dashboard data failed.';
+
+  @override
+  String get dashboardHeaderDescription => 'Summary of the latest runs, imports, and system events.';
+
+  @override
+  String get dashboardRefresh => 'Refresh';
+
+  @override
+  String get dashboardSummaryObligationCheckRan => 'Obligation check run';
+
+  @override
+  String get dashboardSummaryLatestReportGenerated => 'Latest report generated';
+
+  @override
+  String get dashboardSummaryLatestDecisionInDatabase => 'Latest decision in database';
+
+  @override
+  String get dashboardSummaryLatestCompostingNotice => 'Latest composting notice';
+
+  @override
+  String get dashboardSummarySludgeTransportLatestEmptying => 'Sludge transport latest emptying';
+
+  @override
+  String get dashboardSummaryFixedTransportLatestQuarter => 'Fixed transport latest quarter';
+
+  @override
+  String get dashboardSummaryLatestImport => 'Latest import';
+
+  @override
+  String get dashboardViewDetailsTooltip => 'Show details';
+
+  @override
+  String get dashboardLatestSystemEvents => 'Latest system events';
+
+  @override
+  String get dashboardNoSystemEvents => 'No system events available.';
+
+  @override
+  String get dashboardImportLog => 'Import log';
+
+  @override
+  String get dashboardNoImportLog => 'No import log available.';
+
+  @override
+  String get dashboardImportLogTypeOther => 'Other';
+
+  @override
+  String get dashboardNoData => 'Dashboard data is not available.';
+
+  @override
+  String get dashboardNoInfo => 'No data';
+
+  @override
+  String get dashboardStatusCompleted => 'Completed';
+
+  @override
+  String get dashboardStatusFailed => 'Failed';
+
+  @override
+  String get dashboardStatusRunning => 'Running';
+
+  @override
+  String get dashboardStatusPending => 'Queued';
+
+  @override
+  String get dashboardImportDetailsTitle => 'Import log details';
+
+  @override
+  String get dashboardSummaryDetailsDescription => 'All available details for this view.';
+
+  @override
+  String get dashboardCloseTooltip => 'Close';
+
+  @override
+  String get dashboardCloseButton => 'Close';
+
+  @override
+  String get dashboardFieldId => 'ID';
+
+  @override
+  String get dashboardFieldDate => 'Date';
+
+  @override
+  String get dashboardFieldTime => 'Time';
+
+  @override
+  String get dashboardFieldType => 'Type';
+
+  @override
+  String get dashboardFieldStatus => 'Status';
+
+  @override
+  String get dashboardFieldResult => 'Result';
+
+  @override
+  String get dashboardFieldCommand => 'Command';
+
+  @override
+  String get dashboardFieldRunner => 'Runner';
+
+  @override
+  String get dashboardFieldDetails => 'Details';
 }

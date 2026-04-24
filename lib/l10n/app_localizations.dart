@@ -1008,6 +1008,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not connect to the server.'**
   String get reportsRepoConnectionError;
+
+  /// No description provided for @dashboardLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading dashboard data failed.'**
+  String get dashboardLoadError;
+
+  /// No description provided for @dashboardHeaderDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary of the latest runs, imports, and system events.'**
+  String get dashboardHeaderDescription;
+
+  /// No description provided for @dashboardRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get dashboardRefresh;
+
+  /// No description provided for @dashboardSummaryObligationCheckRan.
+  ///
+  /// In en, this message translates to:
+  /// **'Obligation check run'**
+  String get dashboardSummaryObligationCheckRan;
+
+  /// No description provided for @dashboardSummaryLatestReportGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest report generated'**
+  String get dashboardSummaryLatestReportGenerated;
+
+  /// No description provided for @dashboardSummaryLatestDecisionInDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest decision in database'**
+  String get dashboardSummaryLatestDecisionInDatabase;
+
+  /// No description provided for @dashboardSummaryLatestCompostingNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest composting notice'**
+  String get dashboardSummaryLatestCompostingNotice;
+
+  /// No description provided for @dashboardSummarySludgeTransportLatestEmptying.
+  ///
+  /// In en, this message translates to:
+  /// **'Sludge transport latest emptying'**
+  String get dashboardSummarySludgeTransportLatestEmptying;
+
+  /// No description provided for @dashboardSummaryFixedTransportLatestQuarter.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed transport latest quarter'**
+  String get dashboardSummaryFixedTransportLatestQuarter;
+
+  /// No description provided for @dashboardSummaryLatestImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest import'**
+  String get dashboardSummaryLatestImport;
+
+  /// No description provided for @dashboardViewDetailsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Show details'**
+  String get dashboardViewDetailsTooltip;
+
+  /// No description provided for @dashboardLatestSystemEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest system events'**
+  String get dashboardLatestSystemEvents;
+
+  /// No description provided for @dashboardNoSystemEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'No system events available.'**
+  String get dashboardNoSystemEvents;
+
+  /// No description provided for @dashboardImportLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Import log'**
+  String get dashboardImportLog;
+
+  /// No description provided for @dashboardNoImportLog.
+  ///
+  /// In en, this message translates to:
+  /// **'No import log available.'**
+  String get dashboardNoImportLog;
+
+  /// No description provided for @dashboardImportLogTypeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get dashboardImportLogTypeOther;
+
+  /// No description provided for @dashboardNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard data is not available.'**
+  String get dashboardNoData;
+
+  /// No description provided for @dashboardNoInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get dashboardNoInfo;
+
+  /// No description provided for @dashboardStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get dashboardStatusCompleted;
+
+  /// No description provided for @dashboardStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get dashboardStatusFailed;
+
+  /// No description provided for @dashboardStatusRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get dashboardStatusRunning;
+
+  /// No description provided for @dashboardStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued'**
+  String get dashboardStatusPending;
+
+  /// No description provided for @dashboardImportDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import log details'**
+  String get dashboardImportDetailsTitle;
+
+  /// No description provided for @dashboardSummaryDetailsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'All available details for this view.'**
+  String get dashboardSummaryDetailsDescription;
+
+  /// No description provided for @dashboardCloseTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get dashboardCloseTooltip;
+
+  /// No description provided for @dashboardCloseButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get dashboardCloseButton;
+
+  /// No description provided for @dashboardFieldId.
+  ///
+  /// In en, this message translates to:
+  /// **'ID'**
+  String get dashboardFieldId;
+
+  /// No description provided for @dashboardFieldDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get dashboardFieldDate;
+
+  /// No description provided for @dashboardFieldTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get dashboardFieldTime;
+
+  /// No description provided for @dashboardFieldType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get dashboardFieldType;
+
+  /// No description provided for @dashboardFieldStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get dashboardFieldStatus;
+
+  /// No description provided for @dashboardFieldResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get dashboardFieldResult;
+
+  /// No description provided for @dashboardFieldCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Command'**
+  String get dashboardFieldCommand;
+
+  /// No description provided for @dashboardFieldRunner.
+  ///
+  /// In en, this message translates to:
+  /// **'Runner'**
+  String get dashboardFieldRunner;
+
+  /// No description provided for @dashboardFieldDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get dashboardFieldDetails;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

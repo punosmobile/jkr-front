@@ -467,4 +467,109 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get reportsRepoConnectionError => 'Det gick inte att ansluta till servern.';
+
+  @override
+  String get dashboardLoadError => 'Det gick inte att ladda dashboard-data.';
+
+  @override
+  String get dashboardHeaderDescription => 'Sammanfattning av de senaste körningarna, importerna och systemhändelserna.';
+
+  @override
+  String get dashboardRefresh => 'Uppdatera';
+
+  @override
+  String get dashboardSummaryObligationCheckRan => 'Skyldighetskontroll körd';
+
+  @override
+  String get dashboardSummaryLatestReportGenerated => 'Senaste rapport skapad';
+
+  @override
+  String get dashboardSummaryLatestDecisionInDatabase => 'Senaste beslut i databasen';
+
+  @override
+  String get dashboardSummaryLatestCompostingNotice => 'Senaste komposteringsanmälan';
+
+  @override
+  String get dashboardSummarySludgeTransportLatestEmptying => 'Senaste tömning för slamtransport';
+
+  @override
+  String get dashboardSummaryFixedTransportLatestQuarter => 'Senaste kvartal för fast transport';
+
+  @override
+  String get dashboardSummaryLatestImport => 'Senaste import';
+
+  @override
+  String get dashboardViewDetailsTooltip => 'Visa detaljer';
+
+  @override
+  String get dashboardLatestSystemEvents => 'Senaste systemhändelserna';
+
+  @override
+  String get dashboardNoSystemEvents => 'Inga systemhändelser tillgängliga.';
+
+  @override
+  String get dashboardImportLog => 'Importlogg';
+
+  @override
+  String get dashboardNoImportLog => 'Ingen importlogg tillgänglig.';
+
+  @override
+  String get dashboardImportLogTypeOther => 'Annan';
+
+  @override
+  String get dashboardNoData => 'Dashboard-data är inte tillgänglig.';
+
+  @override
+  String get dashboardNoInfo => 'Ingen information';
+
+  @override
+  String get dashboardStatusCompleted => 'Klar';
+
+  @override
+  String get dashboardStatusFailed => 'Fel';
+
+  @override
+  String get dashboardStatusRunning => 'Pågår';
+
+  @override
+  String get dashboardStatusPending => 'I kö';
+
+  @override
+  String get dashboardImportDetailsTitle => 'Importloggens uppgifter';
+
+  @override
+  String get dashboardSummaryDetailsDescription => 'Alla tillgängliga uppgifter för denna vy.';
+
+  @override
+  String get dashboardCloseTooltip => 'Stäng';
+
+  @override
+  String get dashboardCloseButton => 'Stäng';
+
+  @override
+  String get dashboardFieldId => 'ID';
+
+  @override
+  String get dashboardFieldDate => 'Datum';
+
+  @override
+  String get dashboardFieldTime => 'Tid';
+
+  @override
+  String get dashboardFieldType => 'Typ';
+
+  @override
+  String get dashboardFieldStatus => 'Status';
+
+  @override
+  String get dashboardFieldResult => 'Resultat';
+
+  @override
+  String get dashboardFieldCommand => 'Kommando';
+
+  @override
+  String get dashboardFieldRunner => 'Runner';
+
+  @override
+  String get dashboardFieldDetails => 'Detaljer';
 }
