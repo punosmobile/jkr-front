@@ -70,6 +70,7 @@ class ReportRunState extends Equatable {
     this.taskId,
     this.description,
     this.parameters,
+    this.startedAt,
     required this.runStatus,
     this.statusMessage,
     this.errorMessage,
@@ -85,6 +86,7 @@ class ReportRunState extends Equatable {
   final String? taskId;
   final String? description;
   final ReportRunParameters? parameters;
+  final DateTime? startedAt;
   final ReportsRunStatus runStatus;
   final String? statusMessage;
   final String? errorMessage;
@@ -125,6 +127,7 @@ class ReportRunState extends Equatable {
     Object? taskId = _unset,
     Object? description = _unset,
     Object? parameters = _unset,
+    Object? startedAt = _unset,
     ReportsRunStatus? runStatus,
     Object? statusMessage = _unset,
     Object? errorMessage = _unset,
@@ -140,6 +143,7 @@ class ReportRunState extends Equatable {
       taskId: _resolveNullableField(taskId, this.taskId),
       description: _resolveNullableField(description, this.description),
       parameters: _resolveNullableField(parameters, this.parameters),
+      startedAt: _resolveNullableField(startedAt, this.startedAt),
       runStatus: _resolveField(runStatus, this.runStatus),
       statusMessage: _resolveNullableField(statusMessage, this.statusMessage),
       errorMessage: _resolveNullableField(errorMessage, this.errorMessage),
@@ -158,6 +162,7 @@ class ReportRunState extends Equatable {
         taskId,
         description,
         parameters,
+        startedAt,
         runStatus,
         statusMessage,
         errorMessage,

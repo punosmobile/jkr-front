@@ -421,26 +421,23 @@ class _ReportsViewState extends State<_ReportsView> {
   List<ReportRunState> _sortedReportRuns(List<ReportRunState> runs) {
     final indexedRuns = runs.indexed.toList(growable: false);
     indexedRuns.sort((a, b) {
-      final priorityCompare =
-          _runPriority(a.$2).compareTo(_runPriority(b.$2));
-      if (priorityCompare != 0) {
-        return priorityCompare;
+      final leftStartedAt = a.$2.startedAt;
+      final rightStartedAt = b.$2.startedAt;
+
+      if (leftStartedAt != null && rightStartedAt != null) {
+        final startedAtCompare = rightStartedAt.compareTo(leftStartedAt);
+        if (startedAtCompare != 0) {
+          return startedAtCompare;
+        }
+      } else if (leftStartedAt != null) {
+        return -1;
+      } else if (rightStartedAt != null) {
+        return 1;
       }
+
       return a.$1.compareTo(b.$1);
     });
     return indexedRuns.map((entry) => entry.$2).toList(growable: false);
-  }
-
-  int _runPriority(ReportRunState run) {
-    return switch (run.runStatus) {
-      ReportsRunStatus.submitting ||
-      ReportsRunStatus.running ||
-      ReportsRunStatus.cancelling => 0,
-      ReportsRunStatus.completed when run.isWaitingForResultUrl => 1,
-      ReportsRunStatus.completed => 2,
-      ReportsRunStatus.failed => 3,
-      ReportsRunStatus.idle => 4,
-    };
   }
 
   // Static option sources for the filter controls.

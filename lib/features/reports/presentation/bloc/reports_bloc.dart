@@ -63,6 +63,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
       final trackedTaskIds = await _readTrackedTaskIds();
       final trackedTaskParams = await _readTrackedTaskParameters();
       final trackedTaskUiState = await _readTrackedTaskUiState();
+      final trackedTaskStartedAt = await _readTrackedTaskStartedAt();
       final reportTasks = tasks.where(_isReportTask).toList();
       final reportTaskById = {
         for (final task in reportTasks) task.id: task,
@@ -78,6 +79,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
           task,
           trackedTaskParams,
           trackedTaskUiState,
+          trackedTaskStartedAt,
         );
       }
 
@@ -95,6 +97,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
           task,
           trackedTaskParams,
           trackedTaskUiState,
+          trackedTaskStartedAt,
         );
       }
 
@@ -165,6 +168,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     final submittingRun = ReportRunState(
       id: localRunId,
       parameters: parameters,
+      startedAt: DateTime.now(),
       runStatus: ReportsRunStatus.submitting,
       description: l10n.reportsBlocStartDescription,
       statusMessage: l10n.reportsBlocSubmittingStatus,
@@ -387,12 +391,14 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     ReportRunParameters? parameters,
     {
     required bool isCollapsed,
+    DateTime? startedAt,
   }
   ) {
     return ReportRunState(
       id: taskId,
       taskId: taskId,
       parameters: parameters,
+      startedAt: startedAt,
       runStatus: ReportsRunStatus.idle,
       isCollapsed: isCollapsed,
       lastUpdatedAt: DateTime.now(),
@@ -405,6 +411,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     ReportTaskInfo task,
     Map<String, ReportRunParameters> trackedTaskParams,
     Map<String, bool> trackedTaskUiState,
+    Map<String, DateTime> trackedTaskStartedAt,
   ) {
     restoredRuns.add(
       _runFromTask(
@@ -413,6 +420,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
           task.id,
           trackedTaskParams[task.id],
           isCollapsed: trackedTaskUiState[task.id] ?? false,
+          startedAt: trackedTaskStartedAt[task.id],
         ),
       ),
     );
@@ -481,6 +489,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
       taskId: task.id,
       description: task.description,
       parameters: existing?.parameters,
+      startedAt: existing?.startedAt,
       runStatus: runStatus,
       statusMessage: statusMessage,
       errorMessage: errorMessage,
@@ -684,6 +693,35 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     return result;
   }
 
+  Future<Map<String, DateTime>> _readTrackedTaskStartedAt() async {
+    final rawValue = await _storage.read(
+      key: AppConstants.storageKeyTrackedReportTaskStartedAt,
+    );
+    if (rawValue == null || rawValue.isEmpty) {
+      return const {};
+    }
+
+    final decoded = _tryDecodeStoredJson(rawValue);
+    if (decoded is! Map) {
+      return const {};
+    }
+
+    final result = <String, DateTime>{};
+    for (final entry in decoded.entries) {
+      final key = entry.key;
+      final value = entry.value;
+      if (key is! String || value is! String) {
+        continue;
+      }
+      final parsedValue = DateTime.tryParse(value);
+      if (parsedValue == null) {
+        continue;
+      }
+      result[key] = parsedValue;
+    }
+    return result;
+  }
+
   // Storage write helpers.
   Future<void> _persistTrackedRunMetadata(List<ReportRunState> runs) async {
     final metadata = _collectTrackedRunMetadata(runs);
@@ -692,6 +730,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
       taskIds: metadata.taskIds,
       taskParams: metadata.taskParams,
       taskUiState: metadata.taskUiState,
+      taskStartedAt: metadata.taskStartedAt,
     );
   }
 
@@ -707,6 +746,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     List<String> taskIds,
     Map<String, Map<String, dynamic>> taskParams,
     Map<String, bool> taskUiState,
+    Map<String, String> taskStartedAt,
   }) _collectTrackedRunMetadata(List<ReportRunState> runs) {
     final taskIds = runs
         .map((run) => run.taskId)
@@ -717,6 +757,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
 
     final taskParams = <String, Map<String, dynamic>>{};
     final taskUiState = <String, bool>{};
+    final taskStartedAt = <String, String>{};
     for (final run in runs) {
       final taskId = run.taskId;
       if (!_hasTaskId(taskId)) {
@@ -726,12 +767,16 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
         taskParams[taskId!] = run.parameters!.toJson();
       }
       taskUiState[taskId!] = run.isCollapsed;
+      if (run.startedAt != null) {
+        taskStartedAt[taskId] = run.startedAt!.toIso8601String();
+      }
     }
 
     return (
       taskIds: taskIds,
       taskParams: taskParams,
       taskUiState: taskUiState,
+      taskStartedAt: taskStartedAt,
     );
   }
 
@@ -739,12 +784,14 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     required List<String> taskIds,
     required Map<String, Map<String, dynamic>> taskParams,
     required Map<String, bool> taskUiState,
+    required Map<String, String> taskStartedAt,
   }) async {
 
     if (taskIds.isEmpty) {
       await _storage.delete(key: AppConstants.storageKeyTrackedReportTaskId);
       await _storage.delete(key: AppConstants.storageKeyTrackedReportTaskParams);
       await _storage.delete(key: AppConstants.storageKeyTrackedReportTaskUi);
+      await _storage.delete(key: AppConstants.storageKeyTrackedReportTaskStartedAt);
       return;
     }
 
@@ -759,6 +806,10 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     await _storage.write(
       key: AppConstants.storageKeyTrackedReportTaskUi,
       value: jsonEncode(taskUiState),
+    );
+    await _storage.write(
+      key: AppConstants.storageKeyTrackedReportTaskStartedAt,
+      value: jsonEncode(taskStartedAt),
     );
   }
 
