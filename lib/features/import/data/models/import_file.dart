@@ -3,6 +3,8 @@ enum ImportFileBadge { uusi, paivitys, tarkista }
 
 enum AnalysisStatus { pending, analyzed, error }
 
+enum ImportAnalysisErrorCode { notRunnable, missingResult }
+
 class ImportFile {
 
   factory ImportFile.fromJson(Map<String, dynamic> json) {
@@ -94,6 +96,7 @@ class ImportAnalysis {
     this.newCount = 0,
     this.updateCount = 0,
     this.unmatchedCount = 0,
+    this.errorCode,
     this.errorMessage,
   });
 
@@ -101,7 +104,8 @@ class ImportAnalysis {
   final int newCount;
   final int updateCount;
   final int unmatchedCount;
+  final ImportAnalysisErrorCode? errorCode;
   final String? errorMessage;
 
-  bool get hasError => errorMessage != null;
+  bool get hasError => errorCode != null || (errorMessage?.isNotEmpty ?? false);
 }

@@ -572,4 +572,10 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get dashboardFieldDetails => 'Lisätiedot';
+
+  @override
+  String get importAnalysisErrorNotRunnable => 'Tiedostoa ei voi ajaa sisään. Tiedoston sisältöä ei tunnistettu tai tiedosto on virheellinen.';
+
+  @override
+  String get importAnalysisErrorMissingResult => 'Tiedoston esianalyysi epäonnistui eikä backend palauttanut analyysitulosta.';
 }

@@ -572,4 +572,10 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get dashboardFieldDetails => 'Detaljer';
+
+  @override
+  String get importAnalysisErrorNotRunnable => 'Filen kan inte importeras. Innehållet kunde inte identifieras eller filen är ogiltig.';
+
+  @override
+  String get importAnalysisErrorMissingResult => 'Föranalysen misslyckades och backend returnerade inget analysresultat.';
 }
