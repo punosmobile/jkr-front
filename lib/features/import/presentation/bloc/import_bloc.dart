@@ -11,6 +11,7 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
   ImportBloc({required this.repository}) : super(const ImportState()) {
     on<ImportLoadFiles>(_onLoadFiles);
     on<ImportToggleFile>(_onToggleFile);
+    on<ImportSetAllSelected>(_onSetAllSelected);
     on<ImportAnalyzeFiles>(_onAnalyzeFiles);
     on<ImportRemoveAnalyzedFile>(_onRemoveAnalyzedFile);
     on<ImportReorderFiles>(_onReorderFiles);
@@ -76,6 +77,16 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
         errorMessage: e.toString(),
       ));
     }
+  }
+
+  void _onSetAllSelected(
+    ImportSetAllSelected event,
+    Emitter<ImportState> emit,
+  ) {
+    final updated = state.sharepointFiles
+        .map((f) => f.copyWith(selected: event.selected))
+        .toList();
+    emit(state.copyWith(sharepointFiles: updated));
   }
 
   void _onToggleFile(

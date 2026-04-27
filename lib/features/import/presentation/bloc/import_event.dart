@@ -13,6 +13,12 @@ class ImportToggleFile extends ImportEvent {
   const ImportToggleFile(this.fileId);
 }
 
+/// Select or deselect all files.
+class ImportSetAllSelected extends ImportEvent {
+  const ImportSetAllSelected(this.selected);
+  final bool selected;
+}
+
 /// Run pre-analysis on selected files.
 class ImportAnalyzeFiles extends ImportEvent {
   const ImportAnalyzeFiles();
