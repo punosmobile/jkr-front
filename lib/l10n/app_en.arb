@@ -313,5 +313,7 @@
     "dashboardFieldResult": "Result",
     "dashboardFieldCommand": "Command",
     "dashboardFieldRunner": "Runner",
-    "dashboardFieldDetails": "Details"
+    "dashboardFieldDetails": "Details",
+    "importAnalysisErrorNotRunnable": "The file cannot be imported. The contents were not recognized or the file is invalid.",
+    "importAnalysisErrorMissingResult": "Pre-analysis failed and the backend did not return an analysis result."
 }

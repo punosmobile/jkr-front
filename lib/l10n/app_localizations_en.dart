@@ -572,4 +572,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardFieldDetails => 'Details';
+
+  @override
+  String get importAnalysisErrorNotRunnable => 'The file cannot be imported. The contents were not recognized or the file is invalid.';
+
+  @override
+  String get importAnalysisErrorMissingResult => 'Pre-analysis failed and the backend did not return an analysis result.';
 }

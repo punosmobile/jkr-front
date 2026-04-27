@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/tasks/task_activity_cubit.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/card_container.dart';
@@ -410,10 +411,12 @@ class _AnalyzedFileRow extends StatelessWidget {
     return 'update';
   }
 
-  String get _detail {
+  String _detail(BuildContext context) {
     final a = file.analysis;
     if (a == null) return '';
-    if (a.hasError) return a.errorMessage!;
+    if (a.hasError) {
+      return _resolveAnalysisError(context, a);
+    }
     final parts = <String>[];
     if (a.newCount > 0) parts.add('↑ ${_formatNumber(a.newCount)} uutta kohdetta');
     if (a.updateCount > 0) {
@@ -434,6 +437,20 @@ class _AnalyzedFileRow extends StatelessWidget {
       buffer.write(str[i]);
     }
     return buffer.toString();
+  }
+
+  String _resolveAnalysisError(BuildContext context, ImportAnalysis analysis) {
+    final message = analysis.errorMessage;
+    if (message != null && message.isNotEmpty) {
+      return message;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    return switch (analysis.errorCode) {
+      ImportAnalysisErrorCode.notRunnable => l10n.importAnalysisErrorNotRunnable,
+      ImportAnalysisErrorCode.missingResult => l10n.importAnalysisErrorMissingResult,
+      null => '',
+    };
   }
 
   @override
@@ -489,7 +506,7 @@ class _AnalyzedFileRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _detail,
+                  _detail(context),
                   style: TextStyle(
                     fontSize: 11,
                     color: hasError ? AppTheme.red : AppTheme.textSecondary,

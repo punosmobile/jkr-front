@@ -200,5 +200,7 @@
     "dashboardFieldResult": "Tulos",
     "dashboardFieldCommand": "Komento",
     "dashboardFieldRunner": "Suorittaja",
-    "dashboardFieldDetails": "Lisätiedot"
+    "dashboardFieldDetails": "Lisätiedot",
+    "importAnalysisErrorNotRunnable": "Tiedostoa ei voi ajaa sisään. Tiedoston sisältöä ei tunnistettu tai tiedosto on virheellinen.",
+    "importAnalysisErrorMissingResult": "Tiedoston esianalyysi epäonnistui eikä backend palauttanut analyysitulosta."
 }

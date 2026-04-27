@@ -200,5 +200,7 @@
     "dashboardFieldResult": "Resultat",
     "dashboardFieldCommand": "Kommando",
     "dashboardFieldRunner": "Runner",
-    "dashboardFieldDetails": "Detaljer"
+    "dashboardFieldDetails": "Detaljer",
+    "importAnalysisErrorNotRunnable": "Filen kan inte importeras. Innehållet kunde inte identifieras eller filen är ogiltig.",
+    "importAnalysisErrorMissingResult": "Föranalysen misslyckades och backend returnerade inget analysresultat."
 }

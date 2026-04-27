@@ -1218,6 +1218,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Details'**
   String get dashboardFieldDetails;
+
+  /// No description provided for @importAnalysisErrorNotRunnable.
+  ///
+  /// In en, this message translates to:
+  /// **'The file cannot be imported. The contents were not recognized or the file is invalid.'**
+  String get importAnalysisErrorNotRunnable;
+
+  /// No description provided for @importAnalysisErrorMissingResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-analysis failed and the backend did not return an analysis result.'**
+  String get importAnalysisErrorMissingResult;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
