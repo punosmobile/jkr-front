@@ -58,6 +58,29 @@ class SharepointPullResult {
   }
 }
 
+class SharepointPullTaskResponse {
+  final String taskId;
+  final String taskType;
+  final String status;
+  final String description;
+
+  const SharepointPullTaskResponse({
+    required this.taskId,
+    required this.taskType,
+    required this.status,
+    required this.description,
+  });
+
+  factory SharepointPullTaskResponse.fromJson(Map<String, dynamic> json) {
+    return SharepointPullTaskResponse(
+      taskId: json['task_id'] as String? ?? json['id'] as String? ?? '',
+      taskType: json['taskType'] as String? ?? '',
+      status: json['status'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+    );
+  }
+}
+
 class SharepointDownloadedFile {
   factory SharepointDownloadedFile.fromJson(Map<String, dynamic> json) {
     return SharepointDownloadedFile(

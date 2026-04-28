@@ -37,12 +37,14 @@ class SharepointRepository {
   /// Pull files from SharePoint to the backend server's /data/input directory.
   /// [paths] is a list of SharePoint file paths to download.
   /// [subfolder] is an optional target subfolder within /data/input.
-  Future<SharepointPullResult> pullToServer({
+  /// This uses the backend's task mode to avoid request timeouts.
+  Future<SharepointPullTaskResponse> pullToServer({
     required List<String> paths,
     String? subfolder,
   }) async {
     final queryParams = <String, dynamic>{
       'paths': paths,
+      'mode': 'task',
     };
     if (subfolder != null && subfolder.isNotEmpty) {
       queryParams['subfolder'] = subfolder;
@@ -51,6 +53,24 @@ class SharepointRepository {
       '/sharepoint/pull',
       queryParameters: queryParams,
     );
-    return SharepointPullResult.fromJson(response.data as Map<String, dynamic>);
+    return SharepointPullTaskResponse.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<({bool isFinished, bool hasError, String? errorOutput})> fetchTaskStatus(
+    String taskId,
+  ) async {
+    final response = await _api.get('/tasks/$taskId');
+    final data = response.data as Map<String, dynamic>;
+    final status = data['status'] as String? ?? '';
+    final isFinished = status != 'pending' && status != 'running';
+    final exitCode = data['exit_code'] as int?;
+    final errorText = data['error'] as String? ?? '';
+    final hasError = (exitCode != null && exitCode != 0) || errorText.isNotEmpty;
+    final errorOutput = hasError ? errorText : null;
+    return (
+      isFinished: isFinished,
+      hasError: hasError,
+      errorOutput: errorOutput,
+    );
   }
 }
