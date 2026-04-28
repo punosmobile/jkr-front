@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../data/models/sharepoint_item.dart';
 import '../../data/repositories/sharepoint_repository.dart';
 import 'sharepoint_event.dart';
 import 'sharepoint_state.dart';
@@ -156,33 +159,11 @@ class SharepointBloc extends Bloc<SharepointEvent, SharepointState> {
     SharepointPullOneRequested event,
     Emitter<SharepointState> emit,
   ) async {
-    emit(state.copyWith(isPulling: true, pullStatusMessage: null, pullHadErrors: false));
-    try {
-      final result = await _repository.pullToServer(paths: [event.filePath]);
-      final ok = result.downloaded.length;
-      final fail = result.errors.length;
-      String msg;
-      if (ok > 0) {
-        final dl = result.downloaded.first;
-        msg = '${dl.filename} ladattu → ${result.targetDir ?? dl.targetPath ?? ''}';
-      } else {
-        msg = 'Lataus epäonnistui';
-      }
-      if (fail > 0) {
-        msg += ' (${fail} virhe${fail > 1 ? 'ttä' : ''})';
-      }
-      emit(state.copyWith(
-        isPulling: false,
-        pullStatusMessage: msg,
-        pullHadErrors: fail > 0,
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        isPulling: false,
-        pullStatusMessage: 'Virhe: $e',
-        pullHadErrors: true,
-      ));
-    }
+    await _runPullTask(
+      emit,
+      paths: [event.filePath],
+      successMessage: '${event.filePath.split('/').last} ladattu palvelimelle',
+    );
   }
 
   Future<void> _onPullSelected(
@@ -191,20 +172,44 @@ class SharepointBloc extends Bloc<SharepointEvent, SharepointState> {
   ) async {
     final paths = state.selectedFilePaths;
     if (paths.isEmpty) return;
+    await _runPullTask(
+      emit,
+      paths: paths,
+      successMessage: '${paths.length} tiedoston lataus valmistui',
+      clearSelectionOnSuccess: true,
+    );
+  }
+
+  Future<void> _runPullTask(
+    Emitter<SharepointState> emit, {
+    required List<String> paths,
+    required String successMessage,
+    bool clearSelectionOnSuccess = false,
+  }) async {
     emit(state.copyWith(isPulling: true, pullStatusMessage: null, pullHadErrors: false));
     try {
-      final result = await _repository.pullToServer(paths: paths);
-      final ok = result.downloaded.length;
-      final fail = result.errors.length;
-      String msg = '$ok ladattu';
-      if (fail > 0) msg += ', $fail epäonnistui';
-      msg += ' → ${result.targetDir ?? ''}';
+      final task = await _repository.pullToServer(paths: paths);
       emit(state.copyWith(
-        isPulling: false,
-        pullStatusMessage: msg,
-        pullHadErrors: fail > 0,
-        selectedFiles: const {},
+        isPulling: true,
+        pullStatusMessage: 'Lataus käynnistetty (tehtävä ${task.taskId})...',
+        pullHadErrors: false,
       ));
+
+      while (!isClosed) {
+        final result = await _repository.fetchTaskStatus(task.taskId);
+        if (result.isFinished) {
+          emit(state.copyWith(
+            isPulling: false,
+            pullStatusMessage: result.hasError
+                ? 'Lataus epäonnistui: ${result.errorOutput ?? 'tuntematon virhe'}'
+                : successMessage,
+            pullHadErrors: result.hasError,
+            selectedFiles: clearSelectionOnSuccess ? const {} : state.selectedFiles,
+          ));
+          return;
+        }
+        await Future.delayed(const Duration(seconds: 2));
+      }
     } catch (e) {
       emit(state.copyWith(
         isPulling: false,
@@ -214,7 +219,7 @@ class SharepointBloc extends Bloc<SharepointEvent, SharepointState> {
     }
   }
 
-  static int _compareItems(a, b) {
+  static int _compareItems(SharepointItem a, SharepointItem b) {
     // Folders first
     if (a.isFolder && !b.isFolder) return -1;
     if (!a.isFolder && b.isFolder) return 1;
