@@ -33,6 +33,7 @@ import '../../features/realtime_log/presentation/pages/realtime_log_page.dart';
 import '../../features/documentation/presentation/pages/documentation_page.dart';
 import '../../features/reports/presentation/pages/reports_page.dart';
 import 'app_sidebar.dart';
+import 'auth_debug_dialog.dart';
 
 /// Main application shell with sidebar navigation and content area.
 /// This is the primary layout for the authenticated user.
@@ -541,9 +542,30 @@ class _Topbar extends StatelessWidget {
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
           const Spacer(),
-          Text(
-            userName,
-            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+          InkWell(
+            onTap: () => showAuthDebugDialog(context),
+            borderRadius: BorderRadius.circular(4),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    userName,
+                    style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  ),
+                  const SizedBox(width: 6),
+                  Tooltip(
+                    message: 'Näytä tunnistautumistiedot (debug)',
+                    child: Icon(
+                      Icons.bug_report_outlined,
+                      size: 14,
+                      color: AppTheme.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
