@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -12,6 +13,7 @@ import '../../core/auth/auth_service.dart';
 import '../../core/config/env_config.dart';
 import '../../core/di/injection.dart';
 import '../../core/network/dio_client.dart';
+import '../../core/network/protected_api_client.dart';
 import '../../core/tasks/app_task_type.dart';
 import '../../core/tasks/task_activity_cubit.dart';
 import '../../core/theme/app_theme.dart';
@@ -545,10 +547,140 @@ class _Topbar extends StatelessWidget {
             userName,
             style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
           ),
+          const SizedBox(width: 2),
+          const _UserDebugButton(),
         ],
       ),
     );
   }
+}
+
+// ─── USER DEBUG (token-tiedot) ────────────────────────────────────────────────
+
+/// Pieni debug-ötökkä kirjautuneen käyttäjän nimen vieressä. Painamalla avautuu
+/// dialogi, jossa näkyy kaikki käyttäjän token-tiedot (roolit, ryhmät, app rolet
+/// ja raakaclaimit) backendin /auth/me/debug -endpointista.
+class _UserDebugButton extends StatelessWidget {
+  const _UserDebugButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.bug_report_outlined, size: 16),
+      tooltip: 'Käyttäjän token-tiedot (debug)',
+      color: AppTheme.textTertiary,
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
+      constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+      onPressed: () => _showUserDebugDialog(context),
+    );
+  }
+}
+
+Future<Object?> _fetchUserDebug() async {
+  final response = await getIt<ProtectedApiClient>().get<dynamic>('/auth/me/debug');
+  return response.data;
+}
+
+void _showUserDebugDialog(BuildContext context) {
+  showDialog<void>(
+    context: context,
+    builder: (dialogContext) {
+      return Dialog(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 620, maxHeight: 640),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
+            child: FutureBuilder<Object?>(
+              future: _fetchUserDebug(),
+              builder: (context, snapshot) {
+                final bool done = snapshot.connectionState == ConnectionState.done;
+                final String? pretty = (done && !snapshot.hasError)
+                    ? const JsonEncoder.withIndent('  ').convert(snapshot.data)
+                    : null;
+
+                final Widget body;
+                if (!done) {
+                  body = const SizedBox(
+                    height: 120,
+                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  );
+                } else if (snapshot.hasError) {
+                  body = Text(
+                    'Tietojen haku epäonnistui:\n${snapshot.error}',
+                    style: TextStyle(fontSize: 12, color: AppTheme.red),
+                  );
+                } else {
+                  body = Flexible(
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.background2,
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                      child: SingleChildScrollView(
+                        child: SelectableText(
+                          pretty ?? '',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontFamily: 'monospace',
+                            height: 1.45,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.bug_report_outlined, size: 18),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'Käyttäjän token-tiedot',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        if (pretty != null)
+                          IconButton(
+                            icon: const Icon(Icons.copy, size: 16),
+                            tooltip: 'Kopioi',
+                            visualDensity: VisualDensity.compact,
+                            onPressed: () {
+                              Clipboard.setData(ClipboardData(text: pretty));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Kopioitu leikepöydälle'),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            },
+                          ),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 18),
+                          tooltip: 'Sulje',
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    body,
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
 
 // ─── PULSING DOT ─────────────────────────────────────────────────────────────
