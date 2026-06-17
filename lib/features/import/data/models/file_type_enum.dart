@@ -6,6 +6,7 @@ enum FileType {
     HUONEISTOMAARAT('Huoneistomäärät'),
     PERUSMAKSUAINEISTO('Perusmaksuaineisto'),
     HAPATIEDOSTO('Hapa-kohteet'),
+    SOTETIEDOSTO('Sotekohteet'),
     KAIVOTIEDOT_ALKU('Kaivotiedot_aloitus'),
     KAIVOTIEDOT_LOPPU('Kaivotiedot_lopetus'),
     VIEMARIVERKOSTO_ALKU('Viemariverkosto'),
