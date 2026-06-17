@@ -36,6 +36,35 @@ class BackupsBloc extends Bloc<BackupsEvent, BackupsState> {
     Emitter<BackupsState> emit,
   ) async {
     await _loadBackups(emit);
+    await _resumeActiveOperation(emit);
+  }
+
+  /// Palauttaa edistymisindikaattorin, jos palvelimella on jo käynnissä
+  /// varmuuskopiointi/palautus (esim. sivulta poistuttiin tai se aloitettiin
+  /// toisessa istunnossa). Taustatehtävä jatkuu palvelimella joka tapauksessa.
+  Future<void> _resumeActiveOperation(Emitter<BackupsState> emit) async {
+    if (state.isOperationActive) {
+      return;
+    }
+    try {
+      final active = await _repository.fetchActiveOperation();
+      if (active == null) {
+        return;
+      }
+      emit(state.copyWith(
+        operation: BackupOperation(
+          kind: active.isRestore ? BackupOpKind.restore : BackupOpKind.dump,
+          status: BackupOpStatus.running,
+          taskId: active.taskId,
+          filename: active.filename,
+          message: active.message ??
+              (active.isRestore ? 'Palautus käynnissä…' : 'Varmuuskopiointi käynnissä…'),
+        ),
+      ));
+      _startPolling();
+    } catch (_) {
+      // Indikaattorin palautus ei ole kriittinen: lista toimii silti.
+    }
   }
 
   Future<void> _onRefreshed(
@@ -43,6 +72,7 @@ class BackupsBloc extends Bloc<BackupsEvent, BackupsState> {
     Emitter<BackupsState> emit,
   ) async {
     await _loadBackups(emit);
+    await _resumeActiveOperation(emit);
   }
 
   Future<void> _loadBackups(Emitter<BackupsState> emit) async {

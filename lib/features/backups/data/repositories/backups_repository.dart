@@ -28,6 +28,24 @@ class BackupTaskSnapshot {
   String get combinedLog => '$output\n$error';
 }
 
+/// Palvelimella käynnissä oleva dump/restore-operaatio (indikaattorin palautus).
+class BackupActiveOperation {
+  const BackupActiveOperation({
+    required this.taskId,
+    required this.kind,
+    this.filename,
+    this.message,
+  });
+
+  /// "dump" tai "restore".
+  final String kind;
+  final String taskId;
+  final String? filename;
+  final String? message;
+
+  bool get isRestore => kind == 'restore';
+}
+
 /// API-sovitin varmuuskopiointien hallintaan (pg_dump / pg_restore).
 class BackupsRepository {
   final ProtectedApiClient _api = getIt<ProtectedApiClient>();
@@ -104,6 +122,31 @@ class BackupsRepository {
       await _api.post<Map<String, dynamic>>('/db/dumps/upload', data: formData);
     } on DioException catch (error) {
       throw Exception(_errorMessage(error, 'Varmuuskopion vienti epäonnistui'));
+    }
+  }
+
+  /// Palauttaa palvelimella käynnissä olevan dump/restore-operaation tai `null`.
+  /// Käytetään edistymisindikaattorin palauttamiseen sivulle saavuttaessa.
+  Future<BackupActiveOperation?> fetchActiveOperation() async {
+    try {
+      final response = await _api.get<dynamic>('/db/active-operation');
+      final data = response.data;
+      if (data is! Map) {
+        return null;
+      }
+      final map = Map<String, dynamic>.from(data);
+      final taskId = map['task_id'] as String?;
+      if (taskId == null || taskId.isEmpty) {
+        return null;
+      }
+      return BackupActiveOperation(
+        taskId: taskId,
+        kind: (map['kind'] as String?) ?? 'dump',
+        filename: map['filename'] as String?,
+        message: map['message'] as String?,
+      );
+    } on DioException catch (error) {
+      throw Exception(_errorMessage(error, 'Aktiivisen operaation haku epäonnistui'));
     }
   }
 
