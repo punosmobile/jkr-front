@@ -309,14 +309,21 @@ class _ActivityCard extends StatelessWidget {
               l10n.dashboardNoSystemEvents,
               style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
             )
-          : Column(
-              children: [
-                for (int index = 0; index < events.length; index++)
-                  _ActivityRow(
+          : SizedBox(
+              // ~6 tapahtumaa kerrallaan, loput scrollaamalla (kuten tuontiloki),
+              // jottei koko dashboard-näkymä täyty järjestelmätapahtumilla.
+              height: 200,
+              child: Scrollbar(
+                thumbVisibility: true,
+                child: ListView.builder(
+                  primary: false,
+                  itemCount: events.length,
+                  itemBuilder: (context, index) => _ActivityRow(
                     event: events[index],
                     isLast: index == events.length - 1,
                   ),
-              ],
+                ),
+              ),
             ),
     );
   }
@@ -339,7 +346,7 @@ class _ImportLogCard extends StatelessWidget {
               style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
             )
           : SizedBox(
-              height: 420,
+              height: 320,
               child: Scrollbar(
                 thumbVisibility: true,
                 child: ListView.builder(
