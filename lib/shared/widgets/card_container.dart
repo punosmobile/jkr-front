@@ -4,10 +4,13 @@ import '../../core/theme/app_theme.dart';
 
 class CardContainer extends StatelessWidget {
   final String? title;
+  /// Vaihtoehto [title]:lle kun otsikko sisältää esim. linkin. Jos annettu,
+  /// käytetään tämän sijaan pelkän tekstiotsikon.
+  final Widget? titleWidget;
   final Widget child;
   final EdgeInsets? padding;
 
-  const CardContainer({super.key, this.title, required this.child, this.padding});
+  const CardContainer({super.key, this.title, this.titleWidget, required this.child, this.padding});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +26,10 @@ class CardContainer extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (title != null) ...[
+          if (titleWidget != null) ...[
+            titleWidget!,
+            const SizedBox(height: 10),
+          ] else if (title != null) ...[
             Text(title!, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppTheme.textPrimary)),
             const SizedBox(height: 10),
           ],
