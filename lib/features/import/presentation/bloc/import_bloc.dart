@@ -25,6 +25,9 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
     ImportTaskStatusChanged event,
     Emitter<ImportState> emit,
   ) async {
+    // Edellinen tila ennen päivitystä, jotta tunnistetaan siirtymä
+    // "käynnissä -> valmis" (eikä reagoida joka pollaukseen).
+    final wasImporting = state.isImporting;
     emit(state.copyWith(isImporting: event.isActive));
 
     final pendingItems = state.queueItems.where((i) =>
@@ -56,6 +59,20 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
         } catch (_) {}
       }
       emit(state.copyWith(queueItems: updatedItems));
+    }
+
+    // Kun tuonti on juuri päättynyt (käynnissä -> valmis), päivitä
+    // SharePoint-tiedostolista: onnistuneen tuonnin jälkeen lähdetiedostot on
+    // arkistoitu (siirretty JKR-input -> viedyt), joten ne eivät saa jäädä
+    // näkymään "Saatavilla Sharepointissa" -listaan. Suoritetaan vain
+    // siirtymähetkellä, ei joka pollauksella.
+    if (wasImporting && !event.isActive) {
+      try {
+        final files = await repository.fetchSharepointFiles();
+        emit(state.copyWith(sharepointFiles: files));
+      } catch (_) {
+        // Lista päivittyy seuraavalla manuaalisella latauksella.
+      }
     }
   }
 

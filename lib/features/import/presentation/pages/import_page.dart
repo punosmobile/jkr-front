@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/tasks/task_activity_cubit.dart';
@@ -126,10 +127,56 @@ class _SharepointFilesCard extends StatelessWidget {
     required this.isReportsActive,
   });
 
+  /// JKR-input-kansion SharePoint-URL johdetaan listan tiedoston webUrl:sta
+  /// poistamalla viimeinen polkuosa (tiedostonimi). Kaikki listan tiedostot
+  /// ovat samassa input-kansiossa, joten minkä tahansa tiedoston emokansio
+  /// on haluttu kansio. Palauttaa null jos listassa ei ole tiedostoja.
+  String? get _inputFolderUrl {
+    for (final f in files) {
+      if (f.webUrl.isNotEmpty) {
+        final idx = f.webUrl.lastIndexOf('/');
+        if (idx > 0) return f.webUrl.substring(0, idx);
+      }
+    }
+    return null;
+  }
+
+  Widget _buildTitle() {
+    final titleStyle = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w500,
+      color: AppTheme.textPrimary,
+    );
+    final folderUrl = _inputFolderUrl;
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text('Saatavilla ', style: titleStyle),
+        if (folderUrl != null)
+          InkWell(
+            onTap: () => launchUrl(
+              Uri.parse(folderUrl),
+              mode: LaunchMode.externalApplication,
+            ),
+            child: Text(
+              'Sharepointissa',
+              style: titleStyle.copyWith(
+                color: AppTheme.primaryColor,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          )
+        else
+          Text('Sharepointissa', style: titleStyle),
+        Text(' — Valmis vietäväksi', style: titleStyle),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return CardContainer(
-      title: 'Saatavilla Sharepointissa — Valmis vietäväksi',
+      titleWidget: _buildTitle(),
       child: Column(
         children: [
           BlocBuilder<ImportBloc, ImportState>(
