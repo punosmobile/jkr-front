@@ -18,7 +18,6 @@ class BackupsBloc extends Bloc<BackupsEvent, BackupsState> {
     on<BackupsDumpRequested>(_onDumpRequested);
     on<BackupsRestoreRequested>(_onRestoreRequested);
     on<BackupsDeleteRequested>(_onDeleteRequested);
-    on<BackupsDownloadRequested>(_onDownloadRequested);
     on<BackupsUploadRequested>(_onUploadRequested);
     on<BackupsOperationDismissed>(_onOperationDismissed);
     on<BackupsOperationPolled>(_onOperationPolled);
@@ -258,28 +257,6 @@ class BackupsBloc extends Bloc<BackupsEvent, BackupsState> {
         backups: remaining,
         busyFilenames: _without(event.filename),
         feedback: _feedback('Varmuuskopio poistettu', isError: false),
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        busyFilenames: _without(event.filename),
-        feedback: _feedback(_message(e), isError: true),
-      ));
-    }
-  }
-
-  Future<void> _onDownloadRequested(
-    BackupsDownloadRequested event,
-    Emitter<BackupsState> emit,
-  ) async {
-    if (state.busyFilenames.contains(event.filename)) {
-      return;
-    }
-    emit(state.copyWith(busyFilenames: {...state.busyFilenames, event.filename}));
-    try {
-      await _repository.downloadBackup(event.filename);
-      emit(state.copyWith(
-        busyFilenames: _without(event.filename),
-        feedback: _feedback('Lataus aloitettu', isError: false),
       ));
     } catch (e) {
       emit(state.copyWith(

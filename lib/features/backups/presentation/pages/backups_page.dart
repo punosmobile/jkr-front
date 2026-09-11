@@ -283,13 +283,6 @@ class _BackupRow extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             OutlinedButton(
-              onPressed: () => bloc.add(BackupsDownloadRequested(backup.filename)),
-              style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4)),
-              child: const Text('Lataa', style: TextStyle(fontSize: 11)),
-            ),
-            const SizedBox(width: 6),
-            OutlinedButton(
               onPressed:
                   disabled ? null : () => _confirmDelete(context, bloc, backup.filename),
               style: OutlinedButton.styleFrom(
