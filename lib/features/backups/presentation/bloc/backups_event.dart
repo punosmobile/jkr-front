@@ -43,16 +43,6 @@ class BackupsDeleteRequested extends BackupsEvent {
   List<Object?> get props => [filename];
 }
 
-/// Lataa varmuuskopion käyttäjän koneelle.
-class BackupsDownloadRequested extends BackupsEvent {
-  const BackupsDownloadRequested(this.filename);
-
-  final String filename;
-
-  @override
-  List<Object?> get props => [filename];
-}
-
 /// Avaa tiedostonvalinnan ja vie valitun tiedoston palvelimelle.
 class BackupsUploadRequested extends BackupsEvent {
   const BackupsUploadRequested();

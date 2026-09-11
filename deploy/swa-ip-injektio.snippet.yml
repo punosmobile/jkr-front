@@ -1,0 +1,73 @@
+# ---------------------------------------------------------------------------
+# Pala julkaisuputkeen: injektoi IP-rajaus staticwebapp.config.jsoniin.
+#
+# Miksi nain: SWA:ssa networking.allowedIpRanges on osa SIVUSTON SISALTOA,
+# ei Azure-resurssin asetusta. Sita ei voi asettaa az-komennolla, vaan sen on
+# oltava konffitiedostossa jonka deploy lataa. Lista pidetaan silti pois
+# reposta, joten se injektoidaan tassa vaiheessa.
+#
+# Aja TAMA ENNEN swa deploy -askelta, SAMASSA jobissa - tiedostomuutos ei
+# kanna jobien yli.
+#
+# secrets vai vars: IP-allowlist ei ole salaisuus vaan konfiguraatiota, eika
+# GitHub maskaa secretin osajonoja - alla oleva tuloste paljastaisi osoitteet
+# lokiin joka tapauksessa. vars.ALLOWED_IP_RANGES on siksi yleensa parempi
+# valinta kuin secrets.; vaihda viittaus jos haluat.
+#
+# Logiikka on testattu jq 1.7.1:lla: JSON-taulukko, pilkku-/valilyonti-/
+# rivinvaihtolista, paljas IP taydennetaan /32:lla, duplikaatit poistetaan,
+# ja kelvottomat (999.1.1.1, 1.2.3.256, /99, roska, tyhja) torjutaan.
+# ---------------------------------------------------------------------------
+      - name: Injektoi IP-rajaus staticwebapp.config.jsoniin
+        working-directory: jkr-front          # sovita repon rakenteeseen
+        env:
+          ALLOWED_IPS: ${{ secrets.ALLOWED_IP_RANGES }}
+        run: |
+          set -euo pipefail
+          CONF=web/staticwebapp.config.json
+
+          # 1) Pakollinen. Ilman tata tyhja arvo johtaisi siihen, etta
+          #    .networking asetetaan nulliksi ja rajaus katoaa HILJAA.
+          if [ -z "${ALLOWED_IPS:-}" ]; then
+            echo "::error::ALLOWED_IP_RANGES puuttuu tai on tyhja" >&2
+            exit 1
+          fi
+
+          # 2) Hyvaksy joko JSON-taulukko tai erotinlista.
+          #    HUOM -Rs eika -R: ilman s-lippua monirivinen arvo katkeaa
+          #    ensimmaiseen riviin ja loput IP:t katoavat hiljaa.
+          if printf '%s' "$ALLOWED_IPS" | jq -e 'type == "array"' >/dev/null 2>&1; then
+            printf '%s' "$ALLOWED_IPS" | jq '.' > /tmp/ips.json
+          else
+            printf '%s' "$ALLOWED_IPS" | jq -Rs 'split("[[:space:],;]+"; null) | map(select(length > 0))' > /tmp/ips.json
+          fi
+
+          # 3) Validoi ennen kuin mitaan kirjoitetaan. Pelkka regex ei riita:
+          #    [0-9]{1,3} hyvaksyisi 999.1.1.1 ja /99, joten oktetit ja
+          #    prefiksi tarkistetaan myos numeerisesti.
+          jq -e 'length > 0 and all(.[]; test("^([0-9]{1,3}[.]){3}[0-9]{1,3}(/[0-9]{1,2})?$") and (split("/") as $p | ($p[0] | split(".") | map(tonumber) | all(. <= 255)) and (($p[1] // "32") | tonumber <= 32)))' /tmp/ips.json >/dev/null || { echo "::error::ALLOWED_IP_RANGES sisaltaa kelvottoman arvon" >&2; exit 1; }
+
+          # 4) Taydenna paljas IP /32:lla, poista duplikaatit.
+          #    (unique jarjestaa listan - allowlistilla jarjestys ei merkitse.)
+          jq 'map(if test("/") then . else . + "/32" end) | unique' /tmp/ips.json > /tmp/ips.norm.json
+
+          # 5) Yhdista konffiin. navigationFallback sailyy koskemattomana.
+          jq --slurpfile ips /tmp/ips.norm.json '.networking = { allowedIpRanges: $ips[0] }' "$CONF" > /tmp/conf.json
+          mv /tmp/conf.json "$CONF"
+
+          echo "Sallittuja osoitteita: $(jq '.networking.allowedIpRanges | length' "$CONF")"
+          jq -c '.networking' "$CONF"
+
+      # -----------------------------------------------------------------------
+      # Standard-taso on pakko olla, muuten networking-lohko menee lapi mutta
+      # jaa TEHOTTOMAKSI ilman virhetta. Halpa varmistus samaan putkeen:
+      # -----------------------------------------------------------------------
+      - name: Varmista SWA:n Standard-taso
+        run: |
+          set -euo pipefail
+          SKU=$(az staticwebapp show -n "$SWA_NAME" -g "$SWA_RG" --query sku.name -o tsv)
+          echo "Nykyinen SKU: $SKU"
+          if [ "$SKU" != "Standard" ]; then
+            az staticwebapp update -n "$SWA_NAME" -g "$SWA_RG" --sku Standard -o none
+            echo "SKU nostettu Standardiin."
+          fi

@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:dio/dio.dart';
 
 import 'package:jkrfront/core/di/injection.dart';
@@ -96,20 +94,6 @@ class BackupsRepository {
       );
     } on DioException catch (error) {
       throw Exception(_errorMessage(error, 'Varmuuskopion poisto epäonnistui'));
-    }
-  }
-
-  /// Lataa varmuuskopion käyttäjän koneelle selaimen kautta.
-  Future<void> downloadBackup(String filename) async {
-    try {
-      final response = await _api.get<List<int>>(
-        '/db/dumps/${Uri.encodeComponent(filename)}/download',
-        options: Options(responseType: ResponseType.bytes),
-      );
-      final data = response.data ?? const [];
-      WebFileHelper.saveBytes(filename, Uint8List.fromList(data));
-    } on DioException catch (error) {
-      throw Exception(_errorMessage(error, 'Varmuuskopion lataus epäonnistui'));
     }
   }
 
