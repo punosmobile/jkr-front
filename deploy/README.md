@@ -12,8 +12,34 @@ vain `navigationFallback`in. Älä lisää `networking`-lohkoa tänne.
 
 ## Mistä osoitteet tulevat
 
-Ympäristömuuttujasta `ALLOWED_IP_RANGES` (tai putkessa vastaavasta secretistä /
-muuttujasta). Hyväksytyt muodot:
+Lista on tallessa **Azure Key Vaultissa**, secretissä `allowed-ip-ranges`, erikseen
+kussakin ympäristössä:
+
+| Ympäristö | Key Vault |
+|-----------|-----------|
+| dev       | `kv-lhh-h01s01-dev` |
+| testi     | `kv-lhh-jatehuolto-testi` |
+| tuotanto  | `kv-lhh-jatehuolto-prod` |
+
+Deploy-skriptit hakevat sen automaattisesti, joten mitään ei tarvitse asettaa
+käsin. Lähdejärjestys, ensimmäinen löytynyt voittaa:
+
+1. `-AllowedIpRanges`-parametri
+2. ympäristömuuttuja `ALLOWED_IP_RANGES`
+3. Key Vault -secret `allowed-ip-ranges`
+
+Skripti tulostaa aina minkä lähteen se valitsi. Julkaisuputkessa lähde on
+GitHubin secret tai muuttuja — ks. snippet.
+
+Listan päivitys Key Vaultiin:
+
+```bash
+az keyvault secret set --vault-name kv-lhh-jatehuolto-prod --name allowed-ip-ranges --content-type application/json --value '["192.0.2.10/32","198.51.100.25/32"]'
+```
+
+Muutos astuu voimaan vasta seuraavassa deployssa, koska rajaus on osa sisältöä.
+
+Hyväksytyt muodot:
 
 ```
 JSON-taulukko:  ["192.0.2.10/32","198.51.100.25/32"]
@@ -53,9 +79,14 @@ syötteillä — `999.1.1.1`, `1.2.3.256`, `/99`, roska ja tyhjä torjutaan.
 ## Toistaiseksi: ps1-skriptit
 
 Putken valmistumiseen asti deploy tehdään repon ulkopuolisilla
-`deploy-swa.ps1`-skripteillä (yksi per ympäristö). Ne lukevat saman listan:
+`deploy-swa.ps1`-skripteillä (yksi per ympäristö). Ne lukevat listan Key
+Vaultista automaattisesti:
 
 ```powershell
+# tavallinen ajo - lista tulee Key Vaultista, mitaan ei tarvitse asettaa:
+.\deploy-swa.ps1
+
+# ohita Key Vault ymparistomuuttujalla:
 $env:ALLOWED_IP_RANGES = '["192.0.2.10/32"]'
 .\deploy-swa.ps1
 
