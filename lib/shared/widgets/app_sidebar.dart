@@ -59,15 +59,15 @@ class AppSidebar extends StatelessWidget {
       SidebarNavItem(id: 'import', label: l10n.navImport, icon: Icons.download_outlined),
       SidebarNavItem(id: 'realogi', label: l10n.navRealtimeLog, icon: Icons.play_arrow_outlined),
       SidebarNavItem(id: 'raportit', label: l10n.navReports, icon: Icons.grid_view_outlined),
+      SidebarNavItem(id: 'dbdocs', label: l10n.navDbDocs, icon: Icons.menu_book_outlined),
+      SidebarNavItem(id: 'varmuuskopiot', label: l10n.navBackups, icon: Icons.backup_outlined),
     ]),
     SidebarSection(header: l10n.navPlannedFeatures, items: [
       SidebarNavItem(id: 'kohteet', label: l10n.navTargets, icon: Icons.apartment_outlined, isPlanned: true),
       SidebarNavItem(id: 'kartta', label: l10n.navMap, icon: Icons.map_outlined, isPlanned: true),
       SidebarNavItem(id: 'tietokanta', label: l10n.navDatabase, icon: Icons.storage_outlined, isPlanned: true),
       SidebarNavItem(id: 'lokit', label: l10n.navLogs, icon: Icons.list_alt_outlined, isPlanned: true),
-      SidebarNavItem(id: 'dbdocs', label: l10n.navDbDocs, icon: Icons.menu_book_outlined),
-      SidebarNavItem(id: 'varmuuskopiot', label: l10n.navBackups, icon: Icons.backup_outlined),
-      SidebarNavItem(id: 'ohjeet', label: l10n.navHelp, icon: Icons.help_outline),
+      SidebarNavItem(id: 'ohjeet', label: l10n.navHelp, icon: Icons.help_outline, isPlanned: true),
     ]),
   ];
 
