@@ -95,7 +95,7 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
     }
   }
 
-  // ponytail: infers the failing file from the log (last file mentioned before
+  // infers the failing file from the log (last file mentioned before
   // the first [ERROR] line). Replace once the backend returns per-file status.
   static String? _failedFileName(String output, Iterable<String> fileNames) {
     final lines = output.split('\n');
@@ -109,7 +109,7 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
     return null;
   }
 
-  // ponytail: the backend marks the task done before moving files to viedyt,
+  // the backend marks the task done before moving files to viedyt,
   // so refetch until the imported files are gone from the list (max ~8 s).
   // Remove the loop once the backend sets the status only after archiving.
   Future<void> _refreshSharepointFiles(
