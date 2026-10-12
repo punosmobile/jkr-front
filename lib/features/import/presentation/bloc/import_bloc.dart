@@ -39,7 +39,7 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
         i.status != ImportQueueStatus.completed &&
         i.status != ImportQueueStatus.error);
 
-    // Onnistuneesti tuotujen tiedostojen id:t (= SharePoint-itemin id).
+    // Ids of successfully imported files (= SharePoint item id).
     final importedIds = <String>{};
 
     if (!event.isActive && pendingItems.isNotEmpty) {
@@ -52,13 +52,23 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
         try {
           final result = await repository.fetchTaskStatus(taskId);
           if (result.isFinished) {
+            final failedFile = result.hasError
+                ? _failedFileName(
+                    result.output,
+                    updatedItems
+                        .where((i) => i.taskId == taskId)
+                        .map((i) => i.fileName),
+                  )
+                : null;
             for (int i = 0; i < updatedItems.length; i++) {
               if (updatedItems[i].taskId == taskId) {
+                final showError = failedFile == null ||
+                    failedFile == updatedItems[i].fileName;
                 updatedItems[i] = updatedItems[i].copyWith(
                   status: result.hasError
                       ? ImportQueueStatus.error
                       : ImportQueueStatus.completed,
-                  errorOutput: result.errorOutput,
+                  errorOutput: showError ? result.errorOutput : null,
                 );
                 if (!result.hasError) importedIds.add(updatedItems[i].id);
               }
@@ -68,26 +78,40 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
       }
       emit(state.copyWith(
         queueItems: updatedItems,
-        // Viedyt tiedostot pois esianalyysistä, jottei samaa tuontia voi
-        // käynnistää uudelleen. Virheelliset jäävät näkyviin.
+        // Drop imported files from the pre-analysis so the same import can't be
+        // started again. Failed files stay visible.
         analyzedFiles: state.analyzedFiles
             .where((f) => !importedIds.contains(f.id))
             .toList(),
       ));
     }
 
-    // Päivitä SharePoint-lista, kun oma tuonti valmistui (importedIds) tai
-    // jokin tuonti päättyi (käynnissä -> valmis). Onnistuneen tuonnin jälkeen
-    // lähdetiedostot siirretään JKR-input -> viedyt, joten ne eivät saa jäädä
-    // "Saatavilla Sharepointissa" -listaan.
+    // Refresh the SharePoint list when our own import finished (importedIds) or
+    // any import ended (running -> done). After a successful import the source
+    // files are moved JKR-input -> viedyt, so they must not stay in the
+    // "Saatavilla Sharepointissa" list.
     if (importedIds.isNotEmpty || (wasImporting && !event.isActive)) {
       await _refreshSharepointFiles(emit, untilGone: importedIds);
     }
   }
 
-  // ponytail: backend merkitsee tehtävän valmiiksi ennen viedyt-siirtoa, joten
-  // haetaan uudelleen kunnes tuodut tiedostot ovat poistuneet listasta (max
-  // ~8 s). Poista silmukka, kun backend asettaa tilan vasta arkistoinnin jälkeen.
+  // ponytail: infers the failing file from the log (last file mentioned before
+  // the first [ERROR] line). Replace once the backend returns per-file status.
+  static String? _failedFileName(String output, Iterable<String> fileNames) {
+    final lines = output.split('\n');
+    final firstError = lines.indexWhere((l) => l.contains('[ERROR]'));
+    if (firstError < 0) return null;
+    for (final line in lines.take(firstError).toList().reversed) {
+      for (final name in fileNames) {
+        if (line.contains('/$name') || line.contains(' $name')) return name;
+      }
+    }
+    return null;
+  }
+
+  // ponytail: the backend marks the task done before moving files to viedyt,
+  // so refetch until the imported files are gone from the list (max ~8 s).
+  // Remove the loop once the backend sets the status only after archiving.
   Future<void> _refreshSharepointFiles(
     Emitter<ImportState> emit, {
     required Set<String> untilGone,
@@ -99,7 +123,7 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
         emit(state.copyWith(sharepointFiles: files));
         if (!files.any((f) => untilGone.contains(f.id))) return;
       } catch (_) {
-        // Lista päivittyy seuraavalla latauksella.
+        // The list refreshes on the next load.
       }
     }
   }

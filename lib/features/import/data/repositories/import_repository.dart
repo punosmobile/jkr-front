@@ -87,16 +87,27 @@ class ImportRepository {
   }
 
   /// Fetch the status of a single backend task.
-  Future<({bool isFinished, bool hasError, String? errorOutput})> fetchTaskStatus(String taskId) async {
+  Future<({bool isFinished, bool hasError, String? errorOutput, String output})> fetchTaskStatus(String taskId) async {
     final response = await _dio.get('/tasks/$taskId');
     final data = response.data as Map<String, dynamic>;
     final status = data['status'] as String? ?? '';
     final isFinished = status != 'pending' && status != 'running';
     final exitCode = data['exit_code'] as int?;
     final errorText = data['error'] as String? ?? '';
+    final output = data['output'] as String? ?? '';
     final hasError = (exitCode != null && exitCode != 0) || errorText.isNotEmpty;
-    final errorOutput = hasError ? errorText : null;
-    return (isFinished: isFinished, hasError: hasError, errorOutput: errorOutput);
+    // The CLI logs its errors to stdout, so `error` is often empty:
+    // fall back to the error lines in the output.
+    final errorOutput = !hasError
+        ? null
+        : errorText.isNotEmpty
+            ? errorText
+            : output
+                .split('\n')
+                .map((l) => _errorLinePattern.firstMatch(l)?.group(1)?.trim())
+                .whereType<String>()
+                .join('\n');
+    return (isFinished: isFinished, hasError: hasError, errorOutput: errorOutput, output: output);
   }
 
   /// Run velvoitetarkistus for a given date.
@@ -171,6 +182,8 @@ class ImportRepository {
     );
   }
 }
+
+final _errorLinePattern = RegExp(r'\[ERROR\](.*)');
 
 int _compareByFileTypeOrder(ImportFile a, ImportFile b) {
   final aIndex = FileType.values.indexWhere((e) => e.type == a.fileType);
