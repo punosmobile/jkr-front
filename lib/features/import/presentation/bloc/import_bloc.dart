@@ -7,8 +7,12 @@ import 'import_state.dart';
 
 class ImportBloc extends Bloc<ImportEvent, ImportState> {
   final ImportRepository repository;
+  final Duration refreshRetryDelay;
 
-  ImportBloc({required this.repository}) : super(const ImportState()) {
+  ImportBloc({
+    required this.repository,
+    this.refreshRetryDelay = const Duration(seconds: 2),
+  }) : super(const ImportState()) {
     on<ImportLoadFiles>(_onLoadFiles);
     on<ImportToggleFile>(_onToggleFile);
     on<ImportSetAllSelected>(_onSetAllSelected);
@@ -35,6 +39,9 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
         i.status != ImportQueueStatus.completed &&
         i.status != ImportQueueStatus.error);
 
+    // Onnistuneesti tuotujen tiedostojen id:t (= SharePoint-itemin id).
+    final importedIds = <String>{};
+
     if (!event.isActive && pendingItems.isNotEmpty) {
       final taskIds = pendingItems
           .map((i) => i.taskId!)
@@ -53,25 +60,46 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
                       : ImportQueueStatus.completed,
                   errorOutput: result.errorOutput,
                 );
+                if (!result.hasError) importedIds.add(updatedItems[i].id);
               }
             }
           }
         } catch (_) {}
       }
-      emit(state.copyWith(queueItems: updatedItems));
+      emit(state.copyWith(
+        queueItems: updatedItems,
+        // Viedyt tiedostot pois esianalyysistä, jottei samaa tuontia voi
+        // käynnistää uudelleen. Virheelliset jäävät näkyviin.
+        analyzedFiles: state.analyzedFiles
+            .where((f) => !importedIds.contains(f.id))
+            .toList(),
+      ));
     }
 
-    // Kun tuonti on juuri päättynyt (käynnissä -> valmis), päivitä
-    // SharePoint-tiedostolista: onnistuneen tuonnin jälkeen lähdetiedostot on
-    // arkistoitu (siirretty JKR-input -> viedyt), joten ne eivät saa jäädä
-    // näkymään "Saatavilla Sharepointissa" -listaan. Suoritetaan vain
-    // siirtymähetkellä, ei joka pollauksella.
-    if (wasImporting && !event.isActive) {
+    // Päivitä SharePoint-lista, kun oma tuonti valmistui (importedIds) tai
+    // jokin tuonti päättyi (käynnissä -> valmis). Onnistuneen tuonnin jälkeen
+    // lähdetiedostot siirretään JKR-input -> viedyt, joten ne eivät saa jäädä
+    // "Saatavilla Sharepointissa" -listaan.
+    if (importedIds.isNotEmpty || (wasImporting && !event.isActive)) {
+      await _refreshSharepointFiles(emit, untilGone: importedIds);
+    }
+  }
+
+  // ponytail: backend merkitsee tehtävän valmiiksi ennen viedyt-siirtoa, joten
+  // haetaan uudelleen kunnes tuodut tiedostot ovat poistuneet listasta (max
+  // ~8 s). Poista silmukka, kun backend asettaa tilan vasta arkistoinnin jälkeen.
+  Future<void> _refreshSharepointFiles(
+    Emitter<ImportState> emit, {
+    required Set<String> untilGone,
+  }) async {
+    for (var attempt = 0; attempt < 5; attempt++) {
+      if (attempt > 0) await Future.delayed(refreshRetryDelay);
       try {
         final files = await repository.fetchSharepointFiles();
         emit(state.copyWith(sharepointFiles: files));
+        if (!files.any((f) => untilGone.contains(f.id))) return;
       } catch (_) {
-        // Lista päivittyy seuraavalla manuaalisella latauksella.
+        // Lista päivittyy seuraavalla latauksella.
       }
     }
   }
