@@ -12,7 +12,7 @@ class DashboardRepository {
   }
 
   Future<List<DashboardImportLogItem>> fetchImportLog() async {
-    final response = await _dio.get('/tuontiloki');
+    final response = await _dio.get('/tuontiloki_dashboard');
     return (response.data as List<dynamic>? ?? const [])
         .map((item) => DashboardImportLogItem.fromJson(item as Map<String, dynamic>))
         .toList(growable: false);

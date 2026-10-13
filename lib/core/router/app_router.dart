@@ -13,6 +13,7 @@ import '../../features/import/presentation/pages/import_page.dart';
 import '../../features/import/presentation/pages/sharepoint_browser_page.dart';
 import '../../features/licenses/presentation/pages/licenses_page.dart';
 import '../../features/planned/presentation/pages/planned_feature_page.dart';
+import '../../features/logs_and_history/presentation/pages/logs_and_history_page.dart';
 import '../../features/realtime_log/presentation/pages/realtime_log_page.dart';
 import '../../features/documentation/presentation/pages/documentation_page.dart';
 import '../../features/reports/presentation/pages/reports_page.dart';
@@ -137,7 +138,7 @@ class AppRouter {
               path: '/lokit',
               name: 'lokit',
               pageBuilder: (_, state) => const NoTransitionPage(
-                child: PlannedFeaturePage(title: 'Lokit & historia'),
+                child: LogsAndHistoryPage(title: 'Lokit & historia'),
               ),
             ),
           ],
