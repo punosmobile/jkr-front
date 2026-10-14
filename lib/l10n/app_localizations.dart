@@ -1230,6 +1230,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pre-analysis failed and the backend did not return an analysis result.'**
   String get importAnalysisErrorMissingResult;
+
+  /// No description provided for @logsHeaderDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Full history of system events and the import log.'**
+  String get logsHeaderDescription;
+
+  /// No description provided for @logsSystemEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'System events'**
+  String get logsSystemEvents;
+
+  /// No description provided for @logsLimitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get logsLimitLabel;
+
+  /// No description provided for @logsLimitAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get logsLimitAll;
+
+  /// No description provided for @logsEntryCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} entries'**
+  String logsEntryCount(int count);
+
+  /// No description provided for @logsSystemEventsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load system events.'**
+  String get logsSystemEventsLoadError;
+
+  /// No description provided for @logsImportLogLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load the import log.'**
+  String get logsImportLogLoadError;
+
+  /// No description provided for @logsEventDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'System event details'**
+  String get logsEventDetailsTitle;
+
+  /// No description provided for @logsFieldEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Event'**
+  String get logsFieldEvent;
+
+  /// No description provided for @logsFieldTaskType.
+  ///
+  /// In en, this message translates to:
+  /// **'Task type'**
+  String get logsFieldTaskType;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

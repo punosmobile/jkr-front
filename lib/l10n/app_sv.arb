@@ -202,5 +202,15 @@
     "dashboardFieldRunner": "Runner",
     "dashboardFieldDetails": "Detaljer",
     "importAnalysisErrorNotRunnable": "Filen kan inte importeras. Innehållet kunde inte identifieras eller filen är ogiltig.",
-    "importAnalysisErrorMissingResult": "Föranalysen misslyckades och backend returnerade inget analysresultat."
+    "importAnalysisErrorMissingResult": "Föranalysen misslyckades och backend returnerade inget analysresultat.",
+    "logsHeaderDescription": "Fullständig historik över systemhändelser och importloggen.",
+    "logsSystemEvents": "Systemhändelser",
+    "logsLimitLabel": "Visa",
+    "logsLimitAll": "Alla",
+    "logsEntryCount": "{count} rader",
+    "logsSystemEventsLoadError": "Det gick inte att läsa in systemhändelserna.",
+    "logsImportLogLoadError": "Det gick inte att läsa in importloggen.",
+    "logsEventDetailsTitle": "Detaljer för systemhändelse",
+    "logsFieldEvent": "Händelse",
+    "logsFieldTaskType": "Uppgiftstyp"
 }

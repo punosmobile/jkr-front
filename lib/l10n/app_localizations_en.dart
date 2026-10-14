@@ -578,4 +578,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importAnalysisErrorMissingResult => 'Pre-analysis failed and the backend did not return an analysis result.';
+
+  @override
+  String get logsHeaderDescription => 'Full history of system events and the import log.';
+
+  @override
+  String get logsSystemEvents => 'System events';
+
+  @override
+  String get logsLimitLabel => 'Show';
+
+  @override
+  String get logsLimitAll => 'All';
+
+  @override
+  String logsEntryCount(int count) {
+    return '$count entries';
+  }
+
+  @override
+  String get logsSystemEventsLoadError => 'Failed to load system events.';
+
+  @override
+  String get logsImportLogLoadError => 'Failed to load the import log.';
+
+  @override
+  String get logsEventDetailsTitle => 'System event details';
+
+  @override
+  String get logsFieldEvent => 'Event';
+
+  @override
+  String get logsFieldTaskType => 'Task type';
 }

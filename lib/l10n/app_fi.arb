@@ -202,5 +202,15 @@
     "dashboardFieldRunner": "Suorittaja",
     "dashboardFieldDetails": "Lisätiedot",
     "importAnalysisErrorNotRunnable": "Tiedostoa ei voi ajaa sisään. Tiedoston sisältöä ei tunnistettu tai tiedosto on virheellinen.",
-    "importAnalysisErrorMissingResult": "Tiedoston esianalyysi epäonnistui eikä backend palauttanut analyysitulosta."
+    "importAnalysisErrorMissingResult": "Tiedoston esianalyysi epäonnistui eikä backend palauttanut analyysitulosta.",
+    "logsHeaderDescription": "Järjestelmätapahtumien ja tuontilokin koko historia.",
+    "logsSystemEvents": "Järjestelmätapahtumat",
+    "logsLimitLabel": "Näytä",
+    "logsLimitAll": "Kaikki",
+    "logsEntryCount": "{count} riviä",
+    "logsSystemEventsLoadError": "Järjestelmätapahtumien lataus epäonnistui.",
+    "logsImportLogLoadError": "Tuontilokin lataus epäonnistui.",
+    "logsEventDetailsTitle": "Järjestelmätapahtuman tiedot",
+    "logsFieldEvent": "Tapahtuma",
+    "logsFieldTaskType": "Tehtävätyyppi"
 }

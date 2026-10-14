@@ -578,4 +578,36 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get importAnalysisErrorMissingResult => 'Föranalysen misslyckades och backend returnerade inget analysresultat.';
+
+  @override
+  String get logsHeaderDescription => 'Fullständig historik över systemhändelser och importloggen.';
+
+  @override
+  String get logsSystemEvents => 'Systemhändelser';
+
+  @override
+  String get logsLimitLabel => 'Visa';
+
+  @override
+  String get logsLimitAll => 'Alla';
+
+  @override
+  String logsEntryCount(int count) {
+    return '$count rader';
+  }
+
+  @override
+  String get logsSystemEventsLoadError => 'Det gick inte att läsa in systemhändelserna.';
+
+  @override
+  String get logsImportLogLoadError => 'Det gick inte att läsa in importloggen.';
+
+  @override
+  String get logsEventDetailsTitle => 'Detaljer för systemhändelse';
+
+  @override
+  String get logsFieldEvent => 'Händelse';
+
+  @override
+  String get logsFieldTaskType => 'Uppgiftstyp';
 }

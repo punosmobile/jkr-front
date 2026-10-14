@@ -315,5 +315,22 @@
     "dashboardFieldRunner": "Runner",
     "dashboardFieldDetails": "Details",
     "importAnalysisErrorNotRunnable": "The file cannot be imported. The contents were not recognized or the file is invalid.",
-    "importAnalysisErrorMissingResult": "Pre-analysis failed and the backend did not return an analysis result."
+    "importAnalysisErrorMissingResult": "Pre-analysis failed and the backend did not return an analysis result.",
+    "logsHeaderDescription": "Full history of system events and the import log.",
+    "logsSystemEvents": "System events",
+    "logsLimitLabel": "Show",
+    "logsLimitAll": "All",
+    "logsEntryCount": "{count} entries",
+    "@logsEntryCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "logsSystemEventsLoadError": "Failed to load system events.",
+    "logsImportLogLoadError": "Failed to load the import log.",
+    "logsEventDetailsTitle": "System event details",
+    "logsFieldEvent": "Event",
+    "logsFieldTaskType": "Task type"
 }
