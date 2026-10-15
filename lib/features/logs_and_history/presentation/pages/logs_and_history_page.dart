@@ -522,6 +522,7 @@ class _ImportLogRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final command = _shortenCommand(entry.komento);
 
     return Material(
       color: Colors.transparent,
@@ -548,12 +549,35 @@ class _ImportLogRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      entry.tyyppi ?? l10n.dashboardImportLogTypeOther,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textSecondary,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          entry.tyyppi ?? l10n.dashboardImportLogTypeOther,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                        if (command.isNotEmpty) ...[
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Tooltip(
+                              message: entry.komento!.trim(),
+                              waitDuration: const Duration(milliseconds: 500),
+                              child: Text(
+                                command,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppTheme.textTertiary,
+                                  fontFamily: 'monospace',
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     if (_buildImportLogDetail(l10n, entry).isNotEmpty) ...[
                       const SizedBox(height: 2),
@@ -689,6 +713,35 @@ Color? _statusColor(String? status) {
     'pending' => AppTheme.amber,
     _ => null,
   };
+}
+
+/// Lyhentää tuontilokin komennon riville: polut korvataan tiedostonimillä,
+/// jotta saman tyypin rivit (esim. ilmoitukset vs. lopetusilmoitukset)
+/// erottuvat toisistaan. Koko komento näkyy tooltipissa ja lisätiedoissa.
+String _shortenCommand(String? komento) {
+  final trimmed = (komento ?? '').trim();
+  if (trimmed.isEmpty) {
+    return '';
+  }
+
+  return trimmed.split(RegExp(r'\s+')).map(_shortenCommandToken).join(' ');
+}
+
+String _shortenCommandToken(String token) {
+  // --tiedosto=/polku/tiedosto.csv → --tiedosto=tiedosto.csv
+  final eq = token.indexOf('=');
+  if (token.startsWith('-') && eq > 0) {
+    return '${token.substring(0, eq + 1)}${_shortenCommandToken(token.substring(eq + 1))}';
+  }
+
+  // URL:t (esim. postgresql://...) jätetään ennalleen.
+  if (!token.contains('/') || token.contains('://')) {
+    return token;
+  }
+
+  final quote = RegExp(r'''^["']|["']$''');
+  final segments = token.replaceAll(quote, '').split('/').where((s) => s.isNotEmpty);
+  return segments.isEmpty ? token : segments.last;
 }
 
 String _formatImportLogTime(LogHistoryImportLogItem entry) {
