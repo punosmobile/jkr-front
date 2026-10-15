@@ -22,5 +22,315 @@
     "retry": "Retry",
     "@retry": {
         "description": "Retry action"
-    }
+    },
+    "sidebarOrgName": "Lahti region\nwaste management authority",
+    "@sidebarOrgName": {
+        "description": "Organization name in sidebar"
+    },
+    "sidebarAppName": "JKR Data Management",
+    "@sidebarAppName": {
+        "description": "Application name in sidebar"
+    },
+    "navDashboard": "Dashboard",
+    "@navDashboard": {
+        "description": "Navigation: Dashboard"
+    },
+    "navImport": "Data import",
+    "@navImport": {
+        "description": "Navigation: Data import"
+    },
+    "navSharepoint": "SharePoint",
+    "@navSharepoint": {
+        "description": "Navigation: SharePoint"
+    },
+    "navRealtimeLog": "Real-time log",
+    "@navRealtimeLog": {
+        "description": "Navigation: Real-time log"
+    },
+    "navReports": "Reports",
+    "@navReports": {
+        "description": "Navigation: Reports"
+    },
+    "navBackups": "Backups",
+    "@navBackups": {
+        "description": "Navigation: Backups"
+    },
+    "navDbDocs": "Database docs",
+    "@navDbDocs": {
+        "description": "Navigation: Database documentation"
+    },
+    "navHelp": "Help & support",
+    "@navHelp": {
+        "description": "Navigation: Help and support"
+    },
+    "navPlannedFeatures": "Planned features",
+    "@navPlannedFeatures": {
+        "description": "Section header: Planned features"
+    },
+    "navTargets": "Targets",
+    "@navTargets": {
+        "description": "Navigation: Targets"
+    },
+    "navMap": "Map view",
+    "@navMap": {
+        "description": "Navigation: Map view"
+    },
+    "navDatabase": "Database",
+    "@navDatabase": {
+        "description": "Navigation: Database"
+    },
+    "navLogs": "Logs & history",
+    "@navLogs": {
+        "description": "Navigation: Logs and history"
+    },
+    "dbConnectionOk": "DB connection OK",
+    "@dbConnectionOk": {
+        "description": "Database connection status: connected"
+    },
+    "dbNoConnection": "No connection",
+    "@dbNoConnection": {
+        "description": "Database connection status: disconnected"
+    },
+    "logout": "Log out",
+    "@logout": {
+        "description": "Logout button"
+    },
+    "loginBrandBadge": "Lahti JKR",
+    "@loginBrandBadge": {
+        "description": "Brand badge text shown on the login page"
+    },
+    "loginCompactDescription": "The Lahti Waste Management Register brings data entry, monitoring, and reporting into one view.",
+    "@loginCompactDescription": {
+        "description": "Compact header description shown on the login page"
+    },
+    "loginBrandTitle": "Lahti Waste Management\nRegister",
+    "@loginBrandTitle": {
+        "description": "Large brand title shown on the login page"
+    },
+    "loginBrandDescription": "A unified interface for data entry, documentation, and daily follow-up. Sign in with your Microsoft account.",
+    "@loginBrandDescription": {
+        "description": "Brand-side description shown on the login page"
+    },
+    "loginTitle": "Sign in",
+    "@loginTitle": {
+        "description": "Login card title"
+    },
+    "loginDescription": "Use your organization's Microsoft account.",
+    "@loginDescription": {
+        "description": "Login card description"
+    },
+    "loginEnvironmentDevelopment": "Development",
+    "@loginEnvironmentDevelopment": {
+        "description": "Environment chip label for the development environment on the login page"
+    },
+    "loginEnvironmentTest": "Test",
+    "@loginEnvironmentTest": {
+        "description": "Environment chip label for the test environment on the login page"
+    },
+    "loginEnvironmentProduction": "Production",
+    "@loginEnvironmentProduction": {
+        "description": "Environment chip label for the production environment on the login page"
+    },
+    "loginButton": "Continue with Microsoft",
+    "@loginButton": {
+        "description": "Primary login button label"
+    },
+    "loginButtonLoading": "Signing in...",
+    "@loginButtonLoading": {
+        "description": "Primary login button label while loading"
+    },
+    "loginBrowserHint": "Your browser opens Microsoft sign-in and returns you to this application.",
+    "@loginBrowserHint": {
+        "description": "Helper text below the login button"
+    },
+    "loginErrorFailed": "Sign-in failed. Please try again.",
+    "@loginErrorFailed": {
+        "description": "Error message shown when starting login fails without additional details"
+    },
+    "loginErrorGeneric": "Sign-in could not be completed right now.",
+    "@loginErrorGeneric": {
+        "description": "Generic error message shown when login throws an unexpected error"
+    },
+    "reportsPageTitle": "Excel report",
+    "reportsPageDescription": "Create a JKR report with the selected filters. The completed file is stored in SharePoint by default, and the progress is shown here in real time.",
+    "reportsFiltersTitle": "Filters",
+    "reportsFieldDate": "Reference date",
+    "reportsFieldMunicipality": "Municipality",
+    "reportsFieldApartmentCount": "Apartment count",
+    "reportsFieldUrbanArea": "Urban area filter",
+    "reportsFieldPropertyType": "Property type",
+    "reportsFieldSewer": "Sewer network",
+    "reportsInfoParallelRuns": "You can start multiple reports in parallel with the same or new filters. Each run is shown below as its own card, and the card can be collapsed into a compact status view. Cancellation requires separate confirmation.",
+    "reportsRunButton": "Run report",
+    "reportsRunNewButton": "Run new report",
+    "reportsCancelDialogTitle": "Cancel report generation?",
+    "reportsCancelDialogContent": "Report generation is in progress. Do you really want to send a cancellation request?",
+    "reportsCancelDialogContinue": "Continue generation",
+    "reportsCancelDialogConfirm": "Cancel report",
+    "reportsDateNoFilter": "No date filter",
+    "reportsDateClearTooltip": "Clear date",
+    "reportsDateSelectTooltip": "Select date",
+    "reportsDatePickerHelp": "Select reference date",
+    "reportsDatePickerCancel": "Cancel",
+    "reportsDatePickerConfirm": "Select",
+    "reportsAllMunicipalities": "All municipalities",
+    "reportsPropertyTypeAll": "All / no filter",
+    "reportsPropertyTypeResidential": "Residential property",
+    "reportsPropertyTypeHapa": "HAPA",
+    "reportsPropertyTypeBiohapa": "Biohapa",
+    "reportsPropertyTypeOther": "Other",
+    "reportsSewerAll": "All",
+    "reportsSewerConnected": "Connected to sewer network",
+    "reportsSewerNotConnected": "Not connected to sewer network",
+    "reportsApartmentsAll": "All apartment counts",
+    "reportsApartmentsMaxFour": "Up to four",
+    "reportsApartmentsMinFive": "At least five",
+    "reportsUrbanAreaNone": "No filter",
+    "reportsUrbanAreaOver200": "More than 200 inhabitants",
+    "reportsUrbanAreaOver10000": "More than 10,000 inhabitants",
+    "reportsUrbanAreaBoth": "Both urban area filters",
+    "reportsEventJustCompleted": "Completed just now",
+    "reportsEventStarted": "New run started",
+    "reportsCollapseTooltip": "Collapse",
+    "reportsExpandTooltip": "Expand",
+    "reportsTaskLabel": "Task",
+    "reportsIdentifierLabel": "Identifier",
+    "reportsStatusTitleReady": "Ready",
+    "reportsStatusTitleCurrent": "Status",
+    "reportsErrorTitle": "Error",
+    "reportsFileLabel": "File",
+    "reportsSharepointLinkAvailableTitle": "SharePoint link available",
+    "reportsSharepointLinkAvailableCompleted": "The report can now be opened in SharePoint.",
+    "reportsSharepointLinkAvailableRunning": "The SharePoint link is already available even though the run is still in progress.",
+    "reportsSharepointNoticeTitle": "SharePoint notice",
+    "reportsCancelButton": "Cancel report generation",
+    "reportsCloseButton": "Close",
+    "reportsRunStatusStarting": "Starting report",
+    "reportsRunStatusRunning": "Generating report",
+    "reportsRunStatusCancelling": "Cancelling report",
+    "reportsRunStatusCompleted": "Report created",
+    "reportsRunStatusFailed": "Report generation failed",
+    "reportsRunSubtitleRunning": "The server is generating the report in the background. You can see the latest progress information here.",
+    "reportsRunSubtitleCancelling": "The cancellation request has been sent. Wait for the server to confirm that the report was stopped.",
+    "reportsRunSubtitleCompleted": "The report finished successfully. You can close this view with the OK button.",
+    "reportsRunSubtitleFailed": "Report generation stopped due to an error or cancellation. Check the message below.",
+    "reportsParameterDayLabel": "Day",
+    "reportsParameterDayNotFiltered": "Not filtered",
+    "reportsParameterMunicipalityLabel": "Municipality",
+    "reportsParameterApartmentsLabel": "Apartments",
+    "reportsParameterApartmentsAll": "All",
+    "reportsParameterApartmentsMaxFour": "Up to four",
+    "reportsParameterApartmentsMinFive": "At least five",
+    "reportsParameterUrbanAreaLabel": "Urban area",
+    "reportsParameterUrbanAreaNone": "No filter",
+    "reportsParameterUrbanAreaOver200": "More than 200 inhabitants",
+    "reportsParameterUrbanAreaOver10000": "More than 10,000 inhabitants",
+    "reportsParameterUrbanAreaBoth": "Both",
+    "reportsParameterPropertyTypeLabel": "Property type",
+    "reportsParameterPropertyTypeAll": "All",
+    "reportsParameterPropertyTypeResidential": "Residential property",
+    "reportsParameterPropertyTypeHapa": "HAPA",
+    "reportsParameterPropertyTypeBiohapa": "Biohapa",
+    "reportsParameterPropertyTypeOther": "Other",
+    "reportsParameterSewerLabel": "Sewer",
+    "reportsParameterSewerAll": "All",
+    "reportsParameterSewerConnected": "Connected",
+    "reportsParameterSewerNotConnected": "Not connected",
+    "reportsPollingUpdating": "Updating",
+    "reportsPollingUpdatedJustNow": "Updated just now",
+    "reportsPollingUpdatedSecondsAgo": "Updated {seconds}s ago",
+    "@reportsPollingUpdatedSecondsAgo": {
+        "placeholders": {
+            "seconds": {
+                "type": "int"
+            }
+        }
+    },
+    "reportsButtonFetchingLink": "Fetching link",
+    "reportsButtonOpenReport": "Open report",
+    "reportsStepFetchTargets": "Fetching target data from the database",
+    "reportsStepApplyObligationFilters": "Applying obligation filters",
+    "reportsStepCreateReport": "Generating report",
+    "reportsStepExportSharepoint": "Exporting to SharePoint",
+    "reportsBannerSingleActive": "Report generation in progress",
+    "reportsBannerMultipleActive": "{count} runs active",
+    "@reportsBannerMultipleActive": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "reportsOkButton": "OK",
+    "reportsBlocStartDescription": "Starting report",
+    "reportsBlocSubmittingStatus": "Sending request to the server...",
+    "reportsBlocCancellingStatus": "Cancelling report generation...",
+    "reportsBlocCancelled": "Report generation was cancelled.",
+    "reportsBlocCancelPending": "Cancellation request sent. Waiting for server confirmation...",
+    "reportsBlocProgressFallback": "Generating report...",
+    "reportsBlocCompletedStoredSharepoint": "The report has been created and saved to SharePoint.",
+    "reportsBlocCompletedWaitingLink": "The report has been created. Waiting for the SharePoint link...",
+    "reportsBlocCompletedReadyWaitingLink": "The report is ready. Waiting for the SharePoint link...",
+    "reportsBlocFailedGeneric": "Report generation failed.",
+    "reportsRepoFetchTasksFailed": "Fetching report tasks failed.",
+    "reportsRepoStartFailed": "Starting the report failed.",
+    "reportsRepoFetchStatusFailed": "Fetching report status failed.",
+    "reportsRepoCancelRequested": "Report cancellation requested.",
+    "reportsRepoCancelFailed": "Cancelling the report failed.",
+    "reportsRepoConnectionTimeout": "The connection timed out. Please try again.",
+    "reportsRepoConnectionError": "Could not connect to the server.",
+    "dashboardLoadError": "Loading dashboard data failed.",
+    "dashboardHeaderDescription": "Summary of the latest runs, imports, and system events.",
+    "dashboardRefresh": "Refresh",
+    "dashboardSummaryObligationCheckRan": "Obligation check run",
+    "dashboardSummaryLatestReportGenerated": "Latest report generated",
+    "dashboardSummaryLatestDecisionInDatabase": "Latest decision in database",
+    "dashboardSummaryLatestCompostingNotice": "Latest composting notice",
+    "dashboardSummarySludgeTransportLatestEmptying": "Sludge transport latest emptying",
+    "dashboardSummaryFixedTransportLatestQuarter": "Fixed transport latest quarter",
+    "dashboardSummaryLatestImport": "Latest import",
+    "dashboardViewDetailsTooltip": "Show details",
+    "dashboardLatestSystemEvents": "Latest system events",
+    "dashboardNoSystemEvents": "No system events available.",
+    "dashboardImportLog": "Import log",
+    "dashboardNoImportLog": "No import log available.",
+    "dashboardImportLogTypeOther": "Other",
+    "dashboardNoData": "Dashboard data is not available.",
+    "dashboardNoInfo": "No data",
+    "dashboardStatusCompleted": "Completed",
+    "dashboardStatusFailed": "Failed",
+    "dashboardStatusRunning": "Running",
+    "dashboardStatusPending": "Queued",
+    "dashboardImportDetailsTitle": "Import log details",
+    "dashboardSummaryDetailsDescription": "All available details for this view.",
+    "dashboardCloseTooltip": "Close",
+    "dashboardCloseButton": "Close",
+    "dashboardFieldId": "ID",
+    "dashboardFieldDate": "Date",
+    "dashboardFieldTime": "Time",
+    "dashboardFieldType": "Type",
+    "dashboardFieldStatus": "Status",
+    "dashboardFieldResult": "Result",
+    "dashboardFieldCommand": "Command",
+    "dashboardFieldRunner": "Runner",
+    "dashboardFieldDetails": "Details",
+    "importAnalysisErrorNotRunnable": "The file cannot be imported. The contents were not recognized or the file is invalid.",
+    "importAnalysisErrorMissingResult": "Pre-analysis failed and the backend did not return an analysis result.",
+    "logsHeaderDescription": "Full history of system events and the import log.",
+    "logsSystemEvents": "System events",
+    "logsLimitLabel": "Show",
+    "logsLimitAll": "All",
+    "logsEntryCount": "{count} entries",
+    "@logsEntryCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "logsSystemEventsLoadError": "Failed to load system events.",
+    "logsImportLogLoadError": "Failed to load the import log.",
+    "logsEventDetailsTitle": "System event details",
+    "logsFieldEvent": "Event",
+    "logsFieldTaskType": "Task type"
 }

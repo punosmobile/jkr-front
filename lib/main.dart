@@ -5,9 +5,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jkrfront/l10n/app_localizations.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'core/auth/auth_bloc.dart';
-import 'core/auth/auth_event.dart';
 import 'core/auth/auth_service.dart';
 import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
@@ -23,8 +23,12 @@ Future<void> main() async {
   ]);
   
   await configureDependencies();
+
+  // Register PackageInfo for app version number
+  final packageInfo = await PackageInfo.fromPlatform();
+  getIt.registerSingleton<PackageInfo>(packageInfo);
   
-  // Initialisoi MSAL ja käsittele mahdollinen redirect-paluu ENNEN GoRouteria
+  // Initialize MSAL and handle possible redirect return BEFORE GoRouter
   await getIt<AuthService>().initialize();
   
   runApp(const MyApp());
@@ -44,8 +48,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _authBloc = AuthBloc(authService: getIt<AuthService>())
-      ..add(const AuthCheckRequested());
+    _authBloc = AuthBloc(authService: getIt<AuthService>());
     _router = AppRouter.createRouter(_authBloc);
   }
 
@@ -72,6 +75,8 @@ class _MyAppState extends State<MyApp> {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
+        // TODO: Replace with user-selectable locale if/when language switching is implemented.
+        locale: const Locale('fi'),
         supportedLocales: const [
           Locale('en'),
           Locale('fi'),

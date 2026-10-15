@@ -13,11 +13,11 @@ external JSPromise<JSString?> _initMsal(
 @JS('msalLogin')
 external JSPromise<JSAny?> _msalLogin(JSArray<JSString> scopes);
 
-@JS('msalLoginPopup')
-external JSPromise<JSString?> _msalLoginPopup(JSArray<JSString> scopes);
-
 @JS('msalGetToken')
 external JSPromise<JSString?> _msalGetToken(JSArray<JSString> scopes);
+
+@JS('msalGetTokenSilent')
+external JSPromise<JSString?> _msalGetTokenSilent(JSArray<JSString> scopes);
 
 @JS('msalLogout')
 external JSPromise<JSAny?> _msalLogout();
@@ -25,8 +25,14 @@ external JSPromise<JSAny?> _msalLogout();
 @JS('msalGetAccount')
 external JSString? _msalGetAccount();
 
-@JS('msalIsLoggedIn')
-external JSBoolean _msalIsLoggedIn();
+@JS('msalHasAccount')
+external JSBoolean _msalHasAccount();
+
+@JS('msalRestoreActiveAccount')
+external JSBoolean _msalRestoreActiveAccount();
+
+@JS('msalClearSessionData')
+external void _msalClearSessionData();
 
 @JS('msalClearHash')
 external void _msalClearHash();
@@ -37,50 +43,58 @@ class MsalJsInterop {
     return scopes.map((s) => s.toJS).toList().toJS;
   }
 
-  /// Initialisoi MSAL-instanssi. Palauttaa access tokenin jos redirect-login onnistui.
+  /// Initializes the MSAL instance and returns an access token if a redirect
+  /// sign-in completed successfully.
   static Future<String?> initialize() async {
     final result = await _initMsal(
       EnvConfig.azureClientId.toJS,
       EnvConfig.azureTenantId.toJS,
       EnvConfig.azureRedirectUri.toJS,
     ).toDart;
-    // Puhdista Azure AD:n #code=... fragmentti URL:stä ennen GoRouteria
+    // Clear the Azure AD redirect hash before GoRouter reads the URL.
     clearHash();
     return result?.toDart;
   }
 
-  /// Puhdista URL hash-fragmentti (Azure AD redirect jättää #code=...)
+  /// Clears the URL hash fragment left by Azure AD redirects.
   static void clearHash() => _msalClearHash();
 
-  /// Kirjaudu redirect-menetelmällä (sivu ohjautuu Microsoftille)
+  /// Starts redirect-based sign-in.
   static Future<void> loginRedirect() async {
     await _msalLogin(_scopesToJsArray(EnvConfig.azureScopes)).toDart;
   }
 
-  /// Kirjaudu popup-menetelmällä. Palauttaa access tokenin.
-  static Future<String?> loginPopup() async {
-    final result =
-        await _msalLoginPopup(_scopesToJsArray(EnvConfig.azureScopes)).toDart;
-    return result?.toDart;
-  }
-
-  /// Hae access token (silent ensin, sitten interactive)
+  /// Gets an access token, preferring silent acquisition first.
   static Future<String?> getAccessToken() async {
     final result =
         await _msalGetToken(_scopesToJsArray(EnvConfig.azureScopes)).toDart;
     return result?.toDart;
   }
 
-  /// Kirjaudu ulos
+  /// Gets an access token using silent acquisition only.
+  static Future<String?> getAccessTokenSilently() async {
+    final result =
+        await _msalGetTokenSilent(_scopesToJsArray(EnvConfig.azureScopes))
+            .toDart;
+    return result?.toDart;
+  }
+
+  /// Starts sign-out.
   static Future<void> logout() async {
     await _msalLogout().toDart;
   }
 
-  /// Hae aktiivisen käyttäjän tiedot JSON-muodossa
+  /// Returns the active account as JSON.
   static String? getAccountJson() {
     return _msalGetAccount()?.toDart;
   }
 
-  /// Onko kirjautunut
-  static bool get isLoggedIn => _msalIsLoggedIn().toDart;
+  /// Returns whether MSAL currently has an active or cached account.
+  static bool get hasAccount => _msalHasAccount().toDart;
+
+  /// Restores the first cached account as the active account, if needed.
+  static bool restoreActiveAccount() => _msalRestoreActiveAccount().toDart;
+
+  /// Clears MSAL account and storage data controlled by the web layer.
+  static void clearSessionData() => _msalClearSessionData();
 }

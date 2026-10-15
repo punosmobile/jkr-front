@@ -6,37 +6,38 @@ import 'package:go_router/go_router.dart';
 import '../auth/auth_bloc.dart';
 import '../auth/auth_state.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/backups/presentation/pages/backups_page.dart';
+import '../../features/dashboard/presentation/pages/dashboard_page.dart';
+import '../../features/help/presentation/pages/help_page.dart';
+import '../../features/import/presentation/pages/import_page.dart';
+import '../../features/import/presentation/pages/sharepoint_browser_page.dart';
+import '../../features/licenses/presentation/pages/licenses_page.dart';
+import '../../features/planned/presentation/pages/planned_feature_page.dart';
+import '../../features/logs_and_history/presentation/pages/logs_and_history_page.dart';
+import '../../features/realtime_log/presentation/pages/realtime_log_page.dart';
 import '../../features/documentation/presentation/pages/documentation_page.dart';
-import '../../features/home/presentation/pages/home_page.dart';
+import '../../features/reports/presentation/pages/reports_page.dart';
+import '../../shared/widgets/app_shell.dart';
 
 /// Application router configuration.
 class AppRouter {
-  static const String home = '/';
   static const String login = '/login';
-  static const String documentation = '/documentation';
+  static const String dashboard = '/dashboard';
 
   static GoRouter createRouter(AuthBloc authBloc) {
     final refreshNotifier = _AuthBlocRefreshNotifier(authBloc);
 
     return GoRouter(
-      initialLocation: home,
+      // Use the browser location when present so deep links still work.
+      // The initialLocation is only a fallback when there is no platform URL.
+      initialLocation: login,
       debugLogDiagnostics: true,
       refreshListenable: refreshNotifier,
       redirect: (context, state) {
-        final authStatus = authBloc.state.status;
-        final isOnLogin = state.matchedLocation == login;
-
-        // Älä ohjaa mihinkään kun tila on vielä lataamassa
-        if (authStatus == AuthStatus.initial ||
-            authStatus == AuthStatus.loading) {
-          return null;
-        }
-
-        final isAuthenticated = authStatus == AuthStatus.authenticated;
-
-        if (!isAuthenticated && !isOnLogin) return login;
-        if (isAuthenticated && isOnLogin) return home;
-        return null;
+        return redirectLocation(
+          authStatus: authBloc.state.status,
+          matchedLocation: state.matchedLocation,
+        );
       },
       routes: [
         GoRoute(
@@ -47,21 +48,100 @@ class AppRouter {
             child: const LoginPage(),
           ),
         ),
+        // Redirect / to /dashboard
         GoRoute(
-          path: home,
-          name: 'home',
-          pageBuilder: (context, state) => MaterialPage(
-            key: state.pageKey,
-            child: const HomePage(),
-          ),
+          path: '/',
+          redirect: (_, __) => dashboard,
         ),
-        GoRoute(
-          path: documentation,
-          name: 'documentation',
-          pageBuilder: (context, state) => MaterialPage(
-            key: state.pageKey,
-            child: const DocumentationPage(),
-          ),
+        ShellRoute(
+          builder: (context, state, child) => AppShell(child: child),
+          routes: [
+            GoRoute(
+              path: '/dashboard',
+              name: 'dashboard',
+              pageBuilder: (_, state) => const NoTransitionPage(
+                child: DashboardPage(),
+              ),
+            ),
+            GoRoute(
+              path: '/import',
+              name: 'import',
+              pageBuilder: (_, state) => const NoTransitionPage(
+                child: ImportPage(),
+              ),
+            ),
+            GoRoute(
+              path: '/realogi',
+              name: 'realogi',
+              pageBuilder: (_, state) => const NoTransitionPage(
+                child: RealtimeLogPage(),
+              ),
+            ),
+            GoRoute(
+              path: '/raportit',
+              name: 'raportit',
+              pageBuilder: (_, state) => const NoTransitionPage(
+                child: ReportsPage(),
+              ),
+            ),
+            GoRoute(
+              path: '/varmuuskopiot',
+              name: 'varmuuskopiot',
+              pageBuilder: (_, state) => const NoTransitionPage(
+                child: BackupsPage(),
+              ),
+            ),
+            GoRoute(
+              path: '/dbdocs',
+              name: 'dbdocs',
+              pageBuilder: (_, state) => const NoTransitionPage(
+                child: DocumentationPage(),
+              ),
+            ),
+            GoRoute(
+              path: '/lisenssit',
+              name: 'lisenssit',
+              pageBuilder: (_, state) => const NoTransitionPage(
+                child: LicensesPage(),
+              ),
+            ),
+            GoRoute(
+              path: '/ohjeet',
+              name: 'ohjeet',
+              pageBuilder: (_, state) => const NoTransitionPage(
+                child: HelpPage(),
+              ),
+            ),
+            // Suunnitellut ominaisuudet
+            GoRoute(
+              path: '/kohteet',
+              name: 'kohteet',
+              pageBuilder: (_, state) => const NoTransitionPage(
+                child: PlannedFeaturePage(title: 'Kohteet'),
+              ),
+            ),
+            GoRoute(
+              path: '/kartta',
+              name: 'kartta',
+              pageBuilder: (_, state) => const NoTransitionPage(
+                child: PlannedFeaturePage(title: 'Karttanäkymä'),
+              ),
+            ),
+            GoRoute(
+              path: '/tietokanta',
+              name: 'tietokanta',
+              pageBuilder: (_, state) => const NoTransitionPage(
+                child: PlannedFeaturePage(title: 'Tietokanta-työkalu'),
+              ),
+            ),
+            GoRoute(
+              path: '/lokit',
+              name: 'lokit',
+              pageBuilder: (_, state) => const NoTransitionPage(
+                child: LogsAndHistoryPage(title: 'Lokit & historia'),
+              ),
+            ),
+          ],
         ),
       ],
       errorBuilder: (context, state) => Scaffold(
@@ -75,7 +155,7 @@ class AppRouter {
               Text('Page not found: ${state.uri.path}'),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () => context.go(home),
+                onPressed: () => context.go(dashboard),
                 child: const Text('Go Home'),
               ),
             ],
@@ -84,9 +164,28 @@ class AppRouter {
       ),
     );
   }
+
+  static String? redirectLocation({
+    required AuthStatus authStatus,
+    required String matchedLocation,
+  }) {
+    final isOnLogin = matchedLocation == login;
+
+    // While authentication is unresolved, keep the app on the login route
+    // so protected UI cannot render prematurely.
+    if (authStatus == AuthStatus.initial || authStatus == AuthStatus.loading) {
+      return isOnLogin ? null : login;
+    }
+
+    final isAuthenticated = authStatus == AuthStatus.authenticated;
+
+    if (!isAuthenticated && !isOnLogin) return login;
+    if (isAuthenticated && isOnLogin) return dashboard;
+    return null;
+  }
 }
 
-/// GoRouter refreshListenable joka kuuntelee AuthBlocin tilan muutoksia
+/// GoRouter refreshListenable that mirrors AuthBloc state changes.
 class _AuthBlocRefreshNotifier extends ChangeNotifier {
   late final StreamSubscription<AuthState> _subscription;
 

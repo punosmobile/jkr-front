@@ -2,13 +2,17 @@ import 'package:equatable/equatable.dart';
 
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
+enum AuthErrorCode { loginFailed, loginError }
+
 class AuthState extends Equatable {
   final AuthStatus status;
-  final String? errorMessage;
+  final AuthErrorCode? errorCode;
+  final String? errorDetails;
 
   const AuthState({
     this.status = AuthStatus.initial,
-    this.errorMessage,
+    this.errorCode,
+    this.errorDetails,
   });
 
   const AuthState.initial() : this();
@@ -19,9 +23,15 @@ class AuthState extends Equatable {
 
   const AuthState.unauthenticated() : this(status: AuthStatus.unauthenticated);
 
-  const AuthState.error(String message)
-      : this(status: AuthStatus.error, errorMessage: message);
+  const AuthState.error(
+    AuthErrorCode errorCode, {
+    String? errorDetails,
+  }) : this(
+         status: AuthStatus.error,
+         errorCode: errorCode,
+         errorDetails: errorDetails,
+       );
 
   @override
-  List<Object?> get props => [status, errorMessage];
+  List<Object?> get props => [status, errorCode, errorDetails];
 }
