@@ -7,8 +7,12 @@ import 'import_state.dart';
 
 class ImportBloc extends Bloc<ImportEvent, ImportState> {
   final ImportRepository repository;
+  final Duration refreshRetryDelay;
 
-  ImportBloc({required this.repository}) : super(const ImportState()) {
+  ImportBloc({
+    required this.repository,
+    this.refreshRetryDelay = const Duration(seconds: 2),
+  }) : super(const ImportState()) {
     on<ImportLoadFiles>(_onLoadFiles);
     on<ImportToggleFile>(_onToggleFile);
     on<ImportSetAllSelected>(_onSetAllSelected);
@@ -35,6 +39,9 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
         i.status != ImportQueueStatus.completed &&
         i.status != ImportQueueStatus.error);
 
+    // Ids of successfully imported files (= SharePoint item id).
+    final importedIds = <String>{};
+
     if (!event.isActive && pendingItems.isNotEmpty) {
       final taskIds = pendingItems
           .map((i) => i.taskId!)
@@ -45,33 +52,78 @@ class ImportBloc extends Bloc<ImportEvent, ImportState> {
         try {
           final result = await repository.fetchTaskStatus(taskId);
           if (result.isFinished) {
+            final failedFile = result.hasError
+                ? _failedFileName(
+                    result.output,
+                    updatedItems
+                        .where((i) => i.taskId == taskId)
+                        .map((i) => i.fileName),
+                  )
+                : null;
             for (int i = 0; i < updatedItems.length; i++) {
               if (updatedItems[i].taskId == taskId) {
+                final showError = failedFile == null ||
+                    failedFile == updatedItems[i].fileName;
                 updatedItems[i] = updatedItems[i].copyWith(
                   status: result.hasError
                       ? ImportQueueStatus.error
                       : ImportQueueStatus.completed,
-                  errorOutput: result.errorOutput,
+                  errorOutput: showError ? result.errorOutput : null,
                 );
+                if (!result.hasError) importedIds.add(updatedItems[i].id);
               }
             }
           }
         } catch (_) {}
       }
-      emit(state.copyWith(queueItems: updatedItems));
+      emit(state.copyWith(
+        queueItems: updatedItems,
+        // Drop imported files from the pre-analysis so the same import can't be
+        // started again. Failed files stay visible.
+        analyzedFiles: state.analyzedFiles
+            .where((f) => !importedIds.contains(f.id))
+            .toList(),
+      ));
     }
 
-    // Kun tuonti on juuri päättynyt (käynnissä -> valmis), päivitä
-    // SharePoint-tiedostolista: onnistuneen tuonnin jälkeen lähdetiedostot on
-    // arkistoitu (siirretty JKR-input -> viedyt), joten ne eivät saa jäädä
-    // näkymään "Saatavilla Sharepointissa" -listaan. Suoritetaan vain
-    // siirtymähetkellä, ei joka pollauksella.
-    if (wasImporting && !event.isActive) {
+    // Refresh the SharePoint list when our own import finished (importedIds) or
+    // any import ended (running -> done). After a successful import the source
+    // files are moved JKR-input -> viedyt, so they must not stay in the
+    // "Saatavilla Sharepointissa" list.
+    if (importedIds.isNotEmpty || (wasImporting && !event.isActive)) {
+      await _refreshSharepointFiles(emit, untilGone: importedIds);
+    }
+  }
+
+  // infers the failing file from the log (last file mentioned before
+  // the first [ERROR] line). Replace once the backend returns per-file status.
+  static String? _failedFileName(String output, Iterable<String> fileNames) {
+    final lines = output.split('\n');
+    final firstError = lines.indexWhere((l) => l.contains('[ERROR]'));
+    if (firstError < 0) return null;
+    for (final line in lines.take(firstError).toList().reversed) {
+      for (final name in fileNames) {
+        if (line.contains('/$name') || line.contains(' $name')) return name;
+      }
+    }
+    return null;
+  }
+
+  // the backend marks the task done before moving files to viedyt,
+  // so refetch until the imported files are gone from the list (max ~8 s).
+  // Remove the loop once the backend sets the status only after archiving.
+  Future<void> _refreshSharepointFiles(
+    Emitter<ImportState> emit, {
+    required Set<String> untilGone,
+  }) async {
+    for (var attempt = 0; attempt < 5; attempt++) {
+      if (attempt > 0) await Future.delayed(refreshRetryDelay);
       try {
         final files = await repository.fetchSharepointFiles();
         emit(state.copyWith(sharepointFiles: files));
+        if (!files.any((f) => untilGone.contains(f.id))) return;
       } catch (_) {
-        // Lista päivittyy seuraavalla manuaalisella latauksella.
+        // The list refreshes on the next load.
       }
     }
   }
