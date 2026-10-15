@@ -578,4 +578,36 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get importAnalysisErrorMissingResult => 'Tiedoston esianalyysi epäonnistui eikä backend palauttanut analyysitulosta.';
+
+  @override
+  String get logsHeaderDescription => 'Järjestelmätapahtumien ja tuontilokin koko historia.';
+
+  @override
+  String get logsSystemEvents => 'Järjestelmätapahtumat';
+
+  @override
+  String get logsLimitLabel => 'Näytä';
+
+  @override
+  String get logsLimitAll => 'Kaikki';
+
+  @override
+  String logsEntryCount(int count) {
+    return '$count riviä';
+  }
+
+  @override
+  String get logsSystemEventsLoadError => 'Järjestelmätapahtumien lataus epäonnistui.';
+
+  @override
+  String get logsImportLogLoadError => 'Tuontilokin lataus epäonnistui.';
+
+  @override
+  String get logsEventDetailsTitle => 'Järjestelmätapahtuman tiedot';
+
+  @override
+  String get logsFieldEvent => 'Tapahtuma';
+
+  @override
+  String get logsFieldTaskType => 'Tehtävätyyppi';
 }
