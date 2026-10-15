@@ -25,10 +25,10 @@ class HelpPage extends StatelessWidget {
                     1: FlexColumnWidth(),
                   },
                   children: [
-                    _infoRow('Versio', 'v0.7.5'),
+                    _infoRow('Versio', 'v0.8.0'),
                     _infoRow('Tietokanta', 'PostgreSQL 15 / PostGIS'),
                     _infoRow('Ympäristö', 'Tuotanto'),
-                    _infoRow('Päivitetty', '25.11.2025'),
+                    _infoRow('Päivitetty', '15.10.2026'),
                   ],
                 ),
               ),
