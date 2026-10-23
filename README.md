@@ -119,6 +119,23 @@ Tämä mahdollistaa **saman Docker-imagen** käytön kaikissa ympäristöissä (
 | `AZURE_TENANT_ID` | Azure AD -vuokraajan tunnus |
 | `AZURE_REDIRECT_URI` | OAuth-paluuosoite |
 
+## Haarat ja versiointi
+
+| Haara     | Ympäristö |
+| --------- | --------- |
+| `develop` | dev       |
+| `test`    | test      |
+| `main`    | prod      |
+
+- Kulku: feature-haara → PR `develop` → PR `test` → PR `main`. Muutokset näihin haaroihin vain PR:llä, ja jokainen PR tarvitsee yhden hyväksynnän toiselta kehittäjältä.
+- Versio on vain `pubspec.yaml`:ssa (`version: X.Y.Z`). Sovellus näyttää sen sivupalkissa ja ohjesivulla.
+- PR testiin tai mainiin vaatii mainia suuremman version ja `CHANGELOG.md`:hen merkinnän `## [X.Y.Z]`. Testiin voi viedä saman version useasti.
+- Poikkeus labelilla `skip-version-check`, esim. PR joka muuttaa vain README:tä:
+  - GitHub: avaa PR, klikkaa oikean sivupalkin **Labels**-kohdan ratasta ja valitse **skip-version-check**.
+  - CLI: `gh pr edit <PR-numero> --add-label skip-version-check`
+
+  Tarkistus ajetaan uudelleen ja menee läpi varoituksella. Labelin lisääminen vaatii vähintään triage-oikeuden.
+
 ## Projektirakenne
 
 Sovellus noudattaa **feature-first** -arkkitehtuuria. Jokainen päänäkymä on oma feature-moduulinsa, ja yhteiset widgetit ja palvelut sijaitsevat `shared/`-hakemistossa. Authenticated-käyttäjän pääkehys on `AppShell`, joka sisältää sivupalkin (`AppSidebar`) ja sisältöalueen. Sivupalkista valittu näkymä renderöityy sisältöalueelle.
