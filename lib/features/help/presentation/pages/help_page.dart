@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/card_container.dart';
 import '../../../../shared/widgets/responsive_grid.dart';
@@ -25,7 +27,7 @@ class HelpPage extends StatelessWidget {
                     1: FlexColumnWidth(),
                   },
                   children: [
-                    _infoRow('Versio', 'v0.8.0'),
+                    _infoRow('Versio', 'v${getIt<PackageInfo>().version}'),
                     _infoRow('Tietokanta', 'PostgreSQL 15 / PostGIS'),
                     _infoRow('Ympäristö', 'Tuotanto'),
                     _infoRow('Päivitetty', '15.10.2026'),
