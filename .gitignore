@@ -60,3 +60,7 @@ app.*.map.json
 
 # Väliaikaiset tiedostot
 dokumentation-reply.json
+
+# Deploy script environment settings (resource names do not belong in the public repo)
+deploy/*.env
+!deploy/deploy.example.env
