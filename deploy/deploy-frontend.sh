@@ -180,7 +180,8 @@ token=$(azs staticwebapp secrets list --name "$SWA" --resource-group "$RG" --que
 [ -n "$token" ] || fail 'Fetching the deployment token failed.'
 mask "$token"
 # The token goes in an environment variable, so it is not on the command line.
-SWA_CLI_DEPLOYMENT_TOKEN=$token npx --yes "$SWA_CLI" deploy build/web --env production
+# Deploys build/web with its staticwebapp.config.json to the SWA's live environment.
+SWA_CLI_DEPLOYMENT_TOKEN=$token npx --yes "$SWA_CLI" deploy build/web --env production --swa-config-location build/web
 
 # --- Check ----------------------------------------------------------------------------
 expected=$(sed -n 's/^version: *\([^+ ]*\).*/\1/p' pubspec.yaml | head -1)
