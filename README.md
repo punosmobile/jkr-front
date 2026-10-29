@@ -104,7 +104,7 @@ Tuotanto-Dockerfile (`Dockerfile`) rakentuu kaksivaiheisesti: Flutter kompiloi s
 
 ## Azure-deployaus
 
-Frontend deployataan **Azure Container App**:na.
+Frontend julkaistaan **Azure Static Web Appiin** skriptillä `deploy/deploy-frontend.sh <dev|test|prod>`, ks. [deploy/README.md](deploy/README.md). IP-rajaus on pakollinen.
 
 ### Ympäristömuuttujat ajonaikaisesti
 

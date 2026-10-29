@@ -21,12 +21,11 @@ kussakin ympäristössä:
 | testi     | `kv-lhh-jatehuolto-testi` |
 | tuotanto  | `kv-lhh-jatehuolto-prod` |
 
-Deploy-skriptit hakevat sen automaattisesti, joten mitään ei tarvitse asettaa
+Deploy-skripti hakee sen automaattisesti, joten mitään ei tarvitse asettaa
 käsin. Lähdejärjestys, ensimmäinen löytynyt voittaa:
 
-1. `-AllowedIpRanges`-parametri
-2. ympäristömuuttuja `ALLOWED_IP_RANGES`
-3. Key Vault -secret `allowed-ip-ranges`
+1. ympäristömuuttuja `ALLOWED_IP_RANGES`
+2. Key Vault -secret `allowed-ip-ranges`
 
 Skripti tulostaa aina minkä lähteen se valitsi. Julkaisuputkessa lähde on
 GitHubin secret tai muuttuja — ks. snippet.
@@ -76,23 +75,33 @@ tiedostomuutos ei kanna jobien yli.
 jq-logiikka on testattu (jq 1.7.1) sekä kelvollisilla että kelvottomilla
 syötteillä — `999.1.1.1`, `1.2.3.256`, `/99`, roska ja tyhjä torjutaan.
 
-## Toistaiseksi: ps1-skriptit
+## Deploy-skripti
 
-Putken valmistumiseen asti deploy tehdään repon ulkopuolisilla
-`deploy-swa.ps1`-skripteillä (yksi per ympäristö). Ne lukevat listan Key
-Vaultista automaattisesti:
+`deploy/deploy-frontend.sh <dev|test|prod>` buildaa Flutter webin, kirjoittaa
+`runtime_config.js`:n ja IP-rajauksen Key Vaultin arvoista ja julkaisee SWA:han.
+Toimii Macilla ja Linuxilla (Windowsilla WSL tai Git Bash) sekä putkessa.
 
-```powershell
-# tavallinen ajo - lista tulee Key Vaultista, mitaan ei tarvitse asettaa:
-.\deploy-swa.ps1
+Esivaatimukset paikalliselle deploylle:
 
-# ohita Key Vault ymparistomuuttujalla:
-$env:ALLOWED_IP_RANGES = '["192.0.2.10/32"]'
-.\deploy-swa.ps1
+- `az` (Azure CLI), `jq`, `curl`, `flutter` ja `dart` sekä Node.js (`npx`).
+- Apple Silicon -Macilla Rosetta 2: SWA CLI:n julkaisuohjelma `StaticSitesClient`
+  on vain Intel-binääri, ja ilman Rosettaa julkaisu kaatuu virheeseen
+  `spawn Unknown system error -86`. Asennus kerran:
+  `softwareupdate --install-rosetta --agree-to-license`
+- Lukuoikeus ympäristön Key Vaultin secreteihin (esim. rooli *Key Vault Secrets User*).
 
-# tai suoraan parametrina (voittaa ympäristömuuttujan):
-.\deploy-swa.ps1 -AllowedIpRanges '192.0.2.10/32,198.51.100.25'
-
-# rajaus kokonaan pois (esim. jos se on lukinnut sinut ulos):
-.\deploy-swa.ps1 -NoIpRestriction -SkipBuild
+```bash
+cp deploy/deploy.example.env deploy/deploy.dev.env   # arvot salasanahallinnasta
+az login
+deploy/deploy-frontend.sh dev                         # vain haarasta develop, puhdas työhakemisto
+ALLOW_DIRTY=1 deploy/deploy-frontend.sh dev           # kokeilu mistä tahansa haarasta (ei tuotantoon)
+ALLOWED_IP_RANGES='["192.0.2.10/32"]' deploy/deploy-frontend.sh dev   # ohittaa Key Vaultin listan
 ```
+
+- Ilman IP-listaa julkaisua ei tehdä. Rajausta ei voi ohittaa: jos se lukitsee
+  sinut ulos, päivitä Key Vaultin lista ja julkaise uudelleen.
+- SWA:n on oltava Standard-tasolla. Skripti ei muuta Azure-resursseja.
+- Tuloste ei sisällä osoitteita eikä tunnisteita, koska putken lokit ovat julkisia.
+
+Vanhoja `deploy-swa.ps1`-skriptejä ei enää käytetä: ne eivät aseta IP-rajausta,
+joten jokainen niillä tehty julkaisu poistaa sen.
