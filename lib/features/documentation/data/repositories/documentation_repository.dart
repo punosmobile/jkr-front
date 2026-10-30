@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/protected_api_client.dart';
