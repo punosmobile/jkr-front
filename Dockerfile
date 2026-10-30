@@ -1,11 +1,11 @@
 # Stage 1: Build Flutter web
-FROM ghcr.io/cirruslabs/flutter:3.27.4 AS build
+FROM ghcr.io/cirruslabs/flutter:3.41.6@sha256:2e5918c0681a1599ca6bf9a4c0a4f78d39e450da673d063a13968265aa87c210 AS build
 
 WORKDIR /app
 
 # Kopioi riippuvuustiedostot ensin (Docker layer cache)
 COPY pubspec.yaml pubspec.lock ./
-RUN flutter pub get
+RUN flutter pub get --enforce-lockfile
 
 # Kopioi lähdekoodi
 COPY . .

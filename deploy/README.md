@@ -12,29 +12,23 @@ vain `navigationFallback`in. Älä lisää `networking`-lohkoa tänne.
 
 ## Mistä osoitteet tulevat
 
-Lista on tallessa **Azure Key Vaultissa**, secretissä `allowed-ip-ranges`, erikseen
-kussakin ympäristössä:
+Lista on tallessa ympäristön **Azure Key Vaultissa**, secretissä `allowed-ip-ranges`.
+Key Vaultin nimi on asetuksessa `KEYVAULT`: paikallisesti tiedostossa
+`deploy/deploy.<env>.env`, putkessa environment-secretinä.
 
-| Ympäristö | Key Vault |
-|-----------|-----------|
-| dev       | `kv-lhh-h01s01-dev` |
-| testi     | `kv-lhh-jatehuolto-testi` |
-| tuotanto  | `kv-lhh-jatehuolto-prod` |
-
-Deploy-skriptit hakevat sen automaattisesti, joten mitään ei tarvitse asettaa
+Deploy-skripti hakee sen automaattisesti, joten mitään ei tarvitse asettaa
 käsin. Lähdejärjestys, ensimmäinen löytynyt voittaa:
 
-1. `-AllowedIpRanges`-parametri
-2. ympäristömuuttuja `ALLOWED_IP_RANGES`
-3. Key Vault -secret `allowed-ip-ranges`
+1. ympäristömuuttuja `ALLOWED_IP_RANGES`
+2. Key Vault -secret `allowed-ip-ranges`
 
-Skripti tulostaa aina minkä lähteen se valitsi. Julkaisuputkessa lähde on
-GitHubin secret tai muuttuja — ks. snippet.
+Skripti tulostaa aina, minkä lähteen se valitsi. Putki ajaa samaa skriptiä,
+joten siellä lista tulee Key Vaultista.
 
 Listan päivitys Key Vaultiin:
 
 ```bash
-az keyvault secret set --vault-name kv-lhh-jatehuolto-prod --name allowed-ip-ranges --content-type application/json --value '["192.0.2.10/32","198.51.100.25/32"]'
+az keyvault secret set --vault-name <keyvault> --name allowed-ip-ranges --content-type application/json --value '["192.0.2.10/32","198.51.100.25/32"]'
 ```
 
 Muutos astuu voimaan vasta seuraavassa deployssa, koska rajaus on osa sisältöä.
@@ -65,34 +59,55 @@ az staticwebapp show -n <swa> -g <rg> --query sku.name -o tsv
 
 ## Julkaisuputki
 
-`swa-ip-injektio.snippet.yml` sisältää valmiin GitHub Actions -askelparin:
-osoitteiden validointi + injektio konffiin, sekä Standard-tason varmistus.
-Se **ei ole** `.github/workflows/`-kansiossa, jottei GitHub yritä ajaa sitä
-sellaisenaan — kopioi askeleet omaan workflowhun.
+`.github/workflows/deploy.yml` julkaisee haaran sen omaan ympäristöön: develop → dev,
+test → test ja main → tuotanto. Tuotanto odottaa hyväksyntää GitHubin environmentissa.
+Workflow ajaa saman `deploy/deploy-frontend.sh`:n kuin paikallinen julkaisu.
+Käsiajo: Actions → deploy → Run workflow ja ympäristön haara.
 
-Injektio on ajettava **ennen** deploy-askelta ja **samassa jobissa**:
-tiedostomuutos ei kanna jobien yli.
+Azureen kirjaudutaan OIDC:llä frontin omalla identiteetillä. Se luottaa vain tähän
+tiedostoon ympäristön haarasta, joten tiedoston nimeä ei voi vaihtaa.
+Environment-secretit: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`,
+`SUBSCRIPTION`, `RG`, `SWA` ja `KEYVAULT`.
 
-jq-logiikka on testattu (jq 1.7.1) sekä kelvollisilla että kelvottomilla
-syötteillä — `999.1.1.1`, `1.2.3.256`, `/99`, roska ja tyhjä torjutaan.
+## Flutter-versio ja riippuvuudet
 
-## Toistaiseksi: ps1-skriptit
+Flutterin versio on `pubspec.yaml`:n `environment.flutter` (3.41.6). Putki asentaa
+juuri sen, ja Dockerfilen image pidetään samassa versiossa. Käytä samaa versiota
+myös paikallisesti: `flutter pub get` hylkää vanhemman version, mutta uudemman
+se hyväksyy.
 
-Putken valmistumiseen asti deploy tehdään repon ulkopuolisilla
-`deploy-swa.ps1`-skripteillä (yksi per ympäristö). Ne lukevat listan Key
-Vaultista automaattisesti:
+Riippuvuuksien versiot tulevat `pubspec.lock`:sta, joka on gitissä. Julkaisu
+ajaa `flutter pub get --enforce-lockfile`, joten build kaatuu, jos lukitus ei
+vastaa `pubspec.yaml`:ia. Kun riippuvuuksia muutetaan, aja `flutter pub get`
+ja commitoi myös `pubspec.lock`.
 
-```powershell
-# tavallinen ajo - lista tulee Key Vaultista, mitaan ei tarvitse asettaa:
-.\deploy-swa.ps1
+## Deploy-skripti
 
-# ohita Key Vault ymparistomuuttujalla:
-$env:ALLOWED_IP_RANGES = '["192.0.2.10/32"]'
-.\deploy-swa.ps1
+`deploy/deploy-frontend.sh <dev|test|prod>` buildaa Flutter webin, kirjoittaa
+`runtime_config.js`:n ja IP-rajauksen Key Vaultin arvoista ja julkaisee SWA:han.
+Toimii Macilla ja Linuxilla (Windowsilla WSL tai Git Bash) sekä putkessa.
 
-# tai suoraan parametrina (voittaa ympäristömuuttujan):
-.\deploy-swa.ps1 -AllowedIpRanges '192.0.2.10/32,198.51.100.25'
+Esivaatimukset paikalliselle deploylle:
 
-# rajaus kokonaan pois (esim. jos se on lukinnut sinut ulos):
-.\deploy-swa.ps1 -NoIpRestriction -SkipBuild
+- `az` (Azure CLI), `jq`, `curl`, `flutter` ja `dart` (Flutter 3.41.6) sekä Node.js (`npx`).
+- Apple Silicon -Macilla Rosetta 2: SWA CLI:n julkaisuohjelma `StaticSitesClient`
+  on vain Intel-binääri, ja ilman Rosettaa julkaisu kaatuu virheeseen
+  `spawn Unknown system error -86`. Asennus kerran:
+  `softwareupdate --install-rosetta --agree-to-license`
+- Lukuoikeus ympäristön Key Vaultin secreteihin (esim. rooli *Key Vault Secrets User*).
+
+```bash
+cp deploy/deploy.example.env deploy/deploy.dev.env   # arvot salasanahallinnasta
+az login
+deploy/deploy-frontend.sh dev                         # vain haarasta develop, puhdas työhakemisto
+ALLOW_DIRTY=1 deploy/deploy-frontend.sh dev           # kokeilu mistä tahansa haarasta (ei tuotantoon)
+ALLOWED_IP_RANGES='["192.0.2.10/32"]' deploy/deploy-frontend.sh dev   # ohittaa Key Vaultin listan
 ```
+
+- Ilman IP-listaa julkaisua ei tehdä. Rajausta ei voi ohittaa: jos se lukitsee
+  sinut ulos, päivitä Key Vaultin lista ja julkaise uudelleen.
+- SWA:n on oltava Standard-tasolla. Skripti ei muuta Azure-resursseja.
+- Tuloste ei sisällä osoitteita eikä tunnisteita, koska putken lokit ovat julkisia.
+
+Vanhoja `deploy-swa.ps1`-skriptejä ei enää käytetä: ne eivät aseta IP-rajausta,
+joten jokainen niillä tehty julkaisu poistaa sen.

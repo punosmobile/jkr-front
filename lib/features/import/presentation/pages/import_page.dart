@@ -8,7 +8,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/card_container.dart';
 import '../../../../shared/widgets/responsive_grid.dart';
 import '../../../../shared/widgets/status_badge.dart';
-import '../../../../shared/widgets/term_line.dart';
 import '../../data/models/import_file.dart';
 import '../../data/models/import_queue_item.dart';
 import '../bloc/import_bloc.dart';
@@ -260,12 +259,15 @@ class _SharepointFileRow extends StatelessWidget {
   final ImportFile file;
   const _SharepointFileRow({required this.file});
 
+  // The badge is hidden until the TODO in build() is done.
+  // ignore: unused_element
   String get _badgeText => switch (file.badge) {
         ImportFileBadge.uusi => 'uusi',
         ImportFileBadge.paivitys => 'päivitys',
         ImportFileBadge.tarkista => 'tarkista',
       };
 
+  // ignore: unused_element
   String get _badgeType => switch (file.badge) {
         ImportFileBadge.uusi => 'new',
         ImportFileBadge.paivitys => 'update',
