@@ -57,6 +57,8 @@ app.*.map.json
 # Hive
 *.hive
 *.lock
+# pubspec.lock is committed: builds use the locked dependency versions
+!pubspec.lock
 
 # Väliaikaiset tiedostot
 dokumentation-reply.json

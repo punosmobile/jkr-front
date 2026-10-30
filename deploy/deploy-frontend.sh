@@ -148,7 +148,7 @@ ok 'api-base-url, azure-tenant-id, azure-client-id'
 
 # --- Build ----------------------------------------------------------------------------
 info 'Building Flutter web (release)'
-flutter pub get
+flutter pub get --enforce-lockfile
 dart run build_runner build --delete-conflicting-outputs
 flutter build web --release --no-wasm-dry-run
 
