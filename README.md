@@ -121,20 +121,38 @@ Tämä mahdollistaa **saman Docker-imagen** käytön kaikissa ympäristöissä (
 
 ## Haarat ja versiointi
 
-| Haara     | Ympäristö |
-| --------- | --------- |
-| `develop` | dev       |
-| `test`    | test      |
-| `main`    | prod      |
+| Haara     | Ympäristö | Julkaisu                                                |
+| --------- | --------- | ------------------------------------------------------- |
+| `develop` | dev       | automaattisesti mergen jälkeen                          |
+| `test`    | test      | automaattisesti mergen jälkeen                          |
+| `main`    | prod      | mergen jälkeen, kun toinen kehittäjä hyväksyy julkaisun |
 
-- Kulku: feature-haara → PR `develop` → PR `test` → PR `main`. Muutokset näihin haaroihin vain PR:llä, ja jokainen PR tarvitsee yhden hyväksynnän toiselta kehittäjältä.
-- Versio on vain `pubspec.yaml`:ssa (`version: X.Y.Z`). Sovellus näyttää sen sivupalkissa ja ohjesivulla.
-- PR testiin tai mainiin vaatii mainia suuremman version ja `CHANGELOG.md`:hen merkinnän `## [X.Y.Z]`. Testiin voi viedä saman version useasti.
-- Poikkeus labelilla `skip-version-check`, esim. PR joka muuttaa vain README:tä:
-  - GitHub: avaa PR, klikkaa oikean sivupalkin **Labels**-kohdan ratasta ja valitse **skip-version-check**.
-  - CLI: `gh pr edit <PR-numero> --add-label skip-version-check`
+Julkaisun tekee putki `.github/workflows/deploy.yml`, ks. [deploy/README.md](deploy/README.md#julkaisuputki).
 
-  Tarkistus ajetaan uudelleen ja menee läpi varoituksella. Labelin lisääminen vaatii vähintään triage-oikeuden.
+- `develop`, `test` ja `main` muuttuvat vain PR:llä. PR tarvitsee yhden hyväksynnän toiselta kehittäjältä viimeisimmän pushin jälkeen, ja tarkistuksen *Analyze and build* pitää mennä läpi.
+- Versio on vain `pubspec.yaml`:ssa (`version: X.Y.Z`), ja sovellus näyttää sen sivupalkissa ja ohjesivulla. PR testiin tai mainiin vaatii mainia suuremman version ja `CHANGELOG.md`:hen merkinnän `## [X.Y.Z] - VVVV-KK-PP` (tarkistus *Version bumped*).
+
+### Julkaisu
+
+1. Tee muutos feature-haarassa `develop`ista ja avaa PR `develop`iin.
+2. Ennen ensimmäistä PR:ää testiin `develop`issa pitää olla mainia suurempi versio ja sen CHANGELOG-merkintä. Jos ei ole, nosta versio PR:llä `develop`iin: minor (`0.8.0` → `0.9.0`), jos mukana on uusia ominaisuuksia, muuten patch (`0.8.0` → `0.8.1`).
+3. Avaa PR `develop` → `test`. Testissä löytyneet korjaukset kulkevat samaa reittiä samalla versiolla: PR `develop`iin ja uusi PR `develop` → `test`. Lisää ne samaan CHANGELOG-merkintään.
+4. Kun testi on hyväksytty, avaa PR `test` → `main`. Mergen jälkeen toinen kehittäjä hyväksyy julkaisun kohdassa **Actions → deploy → Review deployments**. Mergennyt ei voi hyväksyä sitä.
+
+### Hotfix
+
+1. Tee haara `main`ista. Korjaa, nosta patch-versio (`0.9.0` → `0.9.1`) ja lisää CHANGELOG-merkintä.
+2. Avaa PR `main`iin. Julkaisu hyväksytään kuten kohdassa 4.
+3. Avaa PR `main` → `develop`. Jos `pubspec.yaml` tai `CHANGELOG.md` on ristiriidassa, pidä suurempi versio ja molemmat merkinnät.
+
+### Poikkeus: label `skip-version-check`
+
+Label päästää PR:n läpi ilman versionnostoa, varoituksen kanssa. Käytä sitä vain sovittuihin poikkeuksiin, esim. PR `main`iin, joka muuttaa vain README:tä tai CI-tiedostoja.
+
+- GitHub: PR:n oikean sivupalkin **Labels**-kohdan ratas → **skip-version-check**.
+- CLI: `gh pr edit <PR-numero> --add-label skip-version-check`
+
+Labelin lisääminen vaatii vähintään triage-oikeuden.
 
 ## Projektirakenne
 
