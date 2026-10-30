@@ -18,22 +18,12 @@ import '../../core/tasks/app_task_type.dart';
 import '../../core/tasks/task_activity_cubit.dart';
 import '../../core/theme/app_theme.dart';
 import '../../features/reports/data/models/report_task_info.dart';
-import '../../features/reports/data/models/report_task_response.dart';
 import '../../features/reports/data/repositories/reports_repository.dart';
 import '../../features/reports/presentation/report_activity_coordinator.dart';
 import '../../l10n/app_localizations.dart';
-import '../../features/backups/presentation/pages/backups_page.dart';
-import '../../features/dashboard/presentation/pages/dashboard_page.dart';
-import '../../features/help/presentation/pages/help_page.dart';
 import '../../features/import/data/repositories/import_repository.dart';
 import '../../features/import/presentation/bloc/import_bloc.dart';
 import '../../features/import/presentation/bloc/import_event.dart';
-import '../../features/import/presentation/pages/import_page.dart';
-import '../../features/import/presentation/pages/sharepoint_browser_page.dart';
-import '../../features/planned/presentation/pages/planned_feature_page.dart';
-import '../../features/realtime_log/presentation/pages/realtime_log_page.dart';
-import '../../features/documentation/presentation/pages/documentation_page.dart';
-import '../../features/reports/presentation/pages/reports_page.dart';
 import 'app_sidebar.dart';
 
 /// Main application shell with sidebar navigation and content area.
