@@ -145,6 +145,10 @@ Julkaisun tekee putki `.github/workflows/deploy.yml`, ks. [deploy/README.md](dep
 2. Avaa PR `main`iin. Julkaisu hyväksytään kuten kohdassa 4.
 3. Avaa PR `main` → `develop`. Jos `pubspec.yaml` tai `CHANGELOG.md` on ristiriidassa, pidä suurempi versio ja molemmat merkinnät.
 
+### Palautus
+
+**Actions → deploy → Run workflow**: valitse ympäristön haara ja anna kenttään *commit* haaran aiemman commitin SHA (esim. `ec0442c`). Commit buildataan uudelleen ja julkaistaan. Vain ympäristön haaran historiassa olevan commitin voi julkaista, ja siinä pitää olla Flutter-versio kiinnitettynä `pubspec.yaml`:iin (30.10.2026 alkaen). Tuotannossa palautus odottaa hyväksyntää kuten julkaisu.
+
 ### Poikkeus: label `skip-version-check`
 
 Label päästää PR:n läpi ilman versionnostoa, varoituksen kanssa. Käytä sitä vain sovittuihin poikkeuksiin, esim. PR `main`iin, joka muuttaa vain README:tä tai CI-tiedostoja.

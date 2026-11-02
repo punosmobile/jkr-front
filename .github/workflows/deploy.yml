@@ -5,7 +5,9 @@
 # from the environment's Key Vault.
 #
 # Manual run (Actions → deploy → Run workflow): pick the environment's branch.
-# The branch head is deployed again.
+# The branch head is deployed again. With a commit, an earlier commit of that
+# branch is built and deployed, which is the rollback. Only commits that pin the
+# Flutter version in pubspec.yaml (from 30.10.2026) can be built.
 #
 # The Azure identity trusts only this file from the environment's branch, so
 # keep the file name. Resource names are environment secrets, not variables:
@@ -18,6 +20,10 @@ on:
   push:
     branches: [develop, test, main]
   workflow_dispatch:
+    inputs:
+      commit:
+        description: "Earlier commit of the selected branch to deploy (rollback), e.g. ec0442c. Empty: the head of the branch."
+        required: false
 
 permissions:
   contents: read
@@ -37,6 +43,7 @@ jobs:
       contents: read
     env:
       ENVIRONMENT: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'test' && 'test' || 'dev' }}
+      COMMIT: ${{ inputs.commit }}
       SUBSCRIPTION: ${{ secrets.SUBSCRIPTION }}
       RG: ${{ secrets.RG }}
       SWA: ${{ secrets.SWA }}
@@ -51,9 +58,27 @@ jobs:
             [ -z "$lower" ] || [ "$lower" = "$value" ] || echo "::add-mask::$lower"
           done
 
+      - name: Check input
+        run: |
+          if [ -n "$COMMIT" ] && ! printf '%s' "$COMMIT" | grep -Eqx '[0-9a-f]{7,40}'; then
+            echo "::error::Commit must be a SHA of 7 to 40 hexadecimal characters."
+            exit 1
+          fi
+
+      # The full history is needed only to check that the commit is on the branch.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: ${{ !inputs.commit && '1' || '0' }}
+
+      # Only a commit in the history of the environment's branch, so that a
+      # rollback cannot deploy code that was never merged there.
+      - name: Check out the earlier commit
+        if: inputs.commit != ''
+        run: |
+          git merge-base --is-ancestor "$COMMIT" HEAD 2>/dev/null \
+            || { echo "::error::Commit $COMMIT is not in the history of $GITHUB_REF_NAME."; exit 1; }
+          git checkout --quiet "$COMMIT"
 
       # The version is environment.flutter in pubspec.yaml.
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
