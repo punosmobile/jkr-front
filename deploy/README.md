@@ -62,7 +62,8 @@ az staticwebapp show -n <swa> -g <rg> --query sku.name -o tsv
 `.github/workflows/deploy.yml` julkaisee haaran sen omaan ympäristöön: develop → dev,
 test → test ja main → tuotanto. Tuotanto odottaa hyväksyntää GitHubin environmentissa.
 Workflow ajaa saman `deploy/deploy-frontend.sh`:n kuin paikallinen julkaisu.
-Käsiajo: Actions → deploy → Run workflow ja ympäristön haara.
+Käsiajo: Actions → deploy → Run workflow ja ympäristön haara. Palautus: anna lisäksi
+haaran aiemman commitin SHA (README: Palautus).
 
 Azureen kirjaudutaan OIDC:llä frontin omalla identiteetillä. Se luottaa vain tähän
 tiedostoon ympäristön haarasta, joten tiedoston nimeä ei voi vaihtaa.
