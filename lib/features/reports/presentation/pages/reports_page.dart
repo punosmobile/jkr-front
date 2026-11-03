@@ -1281,7 +1281,6 @@ class _ReportResultActionButtonState extends State<_ReportResultActionButton>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 320),
       reverseDuration: const Duration(milliseconds: 220),

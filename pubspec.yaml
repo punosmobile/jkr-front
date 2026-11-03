@@ -1,10 +1,11 @@
 name: jkrfront
 description: "A modern Flutter application with clean architecture"
 publish_to: 'none'
-version: 1.0.0+1
+version: 0.8.0
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
+  flutter: 3.41.6
 
 dependencies:
   flutter:

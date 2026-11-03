@@ -1,4 +1,3 @@
-import 'package:jkrfront/features/import/data/models/file_type_enum.dart';
 
 /// Represents a file or folder item from SharePoint.
 class SharepointItem {

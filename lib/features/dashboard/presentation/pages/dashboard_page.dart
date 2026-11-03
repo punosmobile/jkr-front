@@ -735,7 +735,7 @@ Future<void> _showImportLogDetailsDialog(
                       children: [
                         _SummaryDetailRow(
                           label: l10n.dashboardFieldId,
-                          value: entry.id?.toString(),
+                          value: entry.id.toString(),
                         ),
                         _SummaryDetailRow(
                           label: l10n.dashboardFieldDate,

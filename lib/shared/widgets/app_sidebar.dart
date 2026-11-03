@@ -31,7 +31,6 @@ class AppSidebar extends StatelessWidget {
   final String activeViewId;
   final String userName;
   final String appVersion;
-  final String appBuildNumber;
   final String? backendVersion;
   final Environment environment;
   final bool dbConnected;
@@ -44,7 +43,6 @@ class AppSidebar extends StatelessWidget {
     required this.activeViewId,
     required this.userName,
     required this.appVersion,
-    required this.appBuildNumber,
     this.backendVersion,
     required this.environment,
     required this.dbConnected,
@@ -120,7 +118,7 @@ class AppSidebar extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Frontend v$appVersion+$appBuildNumber',
+            'Frontend v$appVersion',
             style: TextStyle(
               fontSize: 10,
               color: Colors.white.withValues(alpha: 0.35),

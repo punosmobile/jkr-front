@@ -57,6 +57,12 @@ app.*.map.json
 # Hive
 *.hive
 *.lock
+# pubspec.lock is committed: builds use the locked dependency versions
+!pubspec.lock
 
 # Väliaikaiset tiedostot
 dokumentation-reply.json
+
+# Deploy script environment settings (resource names do not belong in the public repo)
+deploy/*.env
+!deploy/deploy.example.env

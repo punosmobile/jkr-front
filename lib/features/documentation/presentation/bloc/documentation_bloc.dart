@@ -1,6 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../data/models/db_column_doc.dart';
 import '../../data/repositories/documentation_repository.dart';
 import 'documentation_event.dart';
 import 'documentation_state.dart';
